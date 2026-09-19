@@ -1,0 +1,33 @@
+# ==============================================================================
+# Git Ignore Configuration - Trường TH & THCS Phước Hưng - Lớp 9A1
+# ==============================================================================
+
+# AI Agent Workspace & Configurations (Bảo mật - Tuyệt đối không đưa lên GitHub)
+.Agent/
+.Agent
+.agent/
+.agent
+
+# System & Environment Files
+.env
+.env.local
+*.log
+
+# Editor & IDE configs
+.vscode/
+.idea/
+
+# OS Generated Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Python Cache & Bytecode
+__pycache__/
+*.py[cod]
+*.class
+
+# Scratch & Temporary
+scratch_main.js
+test_dom.py
+.shared/

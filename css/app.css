@@ -1,0 +1,149 @@
+/* CSS Custom Styles cho Hệ thống Quản lý Lớp học 9A1 - TH & THCS Phước Hưng */
+:root {
+  --ph-blue-900: #1e3a8a;
+  --ph-blue-800: #1e40af;
+  --ph-blue-600: #2563eb;
+  --ph-blue-500: #3b82f6;
+  --ph-cyan-500: #06b6d4;
+  --ph-cyan-400: #22d3ee;
+  --ph-bg-light: #f8fafc;
+  --ph-card-light: #ffffff;
+  --ph-text-light: #0f172a;
+}
+
+.dark {
+  --ph-bg-dark: #0b1120;
+  --ph-card-dark: #1e293b;
+  --ph-text-dark: #f8fafc;
+}
+
+/* Phông chữ Be Vietnam Pro hỗ trợ dấu tiếng Việt hoàn hảo */
+body {
+  font-family: 'Be Vietnam Pro', 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.4);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.7);
+}
+
+/* Glassmorphism Classes */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+.dark .glass-panel {
+  background: rgba(30, 41, 59, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(51, 65, 85, 0.6);
+}
+
+.glass-nav {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+}
+.dark .glass-nav {
+  background: rgba(15, 23, 42, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(30, 41, 59, 0.8);
+}
+
+/* Hiệu ứng mượt mà */
+.transition-smooth {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Pulse animation nhẹ cho chỉ số cảnh báo */
+@keyframes soft-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.75; }
+}
+.animate-soft-pulse {
+  animation: soft-pulse 2s infinite ease-in-out;
+}
+
+/* Sơ đồ lớp học bàn ghế CSS Grid */
+.classroom-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+}
+
+@media (max-width: 768px) {
+  .classroom-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+}
+
+/* In ấn báo cáo tuần chuẩn văn bản giáo dục */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  .no-print, header, nav, footer, button, .voice-floating-btn {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .glass-panel {
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+  }
+  /* In sơ đồ lớp học */
+  #tab-classroom {
+    display: block !important;
+  }
+  #seating-view-modern {
+    display: none !important;
+  }
+  #seating-view-paper {
+    display: block !important;
+  }
+}
+
+/* Hiệu ứng Bảng đen Lớp học & Kéo thả Ghế ngồi */
+.chalkboard-bg {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.6), 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+}
+
+.seat-slot {
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.seat-slot.drag-over {
+  border-color: #2563eb !important;
+  background-color: #eff6ff !important;
+  transform: scale(1.03);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35) !important;
+  z-index: 20;
+}
+
+.seat-slot.is-dragging {
+  opacity: 0.4;
+  transform: scale(0.96);
+}
+
