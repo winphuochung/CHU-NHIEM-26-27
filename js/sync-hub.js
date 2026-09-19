@@ -58,9 +58,9 @@ class SyncHubManager {
 
       await fetch(this.appsScriptUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload),
-        mode: 'no-cors' // Hỗ trợ Apps Script redirect
+        mode: 'no-cors' // Tránh bị chặn bởi CORS preflight của Google Apps Script
       });
 
       return { success: true };
