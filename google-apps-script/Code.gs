@@ -153,6 +153,11 @@ function populateSheetWithStudents(ss, studentsList) {
   // 3. Ghi dữ liệu vào sheet
   if (rows.length > 0) {
     var dataRange = sheet.getRange(2, 1, rows.length, HEADERS.length);
+    // ÉP KIỂU VĂN BẢN (Text Format '@') cho cột Ngày sinh (5), SĐT (12, 13), Nơi ở (14)
+    sheet.getRange(2, 5, rows.length, 1).setNumberFormat('@');
+    sheet.getRange(2, 12, rows.length, 2).setNumberFormat('@');
+    sheet.getRange(2, 14, rows.length, 1).setNumberFormat('@');
+
     dataRange.setValues(rows);
 
     // Format dữ liệu
@@ -300,6 +305,9 @@ function doPost(e) {
     if (action === 'pushAllData' || action === 'initFullSheet') {
       var studentsList = postData.students && postData.students.length > 0 ? postData.students : DEFAULT_STUDENTS_9A1;
       populateSheetWithStudents(ss, studentsList);
+      if (postData.officerReviews || postData.emulationNotes) {
+        populateOfficerReviewsSheet(ss, postData.officerReviews, postData.emulationNotes, postData.currentWeek);
+      }
       logToAuditSheet(ss, 'Toàn lớp 9A1', postData.actor || 'GVCN Quản trị', 0, 'Đồng bộ toàn bộ ' + studentsList.length + ' học sinh từ App sang Google Sheet');
 
       return ContentService.createTextOutput(JSON.stringify({
@@ -389,4 +397,80 @@ function setupSheetNow() {
 
   populateSheetWithStudents(ss, DEFAULT_STUDENTS_9A1);
   SpreadsheetApp.getUi().alert('🎉 THÀNH CÔNG! Bảng tính Google Sheet lớp 9A1 đã được khởi tạo hoàn chỉnh 43 học sinh và định dạng chuyên nghiệp!');
+}
+
+// Ghi nhận toàn bộ Lời Nhận Xét Của Ban Cán Sự Lớp & GVCN sang Sheet "NhanXet_BanCanSu"
+function populateOfficerReviewsSheet(ss, officerReviews, emulationNotes, currentWeek) {
+  var sheet = ss.getSheetByName('NhanXet_BanCanSu');
+  if (!sheet) {
+    sheet = ss.insertSheet('NhanXet_BanCanSu');
+    sheet.appendRow(['Tuần', 'Thời gian', 'Mã HS / Chủ đề', 'Họ và tên / Đối tượng', 'Người nhận xét', 'Nội dung nhận xét & Đánh giá', 'Ghi chú']);
+    var hRange = sheet.getRange(1, 1, 1, 7);
+    hRange.setBackground('#0d9488'); // Xanh ngọc đậm
+    hRange.setFontColor('#ffffff');
+    hRange.setFontWeight('bold');
+    sheet.setFrozenRows(1);
+    sheet.setRowHeight(1, 32);
+  }
+
+  var nowStr = new Date().toLocaleString('vi-VN');
+  var w = currentWeek || 2;
+
+  if (emulationNotes) {
+    sheet.appendRow([
+      'Tuần ' + w,
+      nowStr,
+      'TỔNG KẾT TUẦN ' + w,
+      'Toàn thể Lớp 9A1',
+      emulationNotes.submittedBy || 'Lớp trưởng (Trình Minh Thiện)',
+      emulationNotes.officerReview || 'Lớp duy trì nề nếp tốt, các tổ trưởng đôn đốc thành viên chu đáo.',
+      'Trạng thái: ' + (emulationNotes.status || 'Chờ duyệt')
+    ]);
+
+    if (emulationNotes.nextWeekDirection) {
+      sheet.appendRow([
+        'Tuần ' + w,
+        nowStr,
+        'KẾ HOẠCH TUẦN ' + (w + 1),
+        'Phương hướng tuần mới',
+        'Ban cán sự lớp',
+        emulationNotes.nextWeekDirection,
+        'Mục tiêu tuần tới'
+      ]);
+    }
+
+    if (emulationNotes.gvcnFeedback) {
+      sheet.appendRow([
+        'Tuần ' + w,
+        nowStr,
+        'CHỈ ĐẠO GVCN',
+        'Tập thể Lớp 9A1',
+        'GVCN Chủ nhiệm 9A1',
+        emulationNotes.gvcnFeedback,
+        'Ý kiến phê duyệt'
+      ]);
+    }
+  }
+
+  if (officerReviews && typeof officerReviews === 'object') {
+    Object.keys(officerReviews).forEach(function(stId) {
+      var stData = officerReviews[stId];
+      if (stData && typeof stData === 'object') {
+        Object.keys(stData).forEach(function(roleKey) {
+          var item = stData[roleKey];
+          if (item && item.comment) {
+            sheet.appendRow([
+              'Tuần ' + w,
+              nowStr,
+              stId,
+              item.studentName || stId,
+              item.actor || roleKey,
+              item.comment + (item.rating ? (' (Đánh giá: ' + item.rating + ')') : ''),
+              'Nhận xét sổ tay cán sự'
+            ]);
+          }
+        });
+      }
+    });
+  }
 }

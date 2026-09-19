@@ -368,6 +368,9 @@
           <button onclick="window.syncHub.exportCSV()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0">
             <i data-lucide="download" class="w-4 h-4"></i> Xuất Excel
           </button>
+          <button onclick="handleExportEmulationWordClick()" class="px-3 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0">
+            <i data-lucide="file-text" class="w-4 h-4"></i> Xuất Word (NĐ 30)
+          </button>
         </div>
       </div>
 
@@ -2297,7 +2300,17 @@
       }
     }
 
-    function handleExportEmulationExcelClick() {
+    
+    function handleExportEmulationWordClick(weekNum) {
+      const w = weekNum || (window.store && window.store.state.currentWeek) || 2;
+      if (window.syncHub && typeof window.syncHub.exportEmulationWordReport === 'function') {
+        window.syncHub.exportEmulationWordReport(w);
+      } else {
+        alert('Đang chuẩn bị dữ liệu xuất Word...');
+      }
+    }
+
+function handleExportEmulationExcelClick() {
       const w = selectedEmulationWeek || 2;
       window.syncHub.exportEmulationExcelReport(w);
     }
@@ -2501,6 +2514,9 @@
               <div class="flex items-center gap-2 shrink-0">
                 <button onclick="handleExportEmulationExcelClick()" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition">
                   <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Xuất Báo Cáo Excel Tuần ${w}
+                </button>
+                <button onclick="handleExportEmulationWordClick(${w})" class="px-3.5 py-1.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition">
+                  <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Xuất Báo Cáo Word Tuần ${w} (NĐ 30/2020)
                 </button>
               </div>
             </div>
@@ -2706,6 +2722,9 @@
             ` : ''}
             <button onclick="window.syncHub.exportEmulationExcelReport(${w})" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
               <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Xuất Báo Cáo Excel
+            </button>
+            <button onclick="handleExportEmulationWordClick(${w})" class="px-3.5 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+              <i data-lucide="file-text" class="w-4 h-4"></i> Xuất Báo Cáo Word (NĐ 30/2020)
             </button>
           </div>
         </div>
