@@ -5150,6 +5150,10 @@ function handleExportEmulationExcelClick() {
         } else {
           // Fallback trực tiếp nếu sync-hub.js bị cache phiên bản cũ trên trình duyệt
           const students = (window.store && typeof window.store.getStudents === 'function') ? window.store.getStudents() : [];
+          const ledger = (window.store && window.store.state && window.store.state.ledger) ? window.store.state.ledger : [];
+          const currentWeek = (window.store && window.store.state.currentWeek) || 2;
+          const emulationNotes = (window.store && typeof window.store.getWeekEmulationNotes === 'function') ? window.store.getWeekEmulationNotes(currentWeek) : {};
+          const officerReviews = (window.store && typeof window.store.getWeeklyOfficerReviews === 'function') ? window.store.getWeeklyOfficerReviews(currentWeek) : {};
           await fetch(inputUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain;charset=utf-8' },
@@ -5157,7 +5161,11 @@ function handleExportEmulationExcelClick() {
               action: 'pushAllData',
               actor: 'GVCN Quản trị 9A1',
               timestamp: new Date().toISOString(),
-              students: students
+              currentWeek: currentWeek,
+              students: students,
+              ledger: ledger,
+              emulationNotes: emulationNotes,
+              officerReviews: officerReviews
             }),
             mode: 'no-cors'
           });

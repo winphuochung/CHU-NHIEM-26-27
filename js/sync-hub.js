@@ -44,12 +44,16 @@ class SyncHubManager {
       const officerReviews = (window.store && typeof window.store.getWeeklyOfficerReviews === 'function')
         ? window.store.getWeeklyOfficerReviews(currentWeek) : {};
 
+      const ledger = (window.store && window.store.state && Array.isArray(window.store.state.ledger))
+        ? window.store.state.ledger : [];
+
       const payload = {
         action: 'pushAllData',
         actor: 'GVCN Quản trị 9A1',
         timestamp: new Date().toISOString(),
         currentWeek: currentWeek,
         students: students,
+        ledger: ledger,
         emulationNotes: emulationNotes,
         officerReviews: officerReviews
       };

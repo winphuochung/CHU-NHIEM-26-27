@@ -3,13 +3,17 @@
  * Trường TH & THCS Phước Hưng (Năm học 2026 - 2027)
  * 
  * ĐẶC ĐIỂM NỔI BẬT:
- * 1. Tự động khởi tạo 100% Google Sheet: Tự tạo sheet DanhSach9A1, tiêu đề xanh navy, kẻ khung, căn lề.
- * 2. Tự động nạp toàn bộ 43 học sinh với 9 chức vụ Ban cán sự chuẩn hóa khi đồng bộ hoặc khi sheet trống.
- * 3. Hỗ trợ push toàn bộ dữ liệu từ Ứng dụng sang Sheet, cập nhật điểm thi đua, tự động ghi AuditLog.
- * 4. Người dùng KHÔNG CẦN tạo bất cứ cột, dòng hay định dạng nào trên Google Sheet!
+ * 1. Tự động khởi tạo 100% 5 Sheet Google Sheets:
+ *    - DanhSach9A1 (43 HS, định dạng text Ngày sinh, SĐT, Nơi ở)
+ *    - SoQuyLop (Sổ quỹ thu chi, số tiền định dạng VNĐ)
+ *    - NhanXet_BanCanSu (Lời nhận xét Ban cán sự, Lớp trưởng, Tổ trưởng & GVCN)
+ *    - ThiDua_35Tuan (Điểm thi đua rèn luyện 35 tuần học)
+ *    - AuditLog (Lịch sử thao tác đồng bộ)
+ * 2. Người dùng KHÔNG CẦN tạo bất cứ cột, dòng hay định dạng nào trên Google Sheet!
+ * 3. Chạy hàm 'setupSheetNow' trong Apps Script Editor để sinh toàn bộ dữ liệu tự động.
  */
 
-var SPREADSHEET_ID = ''; // Để trống nếu dán trực tiếp vào Apps Script từ Google Sheet (Khuyên dùng)
+var SPREADSHEET_ID = ''; // Để trống nếu dán trực tiếp vào Apps Script từ Google Sheet
 
 // Danh sách mặc định 43 học sinh Lớp 9A1 Phước Hưng (Chuẩn hóa Thông tư 22)
 var DEFAULT_STUDENTS_9A1 = [
@@ -65,7 +69,15 @@ var DEFAULT_STUDENTS_9A1 = [
   { id: 'HS43', stt: 43, name: 'Lê Thị Kiều Duyên', gender: 'Nữ', dob: '11/08/2011', to: 1, role: 'Học sinh', conductScore: 93, conduct: 'Tốt', academic: 'Tốt', scoreAvg: 8.4, phone: '0912.345.643', parentPhone: '0903.111.243', address: 'Ấp 2, Xã Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Long Thành', nv3: 'THPT Bình Sơn', notes: 'Chăm chỉ, tích cực trong giờ học' }
 ];
 
-var HEADERS = [
+// Dữ liệu mặc định Sổ quỹ E-Ledger
+var DEFAULT_LEDGER_9A1 = [
+  { id: 'LED01', date: '05/09/2026', type: 'Thu', amount: 4200000, category: 'Quỹ lớp đầu năm', note: 'Thu quỹ phụ huynh 42 học sinh x 100.000đ', approver: 'GVCN Phê duyệt', proofImg: '' },
+  { id: 'LED02', date: '06/09/2026', type: 'Chi', amount: 850000, category: 'Khánh tiết & Trang trí', note: 'Mua khăn trải bàn, lọ hoa, chổi quét lớp, đồ lau bảng', approver: 'Thủ quỹ chi', proofImg: '' },
+  { id: 'LED03', date: '10/09/2026', type: 'Chi', amount: 350000, category: 'Photo tài liệu', note: 'Photo đề khảo sát chất lượng đầu năm môn Toán & Anh', approver: 'Lớp phó HT', proofImg: '' },
+  { id: 'LED04', date: '15/09/2026', type: 'Chi', amount: 420000, category: 'Khen thưởng', note: 'Mua phần thưởng cho 4 bạn Gương sáng tuần 1 & 2', approver: 'GVCN Phê duyệt', proofImg: '' }
+];
+
+var HEADERS_STUDENTS = [
   'Mã HS', 'STT', 'Họ và Tên', 'Giới tính', 'Ngày sinh', 'Tổ', 'Chức vụ',
   'Điểm Thi Đua', 'Rèn Luyện (TT22)', 'Học Lực (TT22)', 'Điểm TB',
   'SĐT Học Sinh', 'SĐT Phụ Huynh', 'Địa Chỉ', 'Bài Tập Về Nhà',
@@ -93,7 +105,7 @@ function getTargetSpreadsheet(e) {
   return ss;
 }
 
-// Hàm format và ghi toàn bộ dữ liệu học sinh vào sheet DanhSach9A1
+// 1. Sheet DanhSach9A1
 function populateSheetWithStudents(ss, studentsList) {
   var list = (studentsList && studentsList.length > 0) ? studentsList : DEFAULT_STUDENTS_9A1;
   var sheet = ss.getSheetByName('DanhSach9A1');
@@ -101,16 +113,12 @@ function populateSheetWithStudents(ss, studentsList) {
     sheet = ss.insertSheet('DanhSach9A1', 0);
   }
 
-  // Xóa toàn bộ nội dung cũ để làm mới định dạng chuẩn
   sheet.clear();
+  sheet.getRange(1, 1, 1, HEADERS_STUDENTS.length).setValues([HEADERS_STUDENTS]);
 
-  // 1. Ghi dòng tiêu đề
-  sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
-
-  // Format tiêu đề chuyên nghiệp
-  var headerRange = sheet.getRange(1, 1, 1, HEADERS.length);
-  headerRange.setBackground('#1e40af'); // Xanh navy đậm
-  headerRange.setFontColor('#ffffff'); // Chữ trắng
+  var headerRange = sheet.getRange(1, 1, 1, HEADERS_STUDENTS.length);
+  headerRange.setBackground('#1e40af'); // Navy Blue
+  headerRange.setFontColor('#ffffff');
   headerRange.setFontWeight('bold');
   headerRange.setFontFamily('Arial');
   headerRange.setFontSize(10.5);
@@ -120,7 +128,6 @@ function populateSheetWithStudents(ss, studentsList) {
   sheet.setRowHeight(1, 36);
   sheet.setFrozenRows(1);
 
-  // 2. Chuẩn bị hàng dữ liệu
   var rows = list.map(function(s, idx) {
     var stt = s.stt || (idx + 1);
     var id = s.id || ('HS' + (stt < 10 ? '0' + stt : stt));
@@ -150,263 +157,120 @@ function populateSheetWithStudents(ss, studentsList) {
     ];
   });
 
-  // 3. Ghi dữ liệu vào sheet
   if (rows.length > 0) {
-    var dataRange = sheet.getRange(2, 1, rows.length, HEADERS.length);
-    // ÉP KIỂU VĂN BẢN (Text Format '@') cho cột Ngày sinh (5), SĐT (12, 13), Nơi ở (14)
-    sheet.getRange(2, 5, rows.length, 1).setNumberFormat('@');
-    sheet.getRange(2, 12, rows.length, 2).setNumberFormat('@');
-    sheet.getRange(2, 14, rows.length, 1).setNumberFormat('@');
+    var dataRange = sheet.getRange(2, 1, rows.length, HEADERS_STUDENTS.length);
+    sheet.getRange(2, 5, rows.length, 1).setNumberFormat('@'); // DOB text
+    sheet.getRange(2, 12, rows.length, 2).setNumberFormat('@'); // Phone text
+    sheet.getRange(2, 14, rows.length, 1).setNumberFormat('@'); // Address text
 
     dataRange.setValues(rows);
-
-    // Format dữ liệu
     dataRange.setFontFamily('Arial');
     dataRange.setFontSize(10);
     dataRange.setVerticalAlignment('middle');
     dataRange.setBorder(true, true, true, true, true, true, '#cbd5e1', SpreadsheetApp.BorderStyle.SOLID);
     sheet.setRowHeights(2, rows.length, 28);
 
-    // Căn giữa các cột mã, số, ngày sinh, chức vụ, điểm...
     var centerCols = [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15];
     centerCols.forEach(function(c) {
       sheet.getRange(2, c, rows.length, 1).setHorizontalAlignment('center');
     });
 
-    // Cột Họ tên, Địa chỉ, NV, Ghi chú căn trái
     var leftCols = [3, 14, 16, 17, 18, 19];
     leftCols.forEach(function(c) {
       sheet.getRange(2, c, rows.length, 1).setHorizontalAlignment('left');
     });
 
-    // Tô màu xen kẽ dòng chẵn/lẻ để đọc dễ dàng
     for (var r = 2; r <= rows.length + 1; r++) {
       if (r % 2 === 1) {
-        sheet.getRange(r, 1, 1, HEADERS.length).setBackground('#f8fafc');
+        sheet.getRange(r, 1, 1, HEADERS_STUDENTS.length).setBackground('#f8fafc');
       }
     }
   }
 
-  // 4. Auto-fit cột
-  for (var colIdx = 1; colIdx <= HEADERS.length; colIdx++) {
+  for (var colIdx = 1; colIdx <= HEADERS_STUDENTS.length; colIdx++) {
     sheet.autoResizeColumn(colIdx);
   }
-
-  // Đảm bảo có sheet AuditLog
-  initAuditSheet(ss);
 
   return sheet;
 }
 
-function initAuditSheet(ss) {
-  var audit = ss.getSheetByName('AuditLog');
-  if (!audit) {
-    audit = ss.insertSheet('AuditLog');
-    audit.appendRow(['Thời gian', 'Người thực hiện', 'Học sinh', 'Nội dung thay đổi', 'Ghi chú']);
-    var hRange = audit.getRange(1, 1, 1, 5);
-    hRange.setBackground('#047857'); // Xanh ngọc
-    hRange.setFontColor('#ffffff');
-    hRange.setFontWeight('bold');
-    audit.setFrozenRows(1);
-    audit.setRowHeight(1, 30);
+// 2. Sheet SoQuyLop
+function populateLedgerSheet(ss, ledgerList) {
+  var list = (ledgerList && ledgerList.length > 0) ? ledgerList : DEFAULT_LEDGER_9A1;
+  var sheet = ss.getSheetByName('SoQuyLop');
+  if (!sheet) {
+    sheet = ss.insertSheet('SoQuyLop');
   }
-  return audit;
-}
 
-function logToAuditSheet(ss, studentName, actor, pointDelta, reason) {
-  var auditSheet = initAuditSheet(ss);
-  var changeText = (typeof pointDelta === 'number' && pointDelta > 0) ? ('+' + pointDelta + ' điểm') : (pointDelta + ' điểm');
-  auditSheet.appendRow([new Date(), actor || 'GVCN', studentName || 'Toàn lớp', changeText, reason || '']);
-}
+  sheet.clear();
+  var headers = ['Mã GD', 'Ngày thực hiện', 'Loại (Thu/Chi)', 'Số tiền (VNĐ)', 'Danh mục', 'Nội dung chi tiết', 'Người phê duyệt', 'Chứng từ'];
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
 
-// GET Webhook: Đồng bộ từ Google Sheet về App
-function doGet(e) {
-  try {
-    var ss = getTargetSpreadsheet(e);
-    if (!ss) {
-      return ContentService.createTextOutput(JSON.stringify({
-        status: 'error',
-        message: 'Chưa kết nối được Google Sheet! Vui lòng mở Google Sheet của lớp > Tiện ích mở rộng > Apps Script và dán mã nguồn này.'
-      })).setMimeType(ContentService.MimeType.JSON);
-    }
+  var hRange = sheet.getRange(1, 1, 1, headers.length);
+  hRange.setBackground('#0f766e'); // Teal Green
+  hRange.setFontColor('#ffffff');
+  hRange.setFontWeight('bold');
+  hRange.setFontFamily('Arial');
+  hRange.setFontSize(10.5);
+  hRange.setHorizontalAlignment('center');
+  hRange.setVerticalAlignment('middle');
+  sheet.setRowHeight(1, 34);
+  sheet.setFrozenRows(1);
 
-    var sheet = ss.getSheetByName('DanhSach9A1') || ss.getActiveSheet();
-    var data = sheet.getDataRange().getValues();
+  var rows = list.map(function(item) {
+    return [
+      item.id || '',
+      item.date || '',
+      item.type || 'Thu',
+      Number(item.amount) || 0,
+      item.category || '',
+      item.note || '',
+      item.approver || 'GVCN Phê duyệt',
+      item.proofImg ? 'Có hình chứng từ' : 'Không'
+    ];
+  });
 
-    // NẾU SHEET TRỐNG HOẶC CHƯA CÓ DỮ LIỆU: TỰ ĐỘNG KHỞI TẠO ĐẦY ĐỦ 43 HỌC SINH LIỀN!
-    if (!data || data.length <= 1 || (e && e.parameter && e.parameter.forceInit === 'true')) {
-      sheet = populateSheetWithStudents(ss, DEFAULT_STUDENTS_9A1);
-      data = sheet.getDataRange().getValues();
-      logToAuditSheet(ss, 'Toàn lớp 9A1', 'Hệ thống tự động', 0, 'Tự động khởi tạo 43 học sinh & định dạng bảng tính');
-    }
+  if (rows.length > 0) {
+    var dataRange = sheet.getRange(2, 1, rows.length, headers.length);
+    sheet.getRange(2, 4, rows.length, 1).setNumberFormat('#,##0" đ"'); // VNĐ format
 
-    var rows = data.slice(1);
-    var students = rows.map(function(row) {
-      var toStr = row[5] ? row[5].toString().replace('Tổ ', '').trim() : (row[3] ? row[3].toString().replace('Tổ ', '').trim() : '');
-      return {
-        id: row[0] ? row[0].toString().trim() : '',
-        stt: Number(row[1]) || 0,
-        name: row[2] ? row[2].toString().trim() : '',
-        gender: row[3] || 'Nam',
-        dob: row[4] || '',
-        to: Number(toStr) || 1,
-        role: row[6] || 'Học sinh',
-        conductScore: Number(row[7]) || 100,
-        conduct: row[8] || 'Tốt',
-        academic: row[9] || 'Tốt',
-        scoreAvg: Number(row[10]) || 8.0,
-        phone: row[11] || '',
-        parentPhone: row[12] || '',
-        address: row[13] || '',
-        homeworkStatus: (row[14] === 'Đã nộp' || row[14] === true),
-        targetHighSchool: {
-          nv1: row[15] || 'THPT Phước Hưng',
-          nv2: row[16] || 'THPT Long Thành',
-          nv3: row[17] || 'THPT Bình Sơn'
-        },
-        notes: row[18] || ''
-      };
-    });
+    dataRange.setValues(rows);
+    dataRange.setFontFamily('Arial');
+    dataRange.setFontSize(10);
+    dataRange.setVerticalAlignment('middle');
+    dataRange.setBorder(true, true, true, true, true, true, '#cbd5e1', SpreadsheetApp.BorderStyle.SOLID);
+    sheet.setRowHeights(2, rows.length, 26);
 
-    return ContentService.createTextOutput(JSON.stringify({
-      status: 'success',
-      school: 'TH & THCS Phước Hưng',
-      class: '9A1',
-      updatedAt: new Date().toISOString(),
-      totalStudents: students.length,
-      students: students,
-      message: 'Đã tải thành công ' + students.length + ' học sinh từ Google Sheet!'
-    })).setMimeType(ContentService.MimeType.JSON);
+    sheet.getRange(2, 1, rows.length, 3).setHorizontalAlignment('center');
+    sheet.getRange(2, 4, rows.length, 1).setHorizontalAlignment('right');
+    sheet.getRange(2, 5, rows.length, 4).setHorizontalAlignment('left');
 
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({
-      status: 'error',
-      message: err.toString()
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-// POST Webhook: Tiếp nhận các hành động từ App đẩy sang
-function doPost(e) {
-  try {
-    var ss = getTargetSpreadsheet(e);
-    if (!ss) {
-      return ContentService.createTextOutput(JSON.stringify({
-        status: 'error',
-        message: 'Chưa tìm thấy Google Sheet liên kết.'
-      })).setMimeType(ContentService.MimeType.JSON);
-    }
-
-    var contents = (e && e.postData && e.postData.contents) ? e.postData.contents : '{}';
-    var postData = JSON.parse(contents);
-    var action = postData.action;
-
-    // HÀNH ĐỘNG 1: Đẩy toàn bộ 43 học sinh & dữ liệu từ App sang Google Sheet
-    if (action === 'pushAllData' || action === 'initFullSheet') {
-      var studentsList = postData.students && postData.students.length > 0 ? postData.students : DEFAULT_STUDENTS_9A1;
-      populateSheetWithStudents(ss, studentsList);
-      if (postData.officerReviews || postData.emulationNotes) {
-        populateOfficerReviewsSheet(ss, postData.officerReviews, postData.emulationNotes, postData.currentWeek);
+    for (var r = 2; r <= rows.length + 1; r++) {
+      if (r % 2 === 1) {
+        sheet.getRange(r, 1, 1, headers.length).setBackground('#f0fdf4');
       }
-      logToAuditSheet(ss, 'Toàn lớp 9A1', postData.actor || 'GVCN Quản trị', 0, 'Đồng bộ toàn bộ ' + studentsList.length + ' học sinh từ App sang Google Sheet');
-
-      return ContentService.createTextOutput(JSON.stringify({
-        status: 'success',
-        totalStudents: studentsList.length,
-        message: 'Đã tạo và đồng bộ thành công toàn bộ ' + studentsList.length + ' học sinh sang Google Sheet!'
-      })).setMimeType(ContentService.MimeType.JSON);
     }
-
-    var sheet = ss.getSheetByName('DanhSach9A1') || ss.getActiveSheet();
-
-    // HÀNH ĐỘNG 2: Cập nhật điểm thi đua rèn luyện (Update Emulation)
-    if (action === 'updateEmulation') {
-      var studentId = postData.studentId;
-      var pointDelta = Number(postData.pointDelta) || 0;
-      var data = sheet.getDataRange().getValues();
-      var found = false;
-
-      for (var i = 1; i < data.length; i++) {
-        if (data[i][0] == studentId) {
-          // Cột điểm thi đua là cột H (index 7 trong mảng 0-indexed, tức cột thứ 8 trên Sheet)
-          var currentScore = Number(data[i][7]) || 100;
-          var newScore = Math.max(0, Math.min(120, currentScore + pointDelta));
-          sheet.getRange(i + 1, 8).setValue(newScore);
-
-          logToAuditSheet(ss, data[i][2], postData.actor, pointDelta, postData.reason);
-          found = true;
-          break;
-        }
-      }
-
-      return ContentService.createTextOutput(JSON.stringify({
-        status: found ? 'success' : 'not_found',
-        message: found ? 'Đã cập nhật điểm thi đua vào Google Sheet!' : 'Không tìm thấy học sinh ' + studentId
-      })).setMimeType(ContentService.MimeType.JSON);
-    }
-
-    // HÀNH ĐỘNG 3: Ghi nhận nộp bài tập về nhà
-    if (action === 'formSubmitHomework') {
-      var studentName = (postData.studentName || '').toLowerCase().trim();
-      var data2 = sheet.getDataRange().getValues();
-      var foundHw = false;
-
-      for (var j = 1; j < data2.length; j++) {
-        var rowName = (data2[j][2] || '').toString().toLowerCase().trim();
-        if (rowName && (rowName === studentName || rowName.indexOf(studentName) !== -1 || studentName.indexOf(rowName) !== -1)) {
-          // Cột bài tập về nhà là cột O (index 14, tức cột 15 trên Sheet)
-          sheet.getRange(j + 1, 15).setValue('Đã nộp');
-          logToAuditSheet(ss, data2[j][2], 'Google Forms', '+2', 'Nộp bài tập môn: ' + (postData.subject || 'Toán 9'));
-          foundHw = true;
-          break;
-        }
-      }
-
-      return ContentService.createTextOutput(JSON.stringify({
-        status: foundHw ? 'success' : 'not_found',
-        message: foundHw ? 'Đã đánh dấu nộp bài tập trên Google Sheet!' : 'Không tìm thấy học sinh: ' + postData.studentName
-      })).setMimeType(ContentService.MimeType.JSON);
-    }
-
-    return ContentService.createTextOutput(JSON.stringify({
-      status: 'ignored',
-      message: 'Hành động không xác định: ' + action
-    })).setMimeType(ContentService.MimeType.JSON);
-
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({
-      status: 'error',
-      message: err.toString()
-    })).setMimeType(ContentService.MimeType.JSON);
   }
+
+  for (var c = 1; c <= headers.length; c++) {
+    sheet.autoResizeColumn(c);
+  }
+
+  return sheet;
 }
 
-/**
- * HÀM CHẠY TRỰC TIẾP TRÊN APPS SCRIPT EDITOR:
- * Nhấn chọn hàm 'setupSheetNow' rồi bấm nút [▷ Chạy] (Run) ở thanh công cụ phía trên.
- * Bảng tính Google Sheet sẽ lập tức tự động sinh ra 43 học sinh đầy đủ định dạng đẹp mắt!
- */
-function setupSheetNow() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  if (!ss && SPREADSHEET_ID) {
-    ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  }
-  if (!ss) {
-    throw new Error('Vui lòng mở trực tiếp Google Sheet của lớp 9A1 rồi vào Tiện ích mở rộng > Apps Script!');
-  }
-
-  populateSheetWithStudents(ss, DEFAULT_STUDENTS_9A1);
-  SpreadsheetApp.getUi().alert('🎉 THÀNH CÔNG! Bảng tính Google Sheet lớp 9A1 đã được khởi tạo hoàn chỉnh 43 học sinh và định dạng chuyên nghiệp!');
-}
-
-// Ghi nhận toàn bộ Lời Nhận Xét Của Ban Cán Sự Lớp & GVCN sang Sheet "NhanXet_BanCanSu"
+// 3. Sheet NhanXet_BanCanSu
 function populateOfficerReviewsSheet(ss, officerReviews, emulationNotes, currentWeek) {
   var sheet = ss.getSheetByName('NhanXet_BanCanSu');
   if (!sheet) {
     sheet = ss.insertSheet('NhanXet_BanCanSu');
-    sheet.appendRow(['Tuần', 'Thời gian', 'Mã HS / Chủ đề', 'Họ và tên / Đối tượng', 'Người nhận xét', 'Nội dung nhận xét & Đánh giá', 'Ghi chú']);
-    var hRange = sheet.getRange(1, 1, 1, 7);
-    hRange.setBackground('#0d9488'); // Xanh ngọc đậm
+  }
+
+  var headers = ['Tuần', 'Thời gian', 'Mã HS / Chủ đề', 'Họ và tên / Đối tượng', 'Người nhận xét', 'Nội dung nhận xét & Đánh giá', 'Ghi chú'];
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(headers);
+    var hRange = sheet.getRange(1, 1, 1, headers.length);
+    hRange.setBackground('#0d9488');
     hRange.setFontColor('#ffffff');
     hRange.setFontWeight('bold');
     sheet.setFrozenRows(1);
@@ -473,4 +337,279 @@ function populateOfficerReviewsSheet(ss, officerReviews, emulationNotes, current
       }
     });
   }
+
+  for (var c = 1; c <= headers.length; c++) {
+    sheet.autoResizeColumn(c);
+  }
+  return sheet;
+}
+
+// 4. Sheet ThiDua_35Tuan
+function populateEmulation35WeeksSheet(ss, studentsList, currentWeek) {
+  var list = (studentsList && studentsList.length > 0) ? studentsList : DEFAULT_STUDENTS_9A1;
+  var sheet = ss.getSheetByName('ThiDua_35Tuan');
+  if (!sheet) {
+    sheet = ss.insertSheet('ThiDua_35Tuan');
+  }
+
+  sheet.clear();
+  var headers = ['Mã HS', 'STT', 'Họ và Tên', 'Tổ', 'Chức vụ', 'Điểm Nề Nếp Tuần ' + (currentWeek || 2), 'Xếp Loại Nề Nếp', 'Rèn Luyện TT22', 'Trạng Thái Nộp Bài', 'Ghi Chú Thi Đua'];
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+
+  var hRange = sheet.getRange(1, 1, 1, headers.length);
+  hRange.setBackground('#6d28d9'); // Purple
+  hRange.setFontColor('#ffffff');
+  hRange.setFontWeight('bold');
+  hRange.setFontFamily('Arial');
+  hRange.setFontSize(10.5);
+  hRange.setHorizontalAlignment('center');
+  hRange.setVerticalAlignment('middle');
+  sheet.setRowHeight(1, 34);
+  sheet.setFrozenRows(1);
+
+  var rows = list.map(function(s, idx) {
+    var score = Number(s.conductScore) || 100;
+    var rank = score >= 95 ? 'Xuất sắc' : (score >= 85 ? 'Tốt' : (score >= 70 ? 'Khá' : 'Cần cố gắng'));
+    return [
+      s.id || ('HS' + (idx + 1)),
+      s.stt || (idx + 1),
+      s.name || '',
+      s.to ? ('Tổ ' + s.to) : '',
+      s.role || 'Học sinh',
+      score,
+      rank,
+      s.conduct || 'Tốt',
+      (s.homeworkStatus === true || s.homeworkStatus === 'Đã nộp') ? 'Đã nộp' : 'Chưa nộp',
+      s.notes || 'Duy trì thi đua tốt'
+    ];
+  });
+
+  if (rows.length > 0) {
+    var dataRange = sheet.getRange(2, 1, rows.length, headers.length);
+    dataRange.setValues(rows);
+    dataRange.setFontFamily('Arial');
+    dataRange.setFontSize(10);
+    dataRange.setVerticalAlignment('middle');
+    dataRange.setBorder(true, true, true, true, true, true, '#cbd5e1', SpreadsheetApp.BorderStyle.SOLID);
+    sheet.setRowHeights(2, rows.length, 26);
+
+    sheet.getRange(2, 1, rows.length, 2).setHorizontalAlignment('center');
+    sheet.getRange(2, 4, rows.length, 6).setHorizontalAlignment('center');
+    sheet.getRange(2, 3, rows.length, 1).setHorizontalAlignment('left');
+
+    for (var r = 2; r <= rows.length + 1; r++) {
+      if (r % 2 === 1) {
+        sheet.getRange(r, 1, 1, headers.length).setBackground('#faf5ff');
+      }
+    }
+  }
+
+  for (var c = 1; c <= headers.length; c++) {
+    sheet.autoResizeColumn(c);
+  }
+  return sheet;
+}
+
+// 5. Sheet AuditLog
+function initAuditSheet(ss) {
+  var audit = ss.getSheetByName('AuditLog');
+  if (!audit) {
+    audit = ss.insertSheet('AuditLog');
+    audit.appendRow(['Thời gian', 'Người thực hiện', 'Học sinh / Lớp', 'Nội dung thay đổi', 'Ghi chú']);
+    var hRange = audit.getRange(1, 1, 1, 5);
+    hRange.setBackground('#047857');
+    hRange.setFontColor('#ffffff');
+    hRange.setFontWeight('bold');
+    audit.setFrozenRows(1);
+    audit.setRowHeight(1, 30);
+  }
+  return audit;
+}
+
+function logToAuditSheet(ss, studentName, actor, pointDelta, reason) {
+  var auditSheet = initAuditSheet(ss);
+  var changeText = (typeof pointDelta === 'number' && pointDelta > 0) ? ('+' + pointDelta + ' điểm') : (pointDelta + ' điểm');
+  auditSheet.appendRow([new Date().toLocaleString('vi-VN'), actor || 'GVCN', studentName || 'Toàn lớp', changeText, reason || '']);
+}
+
+// Webhook GET: Đọc dữ liệu từ Google Sheet về App
+function doGet(e) {
+  try {
+    var ss = getTargetSpreadsheet(e);
+    if (!ss) {
+      return ContentService.createTextOutput(JSON.stringify({
+        status: 'error',
+        message: 'Chưa kết nối được Google Sheet! Vui lòng mở Google Sheet của lớp > Tiện ích mở rộng > Apps Script và dán mã nguồn này.'
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var sheet = ss.getSheetByName('DanhSach9A1') || ss.getActiveSheet();
+    var data = sheet.getDataRange().getValues();
+
+    if (!data || data.length <= 1 || (e && e.parameter && e.parameter.forceInit === 'true')) {
+      sheet = populateSheetWithStudents(ss, DEFAULT_STUDENTS_9A1);
+      populateLedgerSheet(ss, DEFAULT_LEDGER_9A1);
+      populateOfficerReviewsSheet(ss, null, null, 2);
+      populateEmulation35WeeksSheet(ss, DEFAULT_STUDENTS_9A1, 2);
+      data = sheet.getDataRange().getValues();
+      logToAuditSheet(ss, 'Toàn lớp 9A1', 'Hệ thống tự động', 0, 'Tự động khởi tạo 5 Sheet dữ liệu & 43 học sinh');
+    }
+
+    var rows = data.slice(1);
+    var students = rows.map(function(row) {
+      var toStr = row[5] ? row[5].toString().replace('Tổ ', '').trim() : (row[3] ? row[3].toString().replace('Tổ ', '').trim() : '');
+      return {
+        id: row[0] ? row[0].toString().trim() : '',
+        stt: Number(row[1]) || 0,
+        name: row[2] ? row[2].toString().trim() : '',
+        gender: row[3] || 'Nam',
+        dob: row[4] || '',
+        to: Number(toStr) || 1,
+        role: row[6] || 'Học sinh',
+        conductScore: Number(row[7]) || 100,
+        conduct: row[8] || 'Tốt',
+        academic: row[9] || 'Tốt',
+        scoreAvg: Number(row[10]) || 8.0,
+        phone: row[11] || '',
+        parentPhone: row[12] || '',
+        address: row[13] || '',
+        homeworkStatus: (row[14] === 'Đã nộp' || row[14] === true),
+        targetHighSchool: {
+          nv1: row[15] || 'THPT Phước Hưng',
+          nv2: row[16] || 'THPT Long Thành',
+          nv3: row[17] || 'THPT Bình Sơn'
+        },
+        notes: row[18] || ''
+      };
+    });
+
+    return ContentService.createTextOutput(JSON.stringify({
+      status: 'success',
+      school: 'TH & THCS Phước Hưng',
+      class: '9A1',
+      updatedAt: new Date().toISOString(),
+      totalStudents: students.length,
+      students: students,
+      message: 'Đã tải thành công ' + students.length + ' học sinh từ Google Sheet!'
+    })).setMimeType(ContentService.MimeType.JSON);
+
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({
+      status: 'error',
+      message: err.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// Webhook POST: Nhận payload từ App đẩy sang
+function doPost(e) {
+  try {
+    var ss = getTargetSpreadsheet(e);
+    if (!ss) {
+      return ContentService.createTextOutput(JSON.stringify({
+        status: 'error',
+        message: 'Chưa tìm thấy Google Sheet liên kết.'
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var contents = (e && e.postData && e.postData.contents) ? e.postData.contents : '{}';
+    var postData = JSON.parse(contents);
+    var action = postData.action;
+
+    if (action === 'pushAllData' || action === 'initFullSheet') {
+      var studentsList = postData.students && postData.students.length > 0 ? postData.students : DEFAULT_STUDENTS_9A1;
+      populateSheetWithStudents(ss, studentsList);
+      populateLedgerSheet(ss, postData.ledger || DEFAULT_LEDGER_9A1);
+      populateOfficerReviewsSheet(ss, postData.officerReviews, postData.emulationNotes, postData.currentWeek || 2);
+      populateEmulation35WeeksSheet(ss, studentsList, postData.currentWeek || 2);
+      logToAuditSheet(ss, 'Toàn lớp 9A1', postData.actor || 'GVCN Quản trị', 0, 'Đồng bộ toàn bộ 5 Sheet dữ liệu từ App sang Google Sheet');
+
+      return ContentService.createTextOutput(JSON.stringify({
+        status: 'success',
+        totalStudents: studentsList.length,
+        message: 'Đã tạo và đồng bộ thành công toàn bộ 5 Sheet dữ liệu sang Google Sheet!'
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var sheet = ss.getSheetByName('DanhSach9A1') || ss.getActiveSheet();
+
+    if (action === 'updateEmulation') {
+      var studentId = postData.studentId;
+      var pointDelta = Number(postData.pointDelta) || 0;
+      var data = sheet.getDataRange().getValues();
+      var found = false;
+
+      for (var i = 1; i < data.length; i++) {
+        if (data[i][0] == studentId) {
+          var currentScore = Number(data[i][7]) || 100;
+          var newScore = Math.max(0, Math.min(120, currentScore + pointDelta));
+          sheet.getRange(i + 1, 8).setValue(newScore);
+
+          logToAuditSheet(ss, data[i][2], postData.actor, pointDelta, postData.reason);
+          found = true;
+          break;
+        }
+      }
+
+      return ContentService.createTextOutput(JSON.stringify({
+        status: found ? 'success' : 'not_found',
+        message: found ? 'Đã cập nhật điểm thi đua vào Google Sheet!' : 'Không tìm thấy học sinh ' + studentId
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    if (action === 'formSubmitHomework') {
+      var studentName = (postData.studentName || '').toLowerCase().trim();
+      var data2 = sheet.getDataRange().getValues();
+      var foundHw = false;
+
+      for (var j = 1; j < data2.length; j++) {
+        var rowName = (data2[j][2] || '').toString().toLowerCase().trim();
+        if (rowName && (rowName === studentName || rowName.indexOf(studentName) !== -1 || studentName.indexOf(rowName) !== -1)) {
+          sheet.getRange(j + 1, 15).setValue('Đã nộp');
+          logToAuditSheet(ss, data2[j][2], 'Google Forms', '+2', 'Nộp bài tập môn: ' + (postData.subject || 'Toán 9'));
+          foundHw = true;
+          break;
+        }
+      }
+
+      return ContentService.createTextOutput(JSON.stringify({
+        status: foundHw ? 'success' : 'not_found',
+        message: foundHw ? 'Đã đánh dấu nộp bài tập trên Google Sheet!' : 'Không tìm thấy học sinh: ' + postData.studentName
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({
+      status: 'ignored',
+      message: 'Hành động không xác định: ' + action
+    })).setMimeType(ContentService.MimeType.JSON);
+
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({
+      status: 'error',
+      message: err.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * HÀM CHẠY TRỰC TIẾP TRÊN APPS SCRIPT EDITOR:
+ * Chọn 'setupSheetNow' rồi bấm [▷ Chạy] để tự động sinh 5 Sheet hoàn chỉnh.
+ */
+function setupSheetNow() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (!ss && SPREADSHEET_ID) {
+    ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  }
+  if (!ss) {
+    throw new Error('Vui lòng mở trực tiếp Google Sheet của lớp 9A1 rồi vào Tiện ích mở rộng > Apps Script!');
+  }
+
+  populateSheetWithStudents(ss, DEFAULT_STUDENTS_9A1);
+  populateLedgerSheet(ss, DEFAULT_LEDGER_9A1);
+  populateOfficerReviewsSheet(ss, null, null, 2);
+  populateEmulation35WeeksSheet(ss, DEFAULT_STUDENTS_9A1, 2);
+  initAuditSheet(ss);
+  logToAuditSheet(ss, 'Toàn lớp 9A1', 'Hệ thống khởi tạo', 0, 'Tự tạo đầy đủ 5 Sheet dữ liệu cho Lớp 9A1');
+
+  SpreadsheetApp.getUi().alert('🎉 THÀNH CÔNG! Đã tự động tạo và định dạng đủ 5 Sheet (DanhSach9A1, SoQuyLop, NhanXet_BanCanSu, ThiDua_35Tuan, AuditLog)!');
 }
