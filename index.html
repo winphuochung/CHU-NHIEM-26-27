@@ -150,12 +150,12 @@
               Năm học trọng điểm 2026 - 2027 | Khóa tốt nghiệp THCS
             </div>
             <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Hệ Thống Lớp Học Số 9A1</h1>
-            <p class="text-phuochung-100 text-sm mt-1 max-w-xl">Trường TH & THCS Phước Hưng. Đồng hành cùng 42 học sinh bứt phá thi đậu vào lớp 10 các trường THPT công lập & chuyên.</p>
+            <p class="text-phuochung-100 text-sm mt-1 max-w-xl">Trường TH & THCS Phước Hưng. Đồng hành cùng 43 học sinh bứt phá học tập, rèn luyện nề nếp và phát triển toàn diện.</p>
           </div>
 
           <!-- Countdown Card -->
           <div class="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/20 text-center w-full md:w-auto min-w-[280px]">
-            <p class="text-xs uppercase tracking-wider text-cyan-200 font-bold mb-1">⏳ ĐẾM NGƯỢC KỲ THI TUYỂN SINH VÀO 10</p>
+            <p class="text-xs uppercase tracking-wider text-cyan-200 font-bold mb-1">⏳ ĐẾM NGƯỢC NĂM HỌC TRỌNG ĐIỂM 2026 - 2027</p>
             <div class="grid grid-cols-4 gap-2 text-center mt-2" id="dashboard-countdown">
               <div class="bg-black/30 rounded-lg p-2">
                 <span class="text-xl font-black text-white" id="cnt-days">00</span>
@@ -1912,7 +1912,7 @@
   <!-- FOOTER -->
   <footer class="border-t border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 py-4 mt-8 text-center text-xs text-slate-500">
     <p>Hệ thống Quản lý Lớp học Kỹ thuật số Toàn diện Lớp 9A1 (Niên khóa 2026 - 2027) • Trường TH & THCS Phước Hưng</p>
-    <p class="text-[11px] text-slate-400 mt-1">Đồng hành cùng học sinh thi đỗ vào lớp 10 THPT • Tối ưu hóa AI & Đánh giá Thông tư 22/2021/TT-BGDĐT</p>
+    <p class="text-[11px] text-slate-400 mt-1">Đồng hành cùng 43 học sinh Lớp 9A1 • Tối ưu hóa AI & Đánh giá Thi đua theo Thông tư 22/2021/TT-BGDĐT</p>
   </footer>
 
   <!-- Scripts Core -->
@@ -1928,18 +1928,6 @@
   
   <!-- Main Application Orchestration Script -->
   <script>
-    // Tự động giải phóng Service Worker và bộ nhớ Cache cũ để luôn cập nhật tức thì
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(regs => {
-        regs.forEach(r => r.unregister());
-      });
-    }
-    if ('caches' in window) {
-      caches.keys().then(keys => {
-        keys.forEach(k => caches.delete(k));
-      });
-    }
-
     // State Quản lý Tuần thi đua
     let selectedEmulationWeek = 2; // Mặc định Tuần 2
     let selectedTeamFilter = 'all'; // 'all', 1, 2, 3, 4

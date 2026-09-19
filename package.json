@@ -1,0 +1,16 @@
+{
+  "name": "chu-nhiem-26-27",
+  "version": "1.0.0",
+  "description": "Hệ thống Quản lý Lớp học Kỹ thuật số Toàn diện Lớp 9A1 (2026-2027) - TH & THCS Phước Hưng",
+  "private": true,
+  "scripts": {
+    "dev": "python server.py"
+  },
+  "keywords": [
+    "education",
+    "classroom-management",
+    "pwa"
+  ],
+  "author": "Lê Văn Thắng",
+  "license": "MIT"
+}
