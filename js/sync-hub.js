@@ -222,7 +222,7 @@ class SyncHubManager {
     };
 
     // 1. TIÊU ĐỀ HÀNH CHÍNH & THÔNG TIN BÁO CÁO
-    csv += 'UBND HUYỆN LONG THÀNH,TRƯỜNG TH & THCS PHƯỚC HƯNG,NĂM HỌC 2026 - 2027\n';
+    csv += 'UBND XÃ NHƠN HỘI,TRƯỜNG TH & THCS PHƯỚC HƯNG,NĂM HỌC 2026 - 2027\n';
     csv += 'LỚP: 9A1,SĨ SỐ: 43 HỌC SINH,GIÁO VIÊN CHỦ NHIỆM: Thầy/Cô Chủ nhiệm 9A1\n';
     csv += '\n';
     csv += `BÁO CÁO TỔNG HỢP THI ĐUA & ĐÁNH GIÁ THÔNG TƯ 22/2021/TT-BGDĐT - TUẦN ${w}\n`;
@@ -549,7 +549,7 @@ class SyncHubManager {
   <table class="header-table">
     <tr>
       <td style="width: 45%;">
-        <div style="font-size: 12pt; text-transform: uppercase;">UBND HUYỆN LONG THÀNH</div>
+        <div style="font-size: 12pt; text-transform: uppercase;">UBND XÃ NHƠN HỘI</div>
         <div style="font-size: 12pt; font-weight: bold; text-transform: uppercase;">TRƯỜNG TH & THCS PHƯỚC HƯNG</div>
         <div style="font-size: 12pt; font-weight: bold;">LỚP 9A1</div>
         <div class="line-divider-short"></div>
