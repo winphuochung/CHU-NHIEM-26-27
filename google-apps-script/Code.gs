@@ -1,13 +1,76 @@
 /**
- * Google Apps Script - Dong bo 2 chieu He thong Quan ly Lop 9A1 Phuoc Hung
- * Truong TH va THCS Phuoc Hung (Nam hoc 2026-2027)
+ * Google Apps Script - Hệ Thống Quản Lý Toàn Diện & Đồng Bộ 2 Chiều Lớp 9A1 Phước Hưng
+ * Trường TH & THCS Phước Hưng (Năm học 2026 - 2027)
  * 
- * Huong dan:
- * Cach 1 (Khuyen dung): Mo Google Sheet cua lop > Tien ich mo rong > Apps Script > Dan ma nay vao.
- * Cach 2: Neu tao script doc lap, hay dien ID Google Sheet vao bien SPREADSHEET_ID ben duoi:
+ * ĐẶC ĐIỂM NỔI BẬT:
+ * 1. Tự động khởi tạo 100% Google Sheet: Tự tạo sheet DanhSach9A1, tiêu đề xanh navy, kẻ khung, căn lề.
+ * 2. Tự động nạp toàn bộ 43 học sinh với 9 chức vụ Ban cán sự chuẩn hóa khi đồng bộ hoặc khi sheet trống.
+ * 3. Hỗ trợ push toàn bộ dữ liệu từ Ứng dụng sang Sheet, cập nhật điểm thi đua, tự động ghi AuditLog.
+ * 4. Người dùng KHÔNG CẦN tạo bất cứ cột, dòng hay định dạng nào trên Google Sheet!
  */
 
-var SPREADSHEET_ID = ''; 
+var SPREADSHEET_ID = ''; // Để trống nếu dán trực tiếp vào Apps Script từ Google Sheet (Khuyên dùng)
+
+// Danh sách mặc định 43 học sinh Lớp 9A1 Phước Hưng (Chuẩn hóa Thông tư 22)
+var DEFAULT_STUDENTS_9A1 = [
+  // TỔ 4 (11 HS)
+  { id: 'HS01', stt: 1, name: 'Đặng Văn Hoàng Long', gender: 'Nam', dob: '15/03/2011', to: 4, role: 'Học sinh', conductScore: 98, conduct: 'Tốt', academic: 'Tốt', scoreAvg: 8.5, phone: '0912.345.601', parentPhone: '0903.111.201', address: 'Ấp Phước Hưng, Huyện Long Thành', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Long Thành', nv3: 'THPT Bình Sơn', notes: 'Chăm ngoan, tích cực tham gia hoạt động lớp' },
+  { id: 'HS02', stt: 2, name: 'La Cẩm Nhung', gender: 'Nữ', dob: '22/04/2011', to: 4, role: 'Học sinh', conductScore: 99, conduct: 'Tốt', academic: 'Tốt', scoreAvg: 8.8, phone: '0912.345.602', parentPhone: '0903.111.202', address: 'Ấp 1, Xã Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Long Thành', nv3: 'THPT Bình Sơn', notes: 'Chăm ngoan, học lực tốt' },
+  { id: 'HS03', stt: 3, name: 'Võ Ngọc Bảo Trân', gender: 'Nữ', dob: '05/01/2011', to: 4, role: 'Học sinh', conductScore: 92, conduct: 'Tốt', academic: 'Khá', scoreAvg: 7.9, phone: '0912.345.603', parentPhone: '0903.111.203', address: 'Ấp 2, Xã Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Bình Sơn', nv3: 'Trung tâm GDNN-GDTX', notes: 'Có ý thức tập thể cao' },
+  { id: 'HS04', stt: 4, name: 'Nguyễn Gia Thịnh', gender: 'Nam', dob: '18/07/2011', to: 4, role: 'Tổ trưởng 4', conductScore: 94, conduct: 'Tốt', academic: 'Tốt', scoreAvg: 8.4, phone: '0912.345.604', parentPhone: '0903.111.204', address: 'Ấp Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Long Thành', nv3: 'THPT Bình Sơn', notes: 'Tổ trưởng tổ 4 gương mẫu, quản lý tổ 4 chu đáo' },
+  { id: 'HS05', stt: 5, name: 'Trần Trọng Khang', gender: 'Nam', dob: '09/09/2011', to: 4, role: 'Học sinh', conductScore: 90, conduct: 'Tốt', academic: 'Khá', scoreAvg: 7.6, phone: '0912.345.605', parentPhone: '0903.111.205', address: 'Ấp 3, Xã Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Bình Sơn', nv3: 'Trung tâm GDNN-GDTX', notes: 'Ngoan ngoãn, hòa đồng' },
+  { id: 'HS06', stt: 6, name: 'Phạm Tấn Lộc', gender: 'Nam', dob: '30/11/2011', to: 4, role: 'Học sinh', conductScore: 91, conduct: 'Tốt', academic: 'Khá', scoreAvg: 7.5, phone: '0912.345.606', parentPhone: '0903.111.206', address: 'Ấp Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Long Thành', nv3: 'THPT Bình Sơn', notes: 'Ý thức trực nhật tốt' },
+  { id: 'HS07', stt: 7, name: 'Trần Khá Thuận', gender: 'Nam', dob: '12/02/2011', to: 4, role: 'Học sinh', conductScore: 88, conduct: 'Tốt', academic: 'Khá', scoreAvg: 7.3, phone: '0912.345.607', parentPhone: '0903.111.207', address: 'Ấp 1, Xã Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Bình Sơn', nv3: 'Trung tâm GDNN-GDTX', notes: 'Chăm chỉ học tập' },
+  { id: 'HS08', stt: 8, name: 'Hồ Thị Thanh Huyền', gender: 'Nữ', dob: '14/06/2011', to: 4, role: 'Học sinh', conductScore: 95, conduct: 'Tốt', academic: 'Tốt', scoreAvg: 8.6, phone: '0912.345.608', parentPhone: '0903.111.208', address: 'Ấp 2, Xã Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Long Thành', nv3: 'THPT Bình Sơn', notes: 'Hăng hái xây dựng bài' },
+  { id: 'HS09', stt: 9, name: 'Trương Thị Bích Dân', gender: 'Nữ', dob: '03/08/2011', to: 4, role: 'Học sinh', conductScore: 90, conduct: 'Tốt', academic: 'Khá', scoreAvg: 7.7, phone: '0912.345.609', parentPhone: '0903.111.209', address: 'Ấp 4, Xã Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Long Thành', nv3: 'THPT Bình Sơn', notes: 'Kỷ luật tốt' },
+  { id: 'HS10', stt: 10, name: 'Nguyễn Văn Ngà Em', gender: 'Nam', dob: '25/10/2011', to: 4, role: 'Học sinh', conductScore: 89, conduct: 'Tốt', academic: 'Khá', scoreAvg: 7.4, phone: '0912.345.610', parentPhone: '0903.111.210', address: 'Ấp Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Bình Sơn', nv3: 'Trung tâm GDNN-GDTX', notes: 'Nhiệt tình với hoạt động chung' },
+  { id: 'HS11', stt: 11, name: 'Lâm Thái Bảo', gender: 'Nam', dob: '19/12/2011', to: 4, role: 'Học sinh', conductScore: 88, conduct: 'Tốt', academic: 'Khá', scoreAvg: 7.2, phone: '0912.345.611', parentPhone: '0903.111.211', address: 'Ấp 1, Xã Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Bình Sơn', nv3: 'Trung tâm GDNN-GDTX', notes: 'Có tiến bộ trong học kỳ' },
+
+  // TỔ 3 (10 HS)
+  { id: 'HS12', stt: 12, name: 'Trương Hữu Nghĩa', gender: 'Nam', dob: '11/05/2011', to: 3, role: 'Học sinh', conductScore: 98, conduct: 'Tốt', academic: 'Tốt', scoreAvg: 8.9, phone: '0912.345.612', parentPhone: '0903.111.212', address: 'Ấp 1, Xã Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Chuyên Long Khánh', nv2: 'THPT Phước Hưng', nv3: 'THPT Long Thành', notes: 'Học lực giỏi, kỷ luật tốt' },
+  { id: 'HS13', stt: 13, name: 'Trương Kim Ngân', gender: 'Nữ', dob: '28/03/2011', to: 3, role: 'Học sinh', conductScore: 96, conduct: 'Tốt', academic: 'Tốt', scoreAvg: 8.7, phone: '0912.345.613', parentPhone: '0903.111.213', address: 'Ấp 2, Xã Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Long Thành', nv3: 'THPT Bình Sơn', notes: 'Chăm ngoan, hòa đồng' },
+  { id: 'HS14', stt: 14, name: 'Nguyễn Thị Kim Anh', gender: 'Nữ', dob: '19/08/2011', to: 3, role: 'Học sinh', conductScore: 94, conduct: 'Tốt', academic: 'Tốt', scoreAvg: 8.5, phone: '0912.345.614', parentPhone: '0903.111.214', address: 'Ấp Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Long Thành', nv3: 'THPT Bình Sơn', notes: 'Chăm chỉ, chữ viết đẹp' },
+  { id: 'HS15', stt: 15, name: 'Lê Bích Thi', gender: 'Nữ', dob: '04/12/2011', to: 3, role: 'Học sinh', conductScore: 91, conduct: 'Tốt', academic: 'Khá', scoreAvg: 7.8, phone: '0912.345.615', parentPhone: '0903.111.215', address: 'Ấp 3, Xã Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Bình Sơn', nv3: 'Trung tâm GDNN-GDTX', notes: 'Ý thức rèn luyện tốt' },
+  { id: 'HS16', stt: 16, name: 'Nguyễn Minh Triết', gender: 'Nam', dob: '17/02/2011', to: 3, role: 'Học sinh', conductScore: 93, conduct: 'Tốt', academic: 'Tốt', scoreAvg: 8.3, phone: '0912.345.616', parentPhone: '0903.111.216', address: 'Ấp 1, Xã Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Long Thành', nv3: 'THPT Bình Sơn', notes: 'Học lực vững vàng' },
+  { id: 'HS17', stt: 17, name: 'Nguyễn Phú Quý', gender: 'Nam', dob: '08/04/2011', to: 3, role: 'Học sinh', conductScore: 90, conduct: 'Tốt', academic: 'Khá', scoreAvg: 7.6, phone: '0912.345.617', parentPhone: '0903.111.217', address: 'Ấp 4, Xã Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Bình Sơn', nv3: 'Trung tâm GDNN-GDTX', notes: 'Nhiệt tình giúp đỡ bạn' },
+  { id: 'HS18', stt: 18, name: 'Phan Tuấn Khang', gender: 'Nam', dob: '23/09/2011', to: 3, role: 'Tổ trưởng 3', conductScore: 89, conduct: 'Tốt', academic: 'Khá', scoreAvg: 7.5, phone: '0912.345.618', parentPhone: '0903.111.218', address: 'Ấp Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Long Thành', nv3: 'THPT Bình Sơn', notes: 'Tổ trưởng tổ 3 tác phong nhanh nhẹn, trách nhiệm' },
+  { id: 'HS19', stt: 19, name: 'Trần Thị Thanh Ngân', gender: 'Nữ', dob: '10/01/2011', to: 3, role: 'Học sinh', conductScore: 94, conduct: 'Tốt', academic: 'Tốt', scoreAvg: 8.4, phone: '0912.345.619', parentPhone: '0903.111.219', address: 'Ấp 2, Xã Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Long Thành', nv3: 'THPT Bình Sơn', notes: 'Tích cực phát biểu' },
+  { id: 'HS20', stt: 20, name: 'Huỳnh Quốc Long', gender: 'Nam', dob: '16/07/2011', to: 3, role: 'Học sinh', conductScore: 88, conduct: 'Tốt', academic: 'Khá', scoreAvg: 7.3, phone: '0912.345.620', parentPhone: '0903.111.220', address: 'Ấp 3, Xã Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Bình Sơn', nv3: 'Trung tâm GDNN-GDTX', notes: 'Có tinh thần tập thể' },
+  { id: 'HS21', stt: 21, name: 'Nguyễn Thanh Duy', gender: 'Nam', dob: '02/06/2011', to: 3, role: 'Học sinh', conductScore: 87, conduct: 'Tốt', academic: 'Khá', scoreAvg: 7.2, phone: '0912.345.621', parentPhone: '0903.111.221', address: 'Ấp Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Bình Sơn', nv3: 'Trung cấp Nghề', notes: 'Cố gắng trong môn Toán' },
+
+  // TỔ 2 (10 HS)
+  { id: 'HS22', stt: 22, name: 'Nguyễn Thị Huyền Trang', gender: 'Nữ', dob: '29/08/2011', to: 2, role: 'Học sinh', conductScore: 99, conduct: 'Tốt', academic: 'Tốt', scoreAvg: 9.3, phone: '0912.345.622', parentPhone: '0903.111.222', address: 'Ấp 1, Xã Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Chuyên Long Khánh', nv2: 'THPT Phước Hưng', nv3: 'THPT Long Thành', notes: 'Học lực xuất sắc, tích cực tham gia phong trào lớp' },
+  { id: 'HS23', stt: 23, name: 'Nguyễn Thị Kim Yến', gender: 'Nữ', dob: '07/03/2011', to: 2, role: 'Học sinh', conductScore: 95, conduct: 'Tốt', academic: 'Tốt', scoreAvg: 8.6, phone: '0912.345.623', parentPhone: '0903.111.223', address: 'Ấp 2, Xã Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Long Thành', nv3: 'THPT Bình Sơn', notes: 'Chăm ngoan, tích cực' },
+  { id: 'HS24', stt: 24, name: 'Phạm Hoàng Huy', gender: 'Nam', dob: '14/11/2011', to: 2, role: 'Học sinh', conductScore: 90, conduct: 'Tốt', academic: 'Khá', scoreAvg: 7.7, phone: '0912.345.624', parentPhone: '0903.111.224', address: 'Ấp Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Bình Sơn', nv3: 'Trung tâm GDNN-GDTX', notes: 'Môn KHTN tiếp thu tốt' },
+  { id: 'HS25', stt: 25, name: 'Nguyễn Lê Thành Đạt', gender: 'Nam', dob: '21/05/2011', to: 2, role: 'Học sinh', conductScore: 89, conduct: 'Tốt', academic: 'Khá', scoreAvg: 7.6, phone: '0912.345.625', parentPhone: '0903.111.225', address: 'Ấp 3, Xã Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Long Thành', nv3: 'THPT Bình Sơn', notes: 'Tham gia các phong trào thể thao' },
+  { id: 'HS26', stt: 26, name: 'Phan Trần Thảo Quyên', gender: 'Nữ', dob: '05/12/2011', to: 2, role: 'Học sinh', conductScore: 93, conduct: 'Tốt', academic: 'Tốt', scoreAvg: 8.4, phone: '0912.345.626', parentPhone: '0903.111.226', address: 'Ấp 4, Xã Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Long Thành', nv3: 'THPT Bình Sơn', notes: 'Học đều các môn' },
+  { id: 'HS27', stt: 27, name: 'Hồ Thị Kim Cương', gender: 'Nữ', dob: '18/09/2011', to: 2, role: 'Tổ trưởng 2', conductScore: 92, conduct: 'Tốt', academic: 'Khá', scoreAvg: 7.8, phone: '0912.345.627', parentPhone: '0903.111.227', address: 'Ấp 1, Xã Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Bình Sơn', nv3: 'THPT Long Thành', notes: 'Tổ trưởng tổ 2 nhiệt tình, theo dõi nề nếp tổ chu đáo' },
+  { id: 'HS28', stt: 28, name: 'Phạm Tấn Lợi', gender: 'Nam', dob: '09/02/2011', to: 2, role: 'Học sinh', conductScore: 89, conduct: 'Tốt', academic: 'Khá', scoreAvg: 7.5, phone: '0912.345.628', parentPhone: '0903.111.228', address: 'Ấp Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Long Thành', nv3: 'THPT Bình Sơn', notes: 'Có tinh thần trách nhiệm' },
+  { id: 'HS29', stt: 29, name: 'Nguyễn Vũ Duy', gender: 'Nam', dob: '27/06/2011', to: 2, role: 'Học sinh', conductScore: 88, conduct: 'Tốt', academic: 'Khá', scoreAvg: 7.4, phone: '0912.345.629', parentPhone: '0903.111.229', address: 'Ấp 2, Xã Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Long Thành', nv3: 'THPT Bình Sơn', notes: 'Vệ sinh trực nhật sạch sẽ' },
+  { id: 'HS30', stt: 30, name: 'Trình Minh Thiện', gender: 'Nam', dob: '13/10/2011', to: 2, role: 'Lớp trưởng', conductScore: 98, conduct: 'Tốt', academic: 'Tốt', scoreAvg: 8.5, phone: '0912.345.630', parentPhone: '0903.111.230', address: 'Ấp 3, Xã Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Bình Sơn', nv3: 'Trung tâm GDNN-GDTX', notes: 'Lớp trưởng gương mẫu, ý thức kỷ luật nghiêm túc, năng lực chỉ huy tốt' },
+  { id: 'HS31', stt: 31, name: 'Đỗ Duy Bảo', gender: 'Nam', dob: '31/01/2011', to: 2, role: 'Lớp phó Trật tự', conductScore: 96, conduct: 'Tốt', academic: 'Khá', scoreAvg: 8.0, phone: '0912.345.631', parentPhone: '0903.111.231', address: 'Ấp Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Long Thành', nv3: 'THPT Bình Sơn', notes: 'Lớp phó Trật tự công tâm, đôn đốc kỷ luật lớp rất tốt' },
+
+  // TỔ 1 (12 HS)
+  { id: 'HS32', stt: 32, name: 'Đỗ Thị Thùy Linh', gender: 'Nữ', dob: '06/07/2011', to: 1, role: 'Lớp phó Học tập', conductScore: 100, conduct: 'Tốt', academic: 'Tốt', scoreAvg: 9.4, phone: '0912.345.632', parentPhone: '0903.111.232', address: 'Ấp 2, Xã Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Chuyên Long Khánh', nv2: 'THPT Phước Hưng', nv3: 'THPT Long Thành', notes: 'Lớp phó Học tập gương mẫu, học lực xuất sắc, phụ trách học tập toàn diện' },
+  { id: 'HS33', stt: 33, name: 'Nguyễn Thị Tuyết Như', gender: 'Nữ', dob: '15/09/2011', to: 1, role: 'Học sinh', conductScore: 98, conduct: 'Tốt', academic: 'Tốt', scoreAvg: 8.8, phone: '0912.345.633', parentPhone: '0903.111.233', address: 'Ấp Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Long Thành', nv3: 'THPT Bình Sơn', notes: 'Chăm ngoan, cẩn thận' },
+  { id: 'HS34', stt: 34, name: 'Võ Hạ Lam', gender: 'Nữ', dob: '24/11/2011', to: 1, role: 'Học sinh', conductScore: 96, conduct: 'Tốt', academic: 'Tốt', scoreAvg: 8.6, phone: '0912.345.634', parentPhone: '0903.111.234', address: 'Ấp 3, Xã Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Bình Sơn', nv3: 'THPT Long Thành', notes: 'Chăm ngoan, hòa đồng' },
+  { id: 'HS35', stt: 35, name: 'Huỳnh Thị Ngọc Hân', gender: 'Nữ', dob: '03/05/2011', to: 1, role: 'Học sinh', conductScore: 94, conduct: 'Tốt', academic: 'Tốt', scoreAvg: 8.5, phone: '0912.345.635', parentPhone: '0903.111.235', address: 'Ấp 1, Xã Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Long Thành', nv3: 'THPT Bình Sơn', notes: 'Học giỏi môn Tiếng Anh và Ngữ văn' },
+  { id: 'HS36', stt: 36, name: 'Lê Thị Thúy Vy', gender: 'Nữ', dob: '19/01/2011', to: 1, role: 'Học sinh', conductScore: 92, conduct: 'Tốt', academic: 'Khá', scoreAvg: 7.9, phone: '0912.345.636', parentPhone: '0903.111.236', address: 'Ấp 4, Xã Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Long Thành', nv3: 'THPT Bình Sơn', notes: 'Ý thức nề nếp tốt' },
+  { id: 'HS37', stt: 37, name: 'Lê Kiều Khả Ái', gender: 'Nữ', dob: '28/08/2011', to: 1, role: 'Học sinh', conductScore: 95, conduct: 'Tốt', academic: 'Tốt', scoreAvg: 8.7, phone: '0912.345.637', parentPhone: '0903.111.237', address: 'Ấp Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Long Thành', nv3: 'THPT Bình Sơn', notes: 'Chăm ngoan, hăng hái phát biểu' },
+  { id: 'HS38', stt: 38, name: 'Trịnh Lan Phương', gender: 'Nữ', dob: '12/12/2011', to: 1, role: 'Thủ quỹ', conductScore: 96, conduct: 'Tốt', academic: 'Tốt', scoreAvg: 8.6, phone: '0912.345.638', parentPhone: '0903.111.238', address: 'Ấp 2, Xã Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Long Thành', nv3: 'THPT Bình Sơn', notes: 'Thủ quỹ cẩn thận, quản lý tài chính lớp minh bạch' },
+  { id: 'HS39', stt: 39, name: 'Nguyễn Thị Ngọc Thảo', gender: 'Nữ', dob: '08/03/2011', to: 1, role: 'Tổ trưởng 1', conductScore: 95, conduct: 'Tốt', academic: 'Khá', scoreAvg: 8.2, phone: '0912.345.639', parentPhone: '0903.111.239', address: 'Ấp 3, Xã Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Long Thành', nv3: 'THPT Bình Sơn', notes: 'Tổ trưởng tổ 1 gương mẫu, đôn đốc thành viên nề nếp rất tốt' },
+  { id: 'HS40', stt: 40, name: 'Lê Công Minh', gender: 'Nam', dob: '22/10/2011', to: 1, role: 'Học sinh', conductScore: 96, conduct: 'Tốt', academic: 'Khá', scoreAvg: 8.0, phone: '0912.345.640', parentPhone: '0903.111.240', address: 'Ấp 1, Xã Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Long Thành', nv3: 'THPT Bình Sơn', notes: 'Ngoan ngoãn, nhiệt tình' },
+  { id: 'HS41', stt: 41, name: 'Nguyễn Thanh Nhân', gender: 'Nam', dob: '17/04/2011', to: 1, role: 'Lớp phó Lao động', conductScore: 94, conduct: 'Tốt', academic: 'Khá', scoreAvg: 7.8, phone: '0912.345.641', parentPhone: '0903.111.241', address: 'Ấp Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Bình Sơn', nv3: 'Trung tâm GDNN-GDTX', notes: 'Lớp phó Lao động đôn đốc trực nhật nhiệt tình, trách nhiệm cao' },
+  { id: 'HS42', stt: 42, name: 'Lê Thành Nguyên', gender: 'Nam', dob: '30/06/2011', to: 1, role: 'Học sinh', conductScore: 90, conduct: 'Tốt', academic: 'Khá', scoreAvg: 7.6, phone: '0912.345.642', parentPhone: '0903.111.242', address: 'Ấp 4, Xã Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Bình Sơn', nv3: 'Trung tâm GDNN-GDTX', notes: 'Ngoan ngoãn, hòa đồng' },
+  { id: 'HS43', stt: 43, name: 'Lê Thị Kiều Duyên', gender: 'Nữ', dob: '11/08/2011', to: 1, role: 'Học sinh', conductScore: 93, conduct: 'Tốt', academic: 'Tốt', scoreAvg: 8.4, phone: '0912.345.643', parentPhone: '0903.111.243', address: 'Ấp 2, Xã Phước Hưng', homeworkStatus: 'Đã nộp', nv1: 'THPT Phước Hưng', nv2: 'THPT Long Thành', nv3: 'THPT Bình Sơn', notes: 'Chăm chỉ, tích cực trong giờ học' }
+];
+
+var HEADERS = [
+  'Mã HS', 'STT', 'Họ và Tên', 'Giới tính', 'Ngày sinh', 'Tổ', 'Chức vụ',
+  'Điểm Thi Đua', 'Rèn Luyện (TT22)', 'Học Lực (TT22)', 'Điểm TB',
+  'SĐT Học Sinh', 'SĐT Phụ Huynh', 'Địa Chỉ', 'Bài Tập Về Nhà',
+  'NV1 Lớp 10', 'NV2 Lớp 10', 'NV3 Lớp 10', 'Ghi Chú'
+];
 
 function getTargetSpreadsheet(e) {
   var ss = null;
@@ -30,53 +93,184 @@ function getTargetSpreadsheet(e) {
   return ss;
 }
 
+// Hàm format và ghi toàn bộ dữ liệu học sinh vào sheet DanhSach9A1
+function populateSheetWithStudents(ss, studentsList) {
+  var list = (studentsList && studentsList.length > 0) ? studentsList : DEFAULT_STUDENTS_9A1;
+  var sheet = ss.getSheetByName('DanhSach9A1');
+  if (!sheet) {
+    sheet = ss.insertSheet('DanhSach9A1', 0);
+  }
+
+  // Xóa toàn bộ nội dung cũ để làm mới định dạng chuẩn
+  sheet.clear();
+
+  // 1. Ghi dòng tiêu đề
+  sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS]);
+
+  // Format tiêu đề chuyên nghiệp
+  var headerRange = sheet.getRange(1, 1, 1, HEADERS.length);
+  headerRange.setBackground('#1e40af'); // Xanh navy đậm
+  headerRange.setFontColor('#ffffff'); // Chữ trắng
+  headerRange.setFontWeight('bold');
+  headerRange.setFontFamily('Arial');
+  headerRange.setFontSize(10.5);
+  headerRange.setHorizontalAlignment('center');
+  headerRange.setVerticalAlignment('middle');
+  headerRange.setWrap(true);
+  sheet.setRowHeight(1, 36);
+  sheet.setFrozenRows(1);
+
+  // 2. Chuẩn bị hàng dữ liệu
+  var rows = list.map(function(s, idx) {
+    var stt = s.stt || (idx + 1);
+    var id = s.id || ('HS' + (stt < 10 ? '0' + stt : stt));
+    var name = s.name || '';
+    var gender = s.gender || (s.name && (s.name.includes('Thị') || s.name.includes('Nhung') || s.name.includes('Trân') || s.name.includes('Dân') || s.name.includes('Ngân') || s.name.includes('Thi') || s.name.includes('Trang') || s.name.includes('Yến') || s.name.includes('Quyên') || s.name.includes('Cương') || s.name.includes('Linh') || s.name.includes('Như') || s.name.includes('Lam') || s.name.includes('Hân') || s.name.includes('Vy') || s.name.includes('Ái') || s.name.includes('Phương') || s.name.includes('Thảo') || s.name.includes('Duyên')) ? 'Nữ' : 'Nam');
+    var dob = s.dob || '';
+    var toVal = s.to ? ('Tổ ' + s.to) : '';
+    var role = s.role || 'Học sinh';
+    var conductScore = Number(s.conductScore) || 100;
+    var conduct = s.conduct || 'Tốt';
+    var academic = s.academic || 'Tốt';
+    var scoreAvg = Number(s.scoreAvg) || 8.0;
+    var phone = s.phone || '';
+    var parentPhone = s.parentPhone || '';
+    var address = s.address || '';
+    var homework = (s.homeworkStatus === true || s.homeworkStatus === 'Đã nộp') ? 'Đã nộp' : 'Chưa nộp';
+    var nv1 = (s.targetHighSchool && s.targetHighSchool.nv1) || s.nv1 || 'THPT Phước Hưng';
+    var nv2 = (s.targetHighSchool && s.targetHighSchool.nv2) || s.nv2 || 'THPT Long Thành';
+    var nv3 = (s.targetHighSchool && s.targetHighSchool.nv3) || s.nv3 || 'THPT Bình Sơn';
+    var notes = s.notes || '';
+
+    return [
+      id, stt, name, gender, dob, toVal, role,
+      conductScore, conduct, academic, scoreAvg,
+      phone, parentPhone, address, homework,
+      nv1, nv2, nv3, notes
+    ];
+  });
+
+  // 3. Ghi dữ liệu vào sheet
+  if (rows.length > 0) {
+    var dataRange = sheet.getRange(2, 1, rows.length, HEADERS.length);
+    dataRange.setValues(rows);
+
+    // Format dữ liệu
+    dataRange.setFontFamily('Arial');
+    dataRange.setFontSize(10);
+    dataRange.setVerticalAlignment('middle');
+    dataRange.setBorder(true, true, true, true, true, true, '#cbd5e1', SpreadsheetApp.BorderStyle.SOLID);
+    sheet.setRowHeights(2, rows.length, 28);
+
+    // Căn giữa các cột mã, số, ngày sinh, chức vụ, điểm...
+    var centerCols = [1, 2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 15];
+    centerCols.forEach(function(c) {
+      sheet.getRange(2, c, rows.length, 1).setHorizontalAlignment('center');
+    });
+
+    // Cột Họ tên, Địa chỉ, NV, Ghi chú căn trái
+    var leftCols = [3, 14, 16, 17, 18, 19];
+    leftCols.forEach(function(c) {
+      sheet.getRange(2, c, rows.length, 1).setHorizontalAlignment('left');
+    });
+
+    // Tô màu xen kẽ dòng chẵn/lẻ để đọc dễ dàng
+    for (var r = 2; r <= rows.length + 1; r++) {
+      if (r % 2 === 1) {
+        sheet.getRange(r, 1, 1, HEADERS.length).setBackground('#f8fafc');
+      }
+    }
+  }
+
+  // 4. Auto-fit cột
+  for (var colIdx = 1; colIdx <= HEADERS.length; colIdx++) {
+    sheet.autoResizeColumn(colIdx);
+  }
+
+  // Đảm bảo có sheet AuditLog
+  initAuditSheet(ss);
+
+  return sheet;
+}
+
+function initAuditSheet(ss) {
+  var audit = ss.getSheetByName('AuditLog');
+  if (!audit) {
+    audit = ss.insertSheet('AuditLog');
+    audit.appendRow(['Thời gian', 'Người thực hiện', 'Học sinh', 'Nội dung thay đổi', 'Ghi chú']);
+    var hRange = audit.getRange(1, 1, 1, 5);
+    hRange.setBackground('#047857'); // Xanh ngọc
+    hRange.setFontColor('#ffffff');
+    hRange.setFontWeight('bold');
+    audit.setFrozenRows(1);
+    audit.setRowHeight(1, 30);
+  }
+  return audit;
+}
+
+function logToAuditSheet(ss, studentName, actor, pointDelta, reason) {
+  var auditSheet = initAuditSheet(ss);
+  var changeText = (typeof pointDelta === 'number' && pointDelta > 0) ? ('+' + pointDelta + ' điểm') : (pointDelta + ' điểm');
+  auditSheet.appendRow([new Date(), actor || 'GVCN', studentName || 'Toàn lớp', changeText, reason || '']);
+}
+
+// GET Webhook: Đồng bộ từ Google Sheet về App
 function doGet(e) {
   try {
     var ss = getTargetSpreadsheet(e);
     if (!ss) {
       return ContentService.createTextOutput(JSON.stringify({
         status: 'error',
-        message: 'Chua tim thay Google Sheet! Vui long mo truc tiep Google Sheet danh sach lop 9A1 roi chon Tien ich mo rong > Apps Script de trien khai; hoac dien ID Google Sheet vao bien SPREADSHEET_ID trong Code.gs.'
+        message: 'Chưa kết nối được Google Sheet! Vui lòng mở Google Sheet của lớp > Tiện ích mở rộng > Apps Script và dán mã nguồn này.'
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
     var sheet = ss.getSheetByName('DanhSach9A1') || ss.getActiveSheet();
     var data = sheet.getDataRange().getValues();
 
-    if (!data || data.length <= 1) {
-      return ContentService.createTextOutput(JSON.stringify({
-        status: 'success',
-        school: 'TH & THCS Phuoc Hung',
-        class: '9A1',
-        updatedAt: new Date().toISOString(),
-        students: [],
-        message: 'Bang tinh chua co du lieu hoc sinh.'
-      })).setMimeType(ContentService.MimeType.JSON);
+    // NẾU SHEET TRỐNG HOẶC CHƯA CÓ DỮ LIỆU: TỰ ĐỘNG KHỞI TẠO ĐẦY ĐỦ 43 HỌC SINH LIỀN!
+    if (!data || data.length <= 1 || (e && e.parameter && e.parameter.forceInit === 'true')) {
+      sheet = populateSheetWithStudents(ss, DEFAULT_STUDENTS_9A1);
+      data = sheet.getDataRange().getValues();
+      logToAuditSheet(ss, 'Toàn lớp 9A1', 'Hệ thống tự động', 0, 'Tự động khởi tạo 43 học sinh & định dạng bảng tính');
     }
 
     var rows = data.slice(1);
     var students = rows.map(function(row) {
+      var toStr = row[5] ? row[5].toString().replace('Tổ ', '').trim() : (row[3] ? row[3].toString().replace('Tổ ', '').trim() : '');
       return {
-        id: row[0] || '',
-        stt: row[1] || '',
-        name: row[2] || '',
-        to: row[3] || '',
-        conductScore: Number(row[4]) || 100,
-        conduct: row[5] || 'Tot',
-        academic: row[6] || 'Tot',
-        scoreAvg: Number(row[7]) || 0,
-        homeworkStatus: row[8] === 'Da nop' || row[8] === true,
-        notes: row[9] || ''
+        id: row[0] ? row[0].toString().trim() : '',
+        stt: Number(row[1]) || 0,
+        name: row[2] ? row[2].toString().trim() : '',
+        gender: row[3] || 'Nam',
+        dob: row[4] || '',
+        to: Number(toStr) || 1,
+        role: row[6] || 'Học sinh',
+        conductScore: Number(row[7]) || 100,
+        conduct: row[8] || 'Tốt',
+        academic: row[9] || 'Tốt',
+        scoreAvg: Number(row[10]) || 8.0,
+        phone: row[11] || '',
+        parentPhone: row[12] || '',
+        address: row[13] || '',
+        homeworkStatus: (row[14] === 'Đã nộp' || row[14] === true),
+        targetHighSchool: {
+          nv1: row[15] || 'THPT Phước Hưng',
+          nv2: row[16] || 'THPT Long Thành',
+          nv3: row[17] || 'THPT Bình Sơn'
+        },
+        notes: row[18] || ''
       };
     });
 
     return ContentService.createTextOutput(JSON.stringify({
       status: 'success',
-      school: 'TH & THCS Phuoc Hung',
+      school: 'TH & THCS Phước Hưng',
       class: '9A1',
       updatedAt: new Date().toISOString(),
       totalStudents: students.length,
-      students: students
+      students: students,
+      message: 'Đã tải thành công ' + students.length + ' học sinh từ Google Sheet!'
     })).setMimeType(ContentService.MimeType.JSON);
 
   } catch (err) {
@@ -87,69 +281,112 @@ function doGet(e) {
   }
 }
 
+// POST Webhook: Tiếp nhận các hành động từ App đẩy sang
 function doPost(e) {
   try {
     var ss = getTargetSpreadsheet(e);
     if (!ss) {
       return ContentService.createTextOutput(JSON.stringify({
         status: 'error',
-        message: 'Chua tim thay Google Sheet lien ket.'
+        message: 'Chưa tìm thấy Google Sheet liên kết.'
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    var postData = JSON.parse(e.postData.contents);
+    var contents = (e && e.postData && e.postData.contents) ? e.postData.contents : '{}';
+    var postData = JSON.parse(contents);
     var action = postData.action;
+
+    // HÀNH ĐỘNG 1: Đẩy toàn bộ 43 học sinh & dữ liệu từ App sang Google Sheet
+    if (action === 'pushAllData' || action === 'initFullSheet') {
+      var studentsList = postData.students && postData.students.length > 0 ? postData.students : DEFAULT_STUDENTS_9A1;
+      populateSheetWithStudents(ss, studentsList);
+      logToAuditSheet(ss, 'Toàn lớp 9A1', postData.actor || 'GVCN Quản trị', 0, 'Đồng bộ toàn bộ ' + studentsList.length + ' học sinh từ App sang Google Sheet');
+
+      return ContentService.createTextOutput(JSON.stringify({
+        status: 'success',
+        totalStudents: studentsList.length,
+        message: 'Đã tạo và đồng bộ thành công toàn bộ ' + studentsList.length + ' học sinh sang Google Sheet!'
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
     var sheet = ss.getSheetByName('DanhSach9A1') || ss.getActiveSheet();
 
+    // HÀNH ĐỘNG 2: Cập nhật điểm thi đua rèn luyện (Update Emulation)
     if (action === 'updateEmulation') {
       var studentId = postData.studentId;
-      var pointDelta = Number(postData.pointDelta);
+      var pointDelta = Number(postData.pointDelta) || 0;
       var data = sheet.getDataRange().getValues();
+      var found = false;
 
       for (var i = 1; i < data.length; i++) {
         if (data[i][0] == studentId) {
-          var currentScore = Number(data[i][4]) || 100;
+          // Cột điểm thi đua là cột H (index 7 trong mảng 0-indexed, tức cột thứ 8 trên Sheet)
+          var currentScore = Number(data[i][7]) || 100;
           var newScore = Math.max(0, Math.min(120, currentScore + pointDelta));
-          sheet.getRange(i + 1, 5).setValue(newScore);
+          sheet.getRange(i + 1, 8).setValue(newScore);
 
           logToAuditSheet(ss, data[i][2], postData.actor, pointDelta, postData.reason);
+          found = true;
           break;
         }
       }
 
-      return ContentService.createTextOutput(JSON.stringify({ status: 'success', message: 'Da cap nhat diem vao Google Sheet!' }))
-        .setMimeType(ContentService.MimeType.JSON);
+      return ContentService.createTextOutput(JSON.stringify({
+        status: found ? 'success' : 'not_found',
+        message: found ? 'Đã cập nhật điểm thi đua vào Google Sheet!' : 'Không tìm thấy học sinh ' + studentId
+      })).setMimeType(ContentService.MimeType.JSON);
     }
 
+    // HÀNH ĐỘNG 3: Ghi nhận nộp bài tập về nhà
     if (action === 'formSubmitHomework') {
-      var studentName = postData.studentName;
-      var data = sheet.getDataRange().getValues();
+      var studentName = (postData.studentName || '').toLowerCase().trim();
+      var data2 = sheet.getDataRange().getValues();
+      var foundHw = false;
 
-      for (var i = 1; i < data.length; i++) {
-        if (data[i][2] && data[i][2].toString().toLowerCase() === studentName.toLowerCase()) {
-          sheet.getRange(i + 1, 9).setValue('Da nop');
+      for (var j = 1; j < data2.length; j++) {
+        var rowName = (data2[j][2] || '').toString().toLowerCase().trim();
+        if (rowName && (rowName === studentName || rowName.indexOf(studentName) !== -1 || studentName.indexOf(rowName) !== -1)) {
+          // Cột bài tập về nhà là cột O (index 14, tức cột 15 trên Sheet)
+          sheet.getRange(j + 1, 15).setValue('Đã nộp');
+          logToAuditSheet(ss, data2[j][2], 'Google Forms', '+2', 'Nộp bài tập môn: ' + (postData.subject || 'Toán 9'));
+          foundHw = true;
           break;
         }
       }
 
-      return ContentService.createTextOutput(JSON.stringify({ status: 'success', message: 'Da ghi nhan bai tap vao Google Sheet!' }))
-        .setMimeType(ContentService.MimeType.JSON);
+      return ContentService.createTextOutput(JSON.stringify({
+        status: foundHw ? 'success' : 'not_found',
+        message: foundHw ? 'Đã đánh dấu nộp bài tập trên Google Sheet!' : 'Không tìm thấy học sinh: ' + postData.studentName
+      })).setMimeType(ContentService.MimeType.JSON);
     }
 
-    return ContentService.createTextOutput(JSON.stringify({ status: 'ignored', message: 'Hanh dong khong xac dinh' }))
-      .setMimeType(ContentService.MimeType.JSON);
+    return ContentService.createTextOutput(JSON.stringify({
+      status: 'ignored',
+      message: 'Hành động không xác định: ' + action
+    })).setMimeType(ContentService.MimeType.JSON);
 
   } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: err.toString() }))
-      .setMimeType(ContentService.MimeType.JSON);
+    return ContentService.createTextOutput(JSON.stringify({
+      status: 'error',
+      message: err.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
   }
 }
 
-function logToAuditSheet(ss, studentName, actor, pointDelta, reason) {
-  var auditSheet = ss.getSheetByName('AuditLog');
-  if (!auditSheet) {
-    auditSheet = ss.insertSheet('AuditLog');
-    auditSheet.appendRow(['Thoi gian', 'Nguoi thuc hien', 'Hoc sinh', 'Thay doi', 'Ly do']);
+/**
+ * HÀM CHẠY TRỰC TIẾP TRÊN APPS SCRIPT EDITOR:
+ * Nhấn chọn hàm 'setupSheetNow' rồi bấm nút [▷ Chạy] (Run) ở thanh công cụ phía trên.
+ * Bảng tính Google Sheet sẽ lập tức tự động sinh ra 43 học sinh đầy đủ định dạng đẹp mắt!
+ */
+function setupSheetNow() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (!ss && SPREADSHEET_ID) {
+    ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   }
-  auditSheet.appendRow([new Date(), actor, studentName, pointDelta > 0 ? '+' + pointDelta : pointDelta, reason]);
+  if (!ss) {
+    throw new Error('Vui lòng mở trực tiếp Google Sheet của lớp 9A1 rồi vào Tiện ích mở rộng > Apps Script!');
+  }
+
+  populateSheetWithStudents(ss, DEFAULT_STUDENTS_9A1);
+  SpreadsheetApp.getUi().alert('🎉 THÀNH CÔNG! Bảng tính Google Sheet lớp 9A1 đã được khởi tạo hoàn chỉnh 43 học sinh và định dạng chuyên nghiệp!');
 }

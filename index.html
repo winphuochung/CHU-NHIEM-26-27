@@ -895,11 +895,27 @@
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
-        <!-- Cấu hình Google Apps Script -->
+        <!-- Cấu hình Google Apps Script & Đồng Bộ Tự Động -->
         <div class="glass-panel p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-4">
-          <h3 class="font-bold text-slate-900 dark:text-white text-base flex items-center gap-2">
-            <i data-lucide="settings" class="w-5 h-5 text-phuochung-600"></i> Cấu Hình Google Apps Script Web App
-          </h3>
+          <div class="flex items-center justify-between">
+            <h3 class="font-bold text-slate-900 dark:text-white text-base flex items-center gap-2">
+              <i data-lucide="settings" class="w-5 h-5 text-phuochung-600"></i> Đồng Bộ Google Sheets Lớp 9A1
+            </h3>
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+              <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Tự Động Hóa 100%
+            </span>
+          </div>
+
+          <!-- Thông báo hướng dẫn tự động không cần tạo gì -->
+          <div class="p-3.5 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 rounded-xl border border-blue-200 dark:border-blue-800/60 text-xs space-y-1.5">
+            <div class="flex items-center gap-1.5 font-bold text-blue-900 dark:text-blue-200">
+              <i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i> Không cần tạo bảng thủ công trên Google Sheet:
+            </div>
+            <p class="text-blue-800 dark:text-blue-300 text-[12px] leading-relaxed">
+              Thầy/cô chỉ cần bấm nút <b>"Đẩy toàn bộ 43 học sinh sang Google Sheet"</b> bên dưới, hệ thống sẽ tự động tạo bảng tính <code>DanhSach9A1</code>, kẻ khung, căn lề, tô màu xanh navy tiêu đề và điền đầy đủ 43 bạn kèm 9 chức vụ Ban cán sự ngay lập tức!
+            </p>
+          </div>
+
           <div>
             <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">URL Web App Apps Script (Google Sheets của lớp):</label>
             <input type="text" id="apps-script-url-input" 
@@ -907,17 +923,29 @@
                    placeholder="https://script.google.com/macros/s/.../exec"
                    class="w-full text-xs font-mono bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2.5 outline-none focus:ring-2 focus:ring-phuochung-500 text-slate-800 dark:text-slate-200">
           </div>
-          <div class="flex flex-wrap gap-2">
-            <button onclick="handleSaveAppsScriptUrl()" class="px-4 py-2 bg-phuochung-600 hover:bg-phuochung-700 text-white rounded-xl text-xs font-bold transition">
-              Lưu cấu hình
+
+          <div class="flex flex-wrap gap-2.5 pt-1">
+            <button onclick="handlePushAllGoogleSheets()" id="btn-push-all-sheets" class="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition shadow-sm hover:shadow flex items-center gap-2">
+              <i data-lucide="upload-cloud" class="w-4 h-4"></i> Đưa Toàn Bộ 43 Học Sinh Sang Google Sheet Liền
             </button>
-            <button onclick="handlePullGoogleSheets()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5">
-              <i data-lucide="download" class="w-4 h-4"></i> Đồng bộ ngay từ Google Sheets
+            <button onclick="handlePullGoogleSheets()" id="btn-pull-sheets" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+              <i data-lucide="download" class="w-4 h-4"></i> Đồng bộ từ Google Sheets về App
+            </button>
+            <button onclick="handleSaveAppsScriptUrl()" class="px-3.5 py-2.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-medium transition">
+              Lưu URL
             </button>
           </div>
-          <div class="p-3 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs text-slate-600 dark:text-slate-400 space-y-1">
-            <p class="font-semibold text-slate-800 dark:text-slate-200">ℹ️ Hướng dẫn cài đặt:</p>
-            <p>Mở file <code class="text-phuochung-600 font-mono">google-apps-script/Code.gs</code> trong thư mục dự án và dán vào Apps Script của Google Sheets lớp 9A1.</p>
+
+          <div class="p-3 bg-slate-100 dark:bg-slate-800/80 rounded-xl text-xs text-slate-600 dark:text-slate-400 space-y-1.5 border border-slate-200 dark:border-slate-700">
+            <div class="flex items-center justify-between">
+              <span class="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                <i data-lucide="file-code" class="w-4 h-4 text-phuochung-600"></i> Mã Google Apps Script mới nhất:
+              </span>
+              <button onclick="handleViewAppsScriptModal()" class="text-[11px] font-bold text-phuochung-600 hover:text-phuochung-700 underline flex items-center gap-1">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i> Xem & Sao chép mã
+              </button>
+            </div>
+            <p class="text-[11.5px]">Mã nguồn trong file <code class="text-phuochung-600 font-mono">google-apps-script/Code.gs</code> đã tích hợp sẵn hàm <code>setupSheetNow()</code> để tự sinh 43 học sinh trong 1 click.</p>
           </div>
         </div>
 
@@ -4770,6 +4798,38 @@
       alert('Đã lưu cấu hình Google Apps Script URL thành công!');
     }
 
+    // ĐẨY TOÀN BỘ 43 HỌC SINH TỪ APP SANG GOOGLE SHEET LIỀN
+    async function handlePushAllGoogleSheets() {
+      const inp = document.getElementById('apps-script-url-input');
+      const inputUrl = inp ? inp.value.trim() : '';
+      if (inputUrl) {
+        window.syncHub.setAppsScriptUrl(inputUrl);
+      }
+
+      const btn = document.getElementById('btn-push-all-sheets') || event?.currentTarget;
+      const originalText = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin inline mr-1"></i> Đang khởi tạo & đẩy 43 học sinh...';
+        if (window.lucide) lucide.createIcons();
+      }
+
+      try {
+        const res = await window.syncHub.pushAllToGoogleSheets();
+        alert(`🎉 THÀNH CÔNG RỰC RỠ!\n\nToàn bộ dữ liệu 43 học sinh Lớp 9A1 (Họ tên, Tổ 1-4, Chức vụ Ban cán sự, Điểm thi đua, Rèn luyện TT 22, Học lực, SĐT, Địa chỉ, Bài tập, Nguyện vọng 1-3) đã được tự động tạo và điền thẳng vào Google Sheet của thầy/cô!\n\nThầy/cô không cần phải tạo cột hay nhập bất cứ dữ liệu nào trên Google Sheet.`);
+        renderDashboard();
+        renderWorkspaceContent();
+      } catch (e) {
+        alert('Lỗi kết nối khi đẩy dữ liệu: ' + e.message);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+    }
+
     async function handlePullGoogleSheets() {
       const inp = document.getElementById('apps-script-url-input');
       const inputUrl = inp ? inp.value.trim() : '';
@@ -4777,7 +4837,7 @@
         window.syncHub.setAppsScriptUrl(inputUrl);
       }
 
-      const btn = event?.currentTarget || document.querySelector('button[onclick="handlePullGoogleSheets()"]');
+      const btn = document.getElementById('btn-pull-sheets') || event?.currentTarget;
       const originalText = btn ? btn.innerHTML : '';
       if (btn) {
         btn.disabled = true;
@@ -4787,10 +4847,13 @@
 
       try {
         const res = await window.syncHub.pullFromGoogleSheets();
-        if (res.count === 0) {
-          alert('✅ Kết nối Google Sheets thành công!\n\nTuy nhiên Bảng tính hiện chưa có dòng dữ liệu học sinh nào (từ Hàng 2 trở đi). Thầy/cô hãy điền thông tin học sinh vào Google Sheet rồi bấm đồng bộ lại nhé!');
+        if (res.autoInitialized) {
+          alert(`🎉 Bảng tính Google Sheet trước đó chưa có học sinh.\n\nHệ thống đã TỰ ĐỘNG tạo bảng tính "DanhSach9A1" và nạp đầy đủ 43 học sinh Lớp 9A1 sang Google Sheet cho thầy/cô thành công!`);
+        } else if (res.count === 0) {
+          alert('✅ Kết nối Google Sheets thành công! Hệ thống đang tự động khởi tạo dữ liệu...');
+          await handlePushAllGoogleSheets();
         } else {
-          alert(`🎉 Đã đồng bộ thành công dữ liệu của ${res.count} học sinh từ Google Sheets!`);
+          alert(`🎉 Đã đồng bộ thành công dữ liệu của ${res.count} học sinh từ Google Sheets về App!`);
         }
         renderDashboard();
         renderWorkspaceContent();
@@ -4803,6 +4866,47 @@
           if (window.lucide) lucide.createIcons();
         }
       }
+    }
+
+    function handleViewAppsScriptModal() {
+      const modal = document.getElementById('apps-script-code-modal');
+      const textarea = document.getElementById('apps-script-code-area');
+      if (textarea && window.APPS_SCRIPT_SOURCE_CODE) {
+        textarea.value = window.APPS_SCRIPT_SOURCE_CODE;
+      }
+      if (modal) {
+        modal.classList.remove('hidden');
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function handleCopyAppsScriptClipboard() {
+      const textarea = document.getElementById('apps-script-code-area');
+      const code = textarea ? textarea.value : (window.APPS_SCRIPT_SOURCE_CODE || '');
+      if (!code) {
+        alert('Không tìm thấy mã nguồn!');
+        return;
+      }
+
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById('btn-copy-script-code');
+        if (btn) {
+          const old = btn.innerHTML;
+          btn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> Đã sao chép!';
+          if (window.lucide) lucide.createIcons();
+          setTimeout(() => {
+            btn.innerHTML = old;
+            if (window.lucide) lucide.createIcons();
+          }, 2500);
+        }
+        alert('✅ Đã sao chép toàn bộ mã Google Apps Script vào Clipboard!\n\nThầy/cô chỉ cần mở Apps Script trên Google Sheet, xóa hết code cũ và dán (Ctrl+V) vào rồi Lưu (Ctrl+S) là xong!');
+      }).catch(() => {
+        if (textarea) {
+          textarea.select();
+          document.execCommand('copy');
+          alert('✅ Đã sao chép mã nguồn Google Apps Script vào Clipboard!');
+        }
+      });
     }
 
     // Voice Assistant UI Handlers
@@ -5809,5 +5913,44 @@
       syncRoleSelectLabels();
     };
   </script>
+
+  <!-- Modal Xem & Sao Chép Mã Google Apps Script -->
+  <div id="apps-script-code-modal" class="hidden fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+      <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+        <div class="flex items-center gap-2">
+          <i data-lucide="file-code" class="w-5 h-5 text-phuochung-600"></i>
+          <h3 class="font-bold text-slate-900 dark:text-white text-sm md:text-base">Mã Google Apps Script (Tự Động Tạo Bảng & 43 HS)</h3>
+        </div>
+        <button onclick="document.getElementById('apps-script-code-modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      
+      <div class="p-5 overflow-y-auto space-y-3 text-xs">
+        <div class="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 rounded-xl text-emerald-900 dark:text-emerald-300 space-y-1">
+          <p class="font-bold flex items-center gap-1.5"><i data-lucide="sparkles" class="w-4 h-4"></i> Hướng dẫn kích hoạt trong 30 giây (Chỉ cần làm 1 lần):</p>
+          <p>1. Bấm nút <b>"Sao chép toàn bộ mã"</b> bên dưới.</p>
+          <p>2. Mở Google Sheet lớp 9A1 của thầy/cô > Chọn menu <b>Tiện ích mở rộng (Extensions)</b> > <b>Apps Script</b>.</p>
+          <p>3. Xóa hết nội dung cũ trong <code>Code.gs</code>, dán mã vừa copy vào (Ctrl+V) rồi bấm biểu tượng <b>Lưu (Ctrl+S)</b>.</p>
+          <p>4. Bấm <b>Triển khai (Deploy)</b> > <b>Quản lý bản triển khai (Manage deployments)</b> > Biểu tượng Bút chì > Chọn Phiên bản mới (New version) > Triển khai.</p>
+          <p>5. 💡 <b>Cách nhanh nhất:</b> Trong Apps Script Editor, thầy/cô chọn hàm <code>setupSheetNow</code> rồi bấm nút <b>[▷ Chạy] (Run)</b> là Google Sheet lập tức có bảng tính hoàn chỉnh 43 bạn!</p>
+        </div>
+
+        <div class="relative">
+          <textarea id="apps-script-code-area" readonly class="w-full h-64 font-mono text-[11.5px] p-3 bg-slate-950 text-slate-200 rounded-xl border border-slate-700 outline-none select-all leading-relaxed"></textarea>
+        </div>
+      </div>
+
+      <div class="px-5 py-3.5 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2 bg-slate-50 dark:bg-slate-800/50">
+        <button onclick="document.getElementById('apps-script-code-modal').classList.add('hidden')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition">
+          Đóng
+        </button>
+        <button onclick="handleCopyAppsScriptClipboard()" id="btn-copy-script-code" class="px-4 py-2 bg-phuochung-600 hover:bg-phuochung-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+          <i data-lucide="copy" class="w-4 h-4"></i> Sao chép toàn bộ mã
+        </button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
