@@ -1,12 +1,15 @@
 // Sync Hub Module - Đồng bộ Hai Chiều Google Sheets / Forms & Xuất Nhập Dữ liệu
 
-const DEFAULT_PHUOC_HUNG_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxEzIDQbLq_znu4eslNlkjOgmMlVef6NPo-BUdiTnzOmLGRh-TZHpM8DONcJD3UMq7A/exec';
+const DEFAULT_PHUOC_HUNG_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyAsuE30MDo_rFyEMAyx-z7gHPz0d66cIw_VxONshSaPzo-KlhRiyF66M8QJmjci0lU6w/exec';
 
 class SyncHubManager {
   constructor() {
-    this.appsScriptUrl = localStorage.getItem('PHUOC_HUNG_APPS_SCRIPT_URL') || DEFAULT_PHUOC_HUNG_APPS_SCRIPT_URL;
-    if (!localStorage.getItem('PHUOC_HUNG_APPS_SCRIPT_URL')) {
+    const saved = localStorage.getItem('PHUOC_HUNG_APPS_SCRIPT_URL');
+    if (!saved || saved.includes('AKfycbxEzIDQbLq')) {
       localStorage.setItem('PHUOC_HUNG_APPS_SCRIPT_URL', DEFAULT_PHUOC_HUNG_APPS_SCRIPT_URL);
+      this.appsScriptUrl = DEFAULT_PHUOC_HUNG_APPS_SCRIPT_URL;
+    } else {
+      this.appsScriptUrl = saved;
     }
     this.isSyncing = false;
   }
