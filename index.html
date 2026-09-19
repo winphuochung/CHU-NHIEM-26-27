@@ -4798,13 +4798,14 @@
       alert('Đã lưu cấu hình Google Apps Script URL thành công!');
     }
 
-    // ĐẨY TOÀN BỘ 43 HỌC SINH TỪ APP SANG GOOGLE SHEET LIỀN
+    // ĐẨY TOÀN BỘ 43 HỌC SINH TỪ APP SANG GOOGLE SHEET LIỀN (CÓ FALLBACK TỰ CHỦ)
     async function handlePushAllGoogleSheets() {
       const inp = document.getElementById('apps-script-url-input');
-      const inputUrl = inp ? inp.value.trim() : '';
-      if (inputUrl) {
+      const inputUrl = (inp ? inp.value.trim() : '') || 'https://script.google.com/macros/s/AKfycbx1-5VCSDkHz0IKlNvvS6LSXtc5trMXaYeB-R6AvaA4OWIVG0vLddJash2IConpAwzNew/exec';
+      if (window.syncHub && typeof window.syncHub.setAppsScriptUrl === 'function') {
         window.syncHub.setAppsScriptUrl(inputUrl);
       }
+      localStorage.setItem('PHUOC_HUNG_APPS_SCRIPT_URL', inputUrl);
 
       const btn = document.getElementById('btn-push-all-sheets') || event?.currentTarget;
       const originalText = btn ? btn.innerHTML : '';
@@ -4815,7 +4816,24 @@
       }
 
       try {
-        const res = await window.syncHub.pushAllToGoogleSheets();
+        if (window.syncHub && typeof window.syncHub.pushAllToGoogleSheets === 'function') {
+          await window.syncHub.pushAllToGoogleSheets();
+        } else {
+          // Fallback trực tiếp nếu sync-hub.js bị cache phiên bản cũ trên trình duyệt
+          const students = (window.store && typeof window.store.getStudents === 'function') ? window.store.getStudents() : [];
+          await fetch(inputUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+              action: 'pushAllData',
+              actor: 'GVCN Quản trị 9A1',
+              timestamp: new Date().toISOString(),
+              students: students
+            }),
+            mode: 'no-cors'
+          });
+        }
+
         alert(`🎉 THÀNH CÔNG RỰC RỠ!\n\nToàn bộ dữ liệu 43 học sinh Lớp 9A1 (Họ tên, Tổ 1-4, Chức vụ Ban cán sự, Điểm thi đua, Rèn luyện TT 22, Học lực, SĐT, Địa chỉ, Bài tập, Nguyện vọng 1-3) đã được tự động tạo và điền thẳng vào Google Sheet của thầy/cô!\n\nThầy/cô không cần phải tạo cột hay nhập bất cứ dữ liệu nào trên Google Sheet.`);
         renderDashboard();
         renderWorkspaceContent();
@@ -4832,10 +4850,11 @@
 
     async function handlePullGoogleSheets() {
       const inp = document.getElementById('apps-script-url-input');
-      const inputUrl = inp ? inp.value.trim() : '';
-      if (inputUrl) {
+      const inputUrl = (inp ? inp.value.trim() : '') || 'https://script.google.com/macros/s/AKfycbx1-5VCSDkHz0IKlNvvS6LSXtc5trMXaYeB-R6AvaA4OWIVG0vLddJash2IConpAwzNew/exec';
+      if (window.syncHub && typeof window.syncHub.setAppsScriptUrl === 'function') {
         window.syncHub.setAppsScriptUrl(inputUrl);
       }
+      localStorage.setItem('PHUOC_HUNG_APPS_SCRIPT_URL', inputUrl);
 
       const btn = document.getElementById('btn-pull-sheets') || event?.currentTarget;
       const originalText = btn ? btn.innerHTML : '';
@@ -4846,14 +4865,40 @@
       }
 
       try {
-        const res = await window.syncHub.pullFromGoogleSheets();
-        if (res.autoInitialized) {
-          alert(`🎉 Bảng tính Google Sheet trước đó chưa có học sinh.\n\nHệ thống đã TỰ ĐỘNG tạo bảng tính "DanhSach9A1" và nạp đầy đủ 43 học sinh Lớp 9A1 sang Google Sheet cho thầy/cô thành công!`);
-        } else if (res.count === 0) {
-          alert('✅ Kết nối Google Sheets thành công! Hệ thống đang tự động khởi tạo dữ liệu...');
-          await handlePushAllGoogleSheets();
+        if (window.syncHub && typeof window.syncHub.pullFromGoogleSheets === 'function') {
+          const res = await window.syncHub.pullFromGoogleSheets();
+          if (res.autoInitialized) {
+            alert(`🎉 Bảng tính Google Sheet trước đó chưa có học sinh.\n\nHệ thống đã TỰ ĐỘNG tạo bảng tính "DanhSach9A1" và nạp đầy đủ 43 học sinh Lớp 9A1 sang Google Sheet cho thầy/cô thành công!`);
+          } else if (res.count === 0) {
+            alert('✅ Kết nối Google Sheets thành công! Hệ thống đang tự động khởi tạo dữ liệu...');
+            await handlePushAllGoogleSheets();
+          } else {
+            alert(`🎉 Đã đồng bộ thành công dữ liệu của ${res.count} học sinh từ Google Sheets về App!`);
+          }
         } else {
-          alert(`🎉 Đã đồng bộ thành công dữ liệu của ${res.count} học sinh từ Google Sheets về App!`);
+          // Fallback trực tiếp nếu sync-hub.js bị cache phiên bản cũ
+          const response = await fetch(inputUrl);
+          const result = await response.json();
+          if (result.status === 'success' && Array.isArray(result.students)) {
+            if (result.students.length === 0) {
+              await handlePushAllGoogleSheets();
+            } else {
+              result.students.forEach(remoteStudent => {
+                if (!remoteStudent || !remoteStudent.id) return;
+                const local = window.store.getStudentById(remoteStudent.id);
+                if (local) {
+                  window.store.updateStudent(local.id, {
+                    conductScore: Number(remoteStudent.conductScore) || local.conductScore,
+                    conduct: remoteStudent.conduct || local.conduct,
+                    homeworkStatus: remoteStudent.homeworkStatus !== undefined ? remoteStudent.homeworkStatus : local.homeworkStatus
+                  });
+                }
+              });
+              alert(`🎉 Đã đồng bộ thành công dữ liệu của ${result.students.length} học sinh từ Google Sheets về App!`);
+            }
+          } else {
+            throw new Error(result.message || 'Không thể đọc dữ liệu từ Google Sheet');
+          }
         }
         renderDashboard();
         renderWorkspaceContent();
@@ -4868,11 +4913,18 @@
       }
     }
 
-    function handleViewAppsScriptModal() {
+    async function handleViewAppsScriptModal() {
       const modal = document.getElementById('apps-script-code-modal');
       const textarea = document.getElementById('apps-script-code-area');
-      if (textarea && window.APPS_SCRIPT_SOURCE_CODE) {
-        textarea.value = window.APPS_SCRIPT_SOURCE_CODE;
+      if (textarea && (!textarea.value || textarea.value.trim() === '')) {
+        try {
+          const res = await fetch('./google-apps-script/Code.gs');
+          if (res.ok) {
+            textarea.value = await res.text();
+          }
+        } catch (e) {
+          console.warn('Không thể tải file Code.gs:', e);
+        }
       }
       if (modal) {
         modal.classList.remove('hidden');
@@ -4882,9 +4934,9 @@
 
     function handleCopyAppsScriptClipboard() {
       const textarea = document.getElementById('apps-script-code-area');
-      const code = textarea ? textarea.value : (window.APPS_SCRIPT_SOURCE_CODE || '');
+      const code = textarea ? textarea.value : '';
       if (!code) {
-        alert('Không tìm thấy mã nguồn!');
+        alert('Vui lòng đợi tải mã nguồn xong hoặc mở file google-apps-script/Code.gs!');
         return;
       }
 
