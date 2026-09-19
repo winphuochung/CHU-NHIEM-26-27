@@ -1,115 +1,155 @@
 /**
- * Google Apps Script - Đồng bộ 2 chiều Hệ thống Quản lý Lớp 9A1 Phước Hưng
- * Trường TH & THCS Phước Hưng (Năm học 2026-2027)
+ * Google Apps Script - Dong bo 2 chieu He thong Quan ly Lop 9A1 Phuoc Hung
+ * Truong TH va THCS Phuoc Hung (Nam hoc 2026-2027)
  * 
- * Hướng dẫn cài đặt:
- * 1. Mở Google Sheets chứa danh sách lớp 9A1
- * 2. Vào Tiện ích mở rộng (Extensions) > Apps Script
- * 3. Dán toàn bộ mã nguồn này vào Code.gs và Lưu lại
- * 4. Nhấn "Triển khai" (Deploy) > "Triển khai mới" (New deployment) > Loại: "Ứng dụng web" (Web app)
- * 5. Cấp quyền truy cập: "Bất kỳ ai" (Anyone) để App có thể đồng bộ không cần đăng nhập Google phức tạp.
+ * Huong dan:
+ * Cach 1 (Khuyen dung): Mo Google Sheet cua lop > Tien ich mo rong > Apps Script > Dan ma nay vao.
+ * Cach 2: Neu tao script doc lap, hay dien ID Google Sheet vao bien SPREADSHEET_ID ben duoi:
  */
 
-// Xử lý yêu cầu GET: Trả về toàn bộ danh sách học sinh và điểm thi đua từ Google Sheets
+var SPREADSHEET_ID = ''; 
+
+function getTargetSpreadsheet(e) {
+  var ss = null;
+  try {
+    ss = SpreadsheetApp.getActiveSpreadsheet();
+  } catch (err) {}
+
+  if (!ss && e && e.parameter && e.parameter.sheetId) {
+    try {
+      ss = SpreadsheetApp.openById(e.parameter.sheetId.trim());
+    } catch (err) {}
+  }
+
+  if (!ss && typeof SPREADSHEET_ID === 'string' && SPREADSHEET_ID.trim() !== '') {
+    try {
+      ss = SpreadsheetApp.openById(SPREADSHEET_ID.trim());
+    } catch (err) {}
+  }
+
+  return ss;
+}
+
 function doGet(e) {
   try {
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("DanhSach9A1") || SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-    const data = sheet.getDataRange().getValues();
-    const headers = data[0];
-    const rows = data.slice(1);
+    var ss = getTargetSpreadsheet(e);
+    if (!ss) {
+      return ContentService.createTextOutput(JSON.stringify({
+        status: 'error',
+        message: 'Chua tim thay Google Sheet! Vui long mo truc tiep Google Sheet danh sach lop 9A1 roi chon Tien ich mo rong > Apps Script de trien khai; hoac dien ID Google Sheet vao bien SPREADSHEET_ID trong Code.gs.'
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
 
-    const students = rows.map(function(row) {
+    var sheet = ss.getSheetByName('DanhSach9A1') || ss.getActiveSheet();
+    var data = sheet.getDataRange().getValues();
+
+    if (!data || data.length <= 1) {
+      return ContentService.createTextOutput(JSON.stringify({
+        status: 'success',
+        school: 'TH & THCS Phuoc Hung',
+        class: '9A1',
+        updatedAt: new Date().toISOString(),
+        students: [],
+        message: 'Bang tinh chua co du lieu hoc sinh.'
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var rows = data.slice(1);
+    var students = rows.map(function(row) {
       return {
-        id: row[0],
-        stt: row[1],
-        name: row[2],
-        to: row[3],
-        conductScore: row[4],
-        conduct: row[5],
-        academic: row[6],
-        scoreAvg: row[7],
-        homeworkStatus: row[8] === "Đã nộp" || row[8] === true,
-        notes: row[9] || ""
+        id: row[0] || '',
+        stt: row[1] || '',
+        name: row[2] || '',
+        to: row[3] || '',
+        conductScore: Number(row[4]) || 100,
+        conduct: row[5] || 'Tot',
+        academic: row[6] || 'Tot',
+        scoreAvg: Number(row[7]) || 0,
+        homeworkStatus: row[8] === 'Da nop' || row[8] === true,
+        notes: row[9] || ''
       };
     });
 
     return ContentService.createTextOutput(JSON.stringify({
-      status: "success",
-      school: "TH & THCS Phước Hưng",
-      class: "9A1",
+      status: 'success',
+      school: 'TH & THCS Phuoc Hung',
+      class: '9A1',
       updatedAt: new Date().toISOString(),
+      totalStudents: students.length,
       students: students
     })).setMimeType(ContentService.MimeType.JSON);
 
   } catch (err) {
     return ContentService.createTextOutput(JSON.stringify({
-      status: "error",
+      status: 'error',
       message: err.toString()
     })).setMimeType(ContentService.MimeType.JSON);
   }
 }
 
-// Xử lý yêu cầu POST: Nhận dữ liệu chấm điểm từ App hoặc Google Forms nộp bài nạp vào Sheet
 function doPost(e) {
   try {
-    const postData = JSON.parse(e.postData.contents);
-    const action = postData.action;
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("DanhSach9A1") || SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var ss = getTargetSpreadsheet(e);
+    if (!ss) {
+      return ContentService.createTextOutput(JSON.stringify({
+        status: 'error',
+        message: 'Chua tim thay Google Sheet lien ket.'
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
 
-    if (action === "updateEmulation") {
-      // Cập nhật điểm thi đua cho học sinh
-      const studentId = postData.studentId;
-      const pointDelta = Number(postData.pointDelta);
-      const data = sheet.getDataRange().getValues();
+    var postData = JSON.parse(e.postData.contents);
+    var action = postData.action;
+    var sheet = ss.getSheetByName('DanhSach9A1') || ss.getActiveSheet();
 
-      for (let i = 1; i < data.length; i++) {
+    if (action === 'updateEmulation') {
+      var studentId = postData.studentId;
+      var pointDelta = Number(postData.pointDelta);
+      var data = sheet.getDataRange().getValues();
+
+      for (var i = 1; i < data.length; i++) {
         if (data[i][0] == studentId) {
-          const currentScore = Number(data[i][4]) || 100;
-          const newScore = Math.max(0, Math.min(100, currentScore + pointDelta));
-          sheet.getRange(i + 1, 5).setValue(newScore); // Cột điểm rèn luyện
+          var currentScore = Number(data[i][4]) || 100;
+          var newScore = Math.max(0, Math.min(120, currentScore + pointDelta));
+          sheet.getRange(i + 1, 5).setValue(newScore);
 
-          // Ghi nhật ký vào sheet AuditLog
-          logToAuditSheet(data[i][2], postData.actor, pointDelta, postData.reason);
+          logToAuditSheet(ss, data[i][2], postData.actor, pointDelta, postData.reason);
           break;
         }
       }
 
-      return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "Đã cập nhật vào Google Sheet" }))
+      return ContentService.createTextOutput(JSON.stringify({ status: 'success', message: 'Da cap nhat diem vao Google Sheet!' }))
         .setMimeType(ContentService.MimeType.JSON);
     }
 
-    if (action === "formSubmitHomework") {
-      // Tự động phân loại từ Google Form nộp bài tập về nhà
-      const studentName = postData.studentName;
-      const subject = postData.subject;
-      const data = sheet.getDataRange().getValues();
+    if (action === 'formSubmitHomework') {
+      var studentName = postData.studentName;
+      var data = sheet.getDataRange().getValues();
 
-      for (let i = 1; i < data.length; i++) {
-        if (data[i][2].toString().toLowerCase() === studentName.toLowerCase()) {
-          sheet.getRange(i + 1, 9).setValue("Đã nộp"); // Cột trạng thái bài tập
+      for (var i = 1; i < data.length; i++) {
+        if (data[i][2] && data[i][2].toString().toLowerCase() === studentName.toLowerCase()) {
+          sheet.getRange(i + 1, 9).setValue('Da nop');
           break;
         }
       }
 
-      return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "Đã ghi nhận bài tập về nhà" }))
+      return ContentService.createTextOutput(JSON.stringify({ status: 'success', message: 'Da ghi nhan bai tap vao Google Sheet!' }))
         .setMimeType(ContentService.MimeType.JSON);
     }
 
-    return ContentService.createTextOutput(JSON.stringify({ status: "ignored", message: "Hành động không xác định" }))
+    return ContentService.createTextOutput(JSON.stringify({ status: 'ignored', message: 'Hanh dong khong xac dinh' }))
       .setMimeType(ContentService.MimeType.JSON);
 
   } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
+    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: err.toString() }))
       .setMimeType(ContentService.MimeType.JSON);
   }
 }
 
-// Hàm ghi lịch sử Audit vào Sheet AuditLog
-function logToAuditSheet(studentName, actor, pointDelta, reason) {
-  let auditSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("AuditLog");
+function logToAuditSheet(ss, studentName, actor, pointDelta, reason) {
+  var auditSheet = ss.getSheetByName('AuditLog');
   if (!auditSheet) {
-    auditSheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet("AuditLog");
-    auditSheet.appendRow(["Thời gian", "Người thực hiện", "Học sinh", "Thay đổi", "Lý do"]);
+    auditSheet = ss.insertSheet('AuditLog');
+    auditSheet.appendRow(['Thoi gian', 'Nguoi thuc hien', 'Hoc sinh', 'Thay doi', 'Ly do']);
   }
-  auditSheet.appendRow([new Date(), actor, studentName, pointDelta > 0 ? "+" + pointDelta : pointDelta, reason]);
+  auditSheet.appendRow([new Date(), actor, studentName, pointDelta > 0 ? '+' + pointDelta : pointDelta, reason]);
 }
