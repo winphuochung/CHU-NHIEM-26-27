@@ -4760,18 +4760,48 @@
     }
 
     function handleSaveAppsScriptUrl() {
-      const url = document.getElementById('apps-script-url-input').value;
+      const inp = document.getElementById('apps-script-url-input');
+      const url = inp ? inp.value.trim() : '';
+      if (!url) {
+        alert('Vui lòng nhập URL Google Apps Script Web App!');
+        return;
+      }
       window.syncHub.setAppsScriptUrl(url);
       alert('Đã lưu cấu hình Google Apps Script URL thành công!');
     }
 
     async function handlePullGoogleSheets() {
+      const inp = document.getElementById('apps-script-url-input');
+      const inputUrl = inp ? inp.value.trim() : '';
+      if (inputUrl) {
+        window.syncHub.setAppsScriptUrl(inputUrl);
+      }
+
+      const btn = event?.currentTarget || document.querySelector('button[onclick="handlePullGoogleSheets()"]');
+      const originalText = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin inline mr-1"></i> Đang đồng bộ...';
+        if (window.lucide) lucide.createIcons();
+      }
+
       try {
-        await window.syncHub.pullFromGoogleSheets();
-        alert('Đã đồng bộ thành công dữ liệu mới nhất từ Google Sheets!');
+        const res = await window.syncHub.pullFromGoogleSheets();
+        if (res.count === 0) {
+          alert('✅ Kết nối Google Sheets thành công!\n\nTuy nhiên Bảng tính hiện chưa có dòng dữ liệu học sinh nào (từ Hàng 2 trở đi). Thầy/cô hãy điền thông tin học sinh vào Google Sheet rồi bấm đồng bộ lại nhé!');
+        } else {
+          alert(`🎉 Đã đồng bộ thành công dữ liệu của ${res.count} học sinh từ Google Sheets!`);
+        }
         renderDashboard();
+        renderWorkspaceContent();
       } catch (e) {
         alert('Lỗi kết nối: ' + e.message);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+          if (window.lucide) lucide.createIcons();
+        }
       }
     }
 

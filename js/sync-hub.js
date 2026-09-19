@@ -21,9 +21,16 @@ class SyncHubManager {
 
   // Đồng bộ dữ liệu từ Google Sheets về App (GET)
   async pullFromGoogleSheets() {
-    if (!this.appsScriptUrl) {
+    let targetUrl = this.appsScriptUrl;
+    if (!targetUrl || targetUrl.trim() === '') {
+      const domInput = typeof document !== 'undefined' ? document.getElementById('apps-script-url-input')?.value?.trim() : '';
+      targetUrl = domInput || localStorage.getItem('PHUOC_HUNG_APPS_SCRIPT_URL') || DEFAULT_PHUOC_HUNG_APPS_SCRIPT_URL;
+    }
+    if (!targetUrl || targetUrl.trim() === '') {
       throw new Error('Vui lòng cấu hình URL Google Apps Script Web App trong phần Cài đặt.');
     }
+    this.appsScriptUrl = targetUrl.trim();
+    localStorage.setItem('PHUOC_HUNG_APPS_SCRIPT_URL', this.appsScriptUrl);
 
     this.isSyncing = true;
     try {
@@ -33,6 +40,7 @@ class SyncHubManager {
       if (result.status === 'success' && Array.isArray(result.students)) {
         // Cập nhật điểm và bài tập từ Google Sheet vào Store
         result.students.forEach(remoteStudent => {
+          if (!remoteStudent || !remoteStudent.id) return;
           const local = window.store.getStudentById(remoteStudent.id);
           if (local) {
             window.store.updateStudent(local.id, {
@@ -42,7 +50,7 @@ class SyncHubManager {
             });
           }
         });
-        return { success: true, count: result.students.length };
+        return { success: true, count: result.students.length, message: result.message };
       } else {
         throw new Error(result.message || 'Dữ liệu trả về từ Google Sheets không hợp lệ');
       }
