@@ -2789,18 +2789,45 @@ function handleExportEmulationExcelClick() {
                 </div>
                 <div>
                   <h4 class="font-extrabold text-xs text-purple-950 dark:text-purple-200 flex items-center gap-2">
-                    <span>Quyền Hạn Tổ Trưởng ${myToId}: Quản Lý & Nhập Điểm Học Sinh Tổ ${myToId}</span>
+                    <span>Nhiệm Vụ Tổ Trưởng ${myToId}: Nhập Dữ Liệu Thi Đua Tổ ${myToId} ➔ Đồng Bộ & Gửi Cho Ban Cán Sự Xem, Điều Chỉnh</span>
                     <span class="text-[10px] px-2 py-0.5 rounded-full bg-purple-200 dark:bg-purple-900 text-purple-800 dark:text-purple-200 font-bold">${teamMemberCount} học sinh</span>
                   </h4>
                   <p class="text-[11px] text-purple-700 dark:text-purple-400 mt-0.5">
-                    Thầy/Cô và Nhà trường quy định bạn <strong>chỉ nhập danh sách học sinh do Tổ ${myToId} quản lý</strong>. Mọi điểm cộng/trừ và nhận xét sẽ tự động đồng bộ ngay sang Giáo viên chủ nhiệm, Lớp trưởng và các Lớp phó.
+                    Bạn chịu trách nhiệm <strong>nhập đầy đủ điểm thi đua & bài tập của Tổ ${myToId}</strong>, sau đó đồng bộ và gửi qua cho Lớp trưởng và các Lớp phó xem & điều chỉnh cho chính xác thi đua.
                   </p>
                 </div>
               </div>
               <div class="flex items-center gap-2 shrink-0">
-                <span class="text-[11px] font-bold px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-purple-200 dark:border-purple-800 text-purple-800 dark:text-purple-300 flex items-center gap-1.5 shadow-2xs">
-                  <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Đồng bộ dữ liệu với GVCN
-                </span>
+                <button onclick="handleSendToBCS(${myToId}, ${w})" class="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition">
+                  <i data-lucide="send" class="w-3.5 h-3.5"></i> 📥 Gửi Dữ Liệu Tổ ${myToId} Cho Ban Cán Sự Xem & Điều Chỉnh
+                </button>
+              </div>
+            </div>
+          `;
+        } else if (curRole.id === 'gvcn') {
+          bannerScopeEl.innerHTML = `
+            <div class="p-3.5 rounded-2xl bg-blue-50/90 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs mb-3">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                  <i data-lucide="award" class="w-5 h-5"></i>
+                </div>
+                <div>
+                  <h4 class="font-extrabold text-xs text-blue-950 dark:text-blue-200 flex items-center gap-2">
+                    <span>Quyền Hạn GVCN: Xem Báo Cáo Thi Đua Đã Điều Chỉnh Từ Ban Cán Sự ➔ Phê Duyệt Chính Thức</span>
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-200 dark:bg-blue-900 text-blue-800 dark:text-blue-200 font-bold">Toàn Lớp 9A1</span>
+                  </h4>
+                  <p class="text-[11px] text-blue-700 dark:text-blue-400 mt-0.5">
+                    GVCN duyệt chính thức báo cáo thi đua tuần sau khi 4 Tổ trưởng đã nhập dữ liệu và Ban cán sự (Lớp trưởng & các Lớp phó) đã kiểm tra, điều chỉnh chuẩn xác.
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <button onclick="handleApproveReportFast()" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition">
+                  <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Phê Duyệt Báo Cáo Tuần ${w}
+                </button>
+                <button onclick="handleExportEmulationWordClick(${w})" class="px-3.5 py-1.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition">
+                  <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Xuất Báo Cáo Word Tuần ${w} (NĐ 30/2020)
+                </button>
               </div>
             </div>
           `;
@@ -2813,17 +2840,17 @@ function handleExportEmulationExcelClick() {
                 </div>
                 <div>
                   <h4 class="font-extrabold text-xs text-indigo-950 dark:text-indigo-200 flex items-center gap-2">
-                    <span>Quyền Hạn Ban Cán Sự Lớp & GVCN: Theo Dõi & Nhập Toàn Bộ 43 Học Sinh</span>
-                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-200 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 font-bold">Đầy đủ 4 Tổ (43 HS)</span>
+                    <span>Nhiệm Vụ Ban Cán Sự (${curRole.name}): Xem & Điều Chỉnh Thi Đua 4 Tổ ➔ Gửi Báo Cáo Cho GVCN</span>
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-200 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 font-bold">4 Tổ (43 HS)</span>
                   </h4>
                   <p class="text-[11px] text-indigo-700 dark:text-indigo-400 mt-0.5">
-                    Lớp trưởng & các Lớp phó quản lý toàn diện 43 học sinh cả lớp. Dữ liệu từ 4 Tổ trưởng nhập theo từng tổ được tự động liên kết và đồng bộ trực tiếp vào bảng tổng hợp thi đua.
+                    Lớp trưởng, Lớp phó Học tập, Trật tự, Lao động tiếp nhận dữ liệu từ 4 Tổ trưởng ➔ <strong>Xem, kiểm tra & điều chỉnh cho chính xác thi đua</strong>, sau đó gửi qua cho GVCN.
                   </p>
                 </div>
               </div>
               <div class="flex items-center gap-2 shrink-0">
-                <button onclick="handleExportEmulationExcelClick()" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition">
-                  <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5"></i> Xuất Báo Cáo Excel Tuần ${w}
+                <button onclick="handleSendToGVCN(${w})" class="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition">
+                  <i data-lucide="send" class="w-3.5 h-3.5"></i> 📤 Gửi Báo Cáo Thi Đua Đã Điều Chỉnh Cho GVCN
                 </button>
                 <button onclick="handleExportEmulationWordClick(${w})" class="px-3.5 py-1.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition">
                   <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Xuất Báo Cáo Word Tuần ${w} (NĐ 30/2020)
@@ -5002,6 +5029,39 @@ function handleExportEmulationExcelClick() {
     }
 
     // Action Handlers
+    function handleSendToBCS(toId, weekNum) {
+      const w = weekNum || window.selectedEmulationWeek || window.store.state.currentWeek || 2;
+      window.store.recordAudit({
+        id: 'LOG_' + Date.now(),
+        timestamp: new Date().toLocaleString('vi-VN'),
+        actor: `Tổ trưởng ${toId}`,
+        targetStudent: `Lớp trưởng & các Lớp phó`,
+        action: `[Tuần ${w}] Đồng bộ & Gửi dữ liệu thi đua Tổ ${toId}`,
+        reason: `Tổ trưởng ${toId} đã hoàn tất nhập dữ liệu thi đua Tuần ${w} và gửi cho Lớp trưởng, Lớp phó xem & điều chỉnh.`,
+        verified: true
+      });
+      if (window.syncHub && typeof window.syncHub.pushAllToGoogleSheets === 'function') {
+        window.syncHub.pushAllToGoogleSheets().catch(() => {});
+      }
+      alert(`✅ [ĐÃ ĐỒNG BỘ & GỬI CHO BAN CÁN SỰ!]\n\nTổ trưởng ${toId} đã gửi toàn bộ dữ liệu thi đua Tổ ${toId} Tuần ${w} qua cho Lớp trưởng và các Lớp phó xem, điều chỉnh cho chính xác thi đua!\nDữ liệu cũng đã tự động đồng bộ đám mây trực tuyến.`);
+      renderEmulationTable();
+    }
+
+    function handleSendToGVCN(weekNum) {
+      const w = weekNum || window.selectedEmulationWeek || window.store.state.currentWeek || 2;
+      const notes = window.store.getWeekEmulationNotes(w);
+      const role = (window.authManager && typeof window.authManager.getCurrentRole === 'function') ? window.authManager.getCurrentRole() : { name: 'Ban cán sự lớp' };
+      notes.status = 'Chờ GVCN duyệt';
+      notes.submittedBy = `${role.name}`;
+      notes.updatedAt = new Date().toLocaleDateString('vi-VN');
+      window.store.saveState();
+      if (window.syncHub && typeof window.syncHub.pushAllToGoogleSheets === 'function') {
+        window.syncHub.pushAllToGoogleSheets().catch(() => {});
+      }
+      alert(`✅ [ĐÃ GỬI BÁO CÁO THI ĐUA CHO GVCN!]\n\nBan cán sự lớp (${role.name}) đã xem xét, điều chỉnh dữ liệu thi đua 4 Tổ Tuần ${w} chuẩn xác và gửi báo cáo qua cho Giáo viên Chủ nhiệm phê duyệt!`);
+      renderEmulationTable();
+    }
+
     function handleApproveReportFast() {
       const report = window.workspaceManager.approveWeeklyReport();
       alert(`Đã phê duyệt thành công Báo cáo tuần ${report.week} của lớp 9A1 bởi GVCN!\nDữ liệu đã được lưu vào sổ điểm học kỳ.`);

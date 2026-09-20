@@ -8,7 +8,7 @@ const ROLES = {
     icon: 'shield-check',
     color: 'text-blue-600',
     requires2FA: true,
-    description: 'Toàn quyền điều hành, AI Dashboard, Phê duyệt báo cáo, Quản trị an toàn'
+    description: 'Tiếp nhận báo cáo thi đua đã được Ban cán sự xem xét & điều chỉnh, phê duyệt chính thức'
   },
   LOP_TRUONG: {
     id: 'lop_truong',
@@ -17,7 +17,7 @@ const ROLES = {
     icon: 'crown',
     color: 'text-amber-500',
     requires2FA: false,
-    description: 'Tổng hợp báo cáo tuần 1-chạm, điều phối các tổ và ban cán sự'
+    description: 'Xem & điều chỉnh thi đua do 4 Tổ trưởng gửi lên, tổng hợp báo cáo gửi qua cho GVCN'
   },
   LP_HOC_TAP: {
     id: 'lp_hoc_tap',
@@ -26,7 +26,7 @@ const ROLES = {
     icon: 'book-open',
     color: 'text-emerald-500',
     requires2FA: false,
-    description: 'Quản lý nhóm tương trợ, thống kê bài tập nộp, thư viện đề thi thử'
+    description: 'Xem & điều chỉnh mảng học tập bài tập 4 tổ, phối hợp Lớp trưởng lập báo cáo gửi GVCN'
   },
   LP_TRAT_TU: {
     id: 'lp_trat_tu',
@@ -35,7 +35,7 @@ const ROLES = {
     icon: 'alert-triangle',
     color: 'text-rose-500',
     requires2FA: false,
-    description: 'Ghi nhận vi phạm, chấm điểm trừ, đính kèm ảnh bằng chứng thực tế'
+    description: 'Xem & điều chỉnh kỷ luật vi phạm nề nếp 4 tổ, phối hợp Lớp trưởng lập báo cáo gửi GVCN'
   },
   LP_LAO_DONG: {
     id: 'lp_lao_dong',
@@ -44,7 +44,7 @@ const ROLES = {
     icon: 'sparkles',
     color: 'text-cyan-500',
     requires2FA: false,
-    description: 'Sơ đồ xoay vòng trực nhật động, nhắc nhở công tác vệ sinh sáng'
+    description: 'Xem & điều chỉnh điểm trực nhật lao động 4 tổ, phối hợp Lớp trưởng lập báo cáo gửi GVCN'
   },
   THU_QUY: {
     id: 'thu_quy',
@@ -62,7 +62,7 @@ const ROLES = {
     icon: 'users',
     color: 'text-purple-500',
     requires2FA: false,
-    description: 'Theo dõi 12 thành viên Tổ 1 (từ cửa vào), đề xuất Gương sáng tuần'
+    description: 'Nhập dữ liệu thi đua Tổ 1, đồng bộ và gửi cho Lớp trưởng & các Lớp phó xem, điều chỉnh'
   },
   TO_TRUONG_2: {
     id: 'to_truong_2',
@@ -71,7 +71,7 @@ const ROLES = {
     icon: 'users',
     color: 'text-purple-500',
     requires2FA: false,
-    description: 'Theo dõi 10 thành viên Tổ 2, đề xuất Gương sáng tuần'
+    description: 'Nhập dữ liệu thi đua Tổ 2, đồng bộ và gửi cho Lớp trưởng & các Lớp phó xem, điều chỉnh'
   },
   TO_TRUONG_3: {
     id: 'to_truong_3',
@@ -80,7 +80,7 @@ const ROLES = {
     icon: 'users',
     color: 'text-purple-500',
     requires2FA: false,
-    description: 'Theo dõi 10 thành viên Tổ 3, đề xuất Gương sáng tuần'
+    description: 'Nhập dữ liệu thi đua Tổ 3, đồng bộ và gửi cho Lớp trưởng & các Lớp phó xem, điều chỉnh'
   },
   TO_TRUONG_4: {
     id: 'to_truong_4',
@@ -89,7 +89,7 @@ const ROLES = {
     icon: 'users',
     color: 'text-purple-500',
     requires2FA: false,
-    description: 'Theo dõi 11 thành viên Tổ 4 (đối diện bàn giáo viên), đề xuất Gương sáng tuần'
+    description: 'Nhập dữ liệu thi đua Tổ 4, đồng bộ và gửi cho Lớp trưởng & các Lớp phó xem, điều chỉnh'
   },
   HOC_SINH: {
     id: 'hoc_sinh',
