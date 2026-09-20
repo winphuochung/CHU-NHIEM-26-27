@@ -43,63 +43,6 @@
       }
     }
 
-    // PWA Installation & App Download Logic (Cross-platform: Android, iOS iPhone/iPad, Windows, MacOS, ChromeOS)
-    let deferredInstallPrompt = null;
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredInstallPrompt = e;
-      console.log('PWA installation prompt captured.');
-      const btn = document.getElementById('pwa-install-btn');
-      if (btn) {
-        btn.classList.remove('hidden');
-        btn.classList.add('flex');
-      }
-    });
-
-    window.addEventListener('appinstalled', () => {
-      console.log('PWA app installed successfully!');
-      deferredInstallPrompt = null;
-      const btn = document.getElementById('pwa-install-btn');
-      if (btn) {
-        btn.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4 text-emerald-300"></i> <span>Đã cài đặt App</span>';
-        if (window.lucide) lucide.createIcons();
-      }
-    });
-
-    function handlePWAInstallClick() {
-      if (deferredInstallPrompt) {
-        deferredInstallPrompt.prompt();
-        deferredInstallPrompt.userChoice.then((choiceResult) => {
-          if (choiceResult.outcome === 'accepted') {
-            console.log('User accepted PWA installation');
-          } else {
-            console.log('User dismissed PWA installation');
-            openPWAInstructionModal();
-          }
-          deferredInstallPrompt = null;
-        });
-      } else {
-        openPWAInstructionModal();
-      }
-    }
-
-    function openPWAInstructionModal() {
-      const modal = document.getElementById('pwa-install-modal');
-      if (modal) {
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        if (window.lucide) lucide.createIcons();
-      }
-    }
-
-    function closePWAInstructionModal() {
-      const modal = document.getElementById('pwa-install-modal');
-      if (modal) {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-      }
-    }
   </script>
 
   <!-- Lucide Icons -->
@@ -118,15 +61,15 @@
     <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-20 sm:h-24 flex items-center justify-between gap-2 sm:gap-4">
       
       <!-- Brand Logo & Title -->
-      <div class="flex items-center gap-2.5 sm:gap-4 cursor-pointer select-none py-1" onclick="switchMainTab('dashboard')" title="Về trang Tổng quan">
+      <div class="flex items-center gap-2 sm:gap-4 cursor-pointer select-none py-1 min-w-0" onclick="switchMainTab('dashboard')" title="Về trang Tổng quan">
         <img src="logo.png" onerror="this.src='assets/logo.png'" alt="Logo Trường TH & THCS Phước Hưng - Lớp 9A1" 
-             class="h-16 w-16 sm:h-20 sm:w-20 object-cover rounded-full shadow-lg ring-2 sm:ring-4 ring-phuochung-600/40 shrink-0 hover:scale-105 transition-all duration-200">
+             class="h-11 w-11 sm:h-20 sm:w-20 object-cover rounded-full shadow-md ring-2 ring-phuochung-600/40 shrink-0 hover:scale-105 transition-all duration-200">
         <div class="min-w-0">
-          <div class="flex items-center gap-1.5 sm:gap-2.5">
-            <span class="font-black text-xl sm:text-2xl text-phuochung-800 dark:text-phuochung-400 tracking-tight leading-none">LỚP 9A1</span>
-            <span class="text-[10px] sm:text-xs px-2 sm:px-2.5 py-0.5 rounded-full bg-phuochung-100 dark:bg-phuochung-900/60 text-phuochung-700 dark:text-phuochung-300 font-bold border border-phuochung-300/50 shrink-0">2026 - 2027</span>
+          <div class="flex items-center gap-1 sm:gap-2">
+            <span class="font-black text-lg sm:text-2xl text-phuochung-800 dark:text-phuochung-400 tracking-tight leading-none">9A1</span>
+            <span class="text-[9px] sm:text-xs px-1.5 sm:px-2.5 py-0.5 rounded-full bg-phuochung-100 dark:bg-phuochung-900/60 text-phuochung-700 dark:text-phuochung-300 font-bold border border-phuochung-300/50 shrink-0">2026-2027</span>
           </div>
-          <p class="text-[11px] sm:text-sm text-slate-700 dark:text-slate-300 font-semibold truncate max-w-[150px] sm:max-w-none mt-0.5">Trường TH & THCS Phước Hưng</p>
+          <p class="text-[10px] sm:text-sm text-slate-700 dark:text-slate-300 font-semibold truncate max-w-[120px] sm:max-w-none mt-0.5">TH & THCS Phước Hưng</p>
         </div>
       </div>
 
@@ -204,6 +147,29 @@
     <!-- ============================================== -->
     <section id="tab-dashboard" class="tab-content space-y-6">
       
+      <!-- Prominent PWA Install Notice Bar for Mobile Phones & Laptops -->
+      <div id="pwa-quick-install-banner" class="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-blue-700 via-indigo-700 to-phuochung-800 text-white shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border border-blue-400/30">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center shrink-0 text-white shadow-inner">
+            <i data-lucide="smartphone" class="w-6 h-6 text-cyan-300"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-sm sm:text-base text-white flex items-center gap-2">
+              <span>Cài Đặt App 9A1 Cho Điện Thoại & Laptop</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-cyan-400 text-slate-900 font-extrabold uppercase">1-Chạm</span>
+            </h3>
+            <p class="text-xs text-blue-100 mt-0.5">
+              Cài app trực tiếp về màn hình chính điện thoại (iPhone / Android) hoặc Desktop để mở nhanh như ứng dụng thật không cần mở trình duyệt web.
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
+          <button onclick="handlePWAInstallClick()" class="w-full sm:w-auto px-4 py-2.5 bg-white text-phuochung-700 hover:bg-blue-50 font-extrabold rounded-xl text-xs shadow-md transition flex items-center justify-center gap-2 transform active:scale-95">
+            <i data-lucide="download" class="w-4 h-4 text-phuochung-600"></i> Cài Đặt Ứng Dụng Ngay
+          </button>
+        </div>
+      </div>
+
       <!-- Banner Countdown & Status -->
       <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-phuochung-900 via-phuochung-800 to-cyan-800 text-white p-6 shadow-lg">
         <div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
@@ -2665,87 +2631,7 @@
   </table>
 
 </div>
-
-  <!-- Modal Hướng Dẫn Cài Đặt App Cho Mọi Thiết Bị (iPhone, Android, Windows, Mac) -->
-  <div id="pwa-install-modal" class="hidden fixed inset-0 z-[100] bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
-      
-      <!-- Header -->
-      <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-phuochung-800 to-indigo-900 text-white">
-        <div class="flex items-center gap-2.5">
-          <div class="p-2 rounded-xl bg-white/10 backdrop-blur">
-            <i data-lucide="download-cloud" class="w-5 h-5 text-cyan-300"></i>
-          </div>
-          <div>
-            <h3 class="font-extrabold text-white text-base">Cài Đặt App 9A1 Phước Hưng</h3>
-            <p class="text-[11px] text-cyan-200">Tải & Cài đặt ứng dụng về Điện thoại / Máy tính</p>
-          </div>
-        </div>
-        <button onclick="closePWAInstructionModal()" class="text-white/80 hover:text-white p-1 rounded-lg">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
-      </div>
-
-      <!-- Body -->
-      <div class="p-5 overflow-y-auto space-y-4 text-xs">
-        <div class="p-3.5 bg-blue-50 dark:bg-blue-950/40 rounded-xl border border-blue-200 dark:border-blue-800/60 text-blue-900 dark:text-blue-200 flex items-start gap-2.5">
-          <i data-lucide="sparkles" class="w-5 h-5 text-amber-500 shrink-0 mt-0.5"></i>
-          <p class="leading-relaxed">
-            Ứng dụng được thiết kế theo chuẩn <b>Progressive Web App (PWA)</b> tiên tiến nhất, cho phép cài đặt trực tiếp về màn hình chính của mọi thiết bị điện thoại hoặc máy tính laptop để truy cập 1-chạm cực kỳ tiện lợi!
-          </p>
-        </div>
-
-        <div class="space-y-3">
-          <!-- 1. Hướng dẫn iPhone / iPad (iOS Safari) -->
-          <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
-            <div class="flex items-center gap-2 font-bold text-slate-900 dark:text-white text-xs">
-              <span class="w-5 h-5 rounded-full bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-extrabold text-[10px] flex items-center justify-center">1</span>
-              <span>Điện thoại iPhone / iPad (iOS Safari):</span>
-            </div>
-            <p class="text-slate-600 dark:text-slate-300 pl-7 leading-relaxed">
-              1. Bấm vào nút <b>Chia sẻ (Share)</b> <i data-lucide="share" class="w-3.5 h-3.5 inline text-blue-600"></i> ở thanh công cụ dưới trình duyệt Safari.<br>
-              2. Kéo xuống chọn <b>"Thêm vào Màn hình chính" (Add to Home Screen)</b>.<br>
-              3. Bấm <b>"Thêm" (Add)</b> ở góc trên bên phải. Biểu tượng App 9A1 sẽ xuất hiện ngay trên màn hình điện thoại!
-            </p>
-          </div>
-
-          <!-- 2. Hướng dẫn Điện thoại Android (Chrome / Samsung) -->
-          <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
-            <div class="flex items-center gap-2 font-bold text-slate-900 dark:text-white text-xs">
-              <span class="w-5 h-5 rounded-full bg-emerald-600 text-white font-extrabold text-[10px] flex items-center justify-center">2</span>
-              <span>Điện thoại Android (Google Chrome / Samsung Internet):</span>
-            </div>
-            <p class="text-slate-600 dark:text-slate-300 pl-7 leading-relaxed">
-              1. Bấm vào menu <b>3 chấm (⋮)</b> ở góc trên bên phải trình duyệt Chrome.<br>
-              2. Chọn <b>"Cài đặt ứng dụng"</b> (hoặc <b>"Thêm vào Màn hình chính"</b>).<br>
-              3. Xác nhận để ứng dụng tự động cài đặt về điện thoại.
-            </p>
-          </div>
-
-          <!-- 3. Hướng dẫn Máy tính / Laptop (Chrome / Edge) -->
-          <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2">
-            <div class="flex items-center gap-2 font-bold text-slate-900 dark:text-white text-xs">
-              <span class="w-5 h-5 rounded-full bg-blue-600 text-white font-extrabold text-[10px] flex items-center justify-center">3</span>
-              <span>Máy tính / Laptop (Google Chrome / Microsoft Edge):</span>
-            </div>
-            <p class="text-slate-600 dark:text-slate-300 pl-7 leading-relaxed">
-              1. Nhìn lên thanh địa chỉ trang web (Address Bar) góc trên bên phải.<br>
-              2. Bấm vào biểu tượng <b>Cài đặt App (nút màn hình máy tính có dấu cộng/mũi tên xuống)</b>.<br>
-              3. Chọn <b>"Cài đặt" (Install)</b>. Ứng dụng sẽ mở ở cửa sổ độc lập và tự tạo biểu tượng trên Desktop!
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Footer -->
-      <div class="px-5 py-3.5 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
-        <span class="text-[11px] text-slate-500 font-medium">Tương thích 100% iOS, Android, Windows, MacOS</span>
-        <button onclick="closePWAInstructionModal()" class="px-5 py-2 bg-phuochung-600 hover:bg-phuochung-700 text-white rounded-xl text-xs font-bold transition shadow-sm">
-          Đã Hiểu
-        </button>
-      </div>
-    </div>
-  </div>
+</div>
 </body>
 </html>
       `;
@@ -6509,6 +6395,89 @@ function handleExportEmulationExcelClick() {
       }
     });
 
+
+    // PWA Installation & App Download Logic (Cross-platform: Android, iOS iPhone/iPad, Windows, MacOS, ChromeOS)
+    let deferredInstallPrompt = null;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      console.log('PWA beforeinstallprompt captured successfully.');
+      const btn = document.getElementById('pwa-install-btn');
+      if (btn) {
+        btn.classList.remove('hidden');
+        btn.classList.add('flex');
+      }
+    });
+
+    window.addEventListener('appinstalled', () => {
+      console.log('PWA app installed successfully!');
+      deferredInstallPrompt = null;
+      const btn = document.getElementById('pwa-install-btn');
+      if (btn) {
+        btn.innerHTML = '<i data-lucide="check-circle" class="w-4 h-4 text-emerald-300"></i> <span>Đã cài đặt</span>';
+        if (window.lucide) lucide.createIcons();
+      }
+    });
+
+    function handlePWAInstallClick() {
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        deferredInstallPrompt.userChoice.then((choiceResult) => {
+          if (choiceResult.outcome === 'accepted') {
+            console.log('User accepted PWA install');
+          } else {
+            console.log('User dismissed PWA install');
+            openPWAInstructionModal();
+          }
+          deferredInstallPrompt = null;
+        });
+      } else {
+        openPWAInstructionModal();
+      }
+    }
+
+    function openPWAInstructionModal() {
+      const modal = document.getElementById('pwa-install-modal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        if (window.lucide) lucide.createIcons();
+
+        // Tự động nhận diện thiết bị người dùng đang sử dụng để làm nổi bật mục tương ứng
+        const ua = navigator.userAgent || navigator.vendor || window.opera || '';
+        const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        const isAndroid = /android/i.test(ua);
+
+        const iosBox = document.getElementById('pwa-guide-ios');
+        const androidBox = document.getElementById('pwa-guide-android');
+        const pcBox = document.getElementById('pwa-guide-pc');
+
+        const iosBadge = document.getElementById('pwa-badge-ios');
+        const androidBadge = document.getElementById('pwa-badge-android');
+        const pcBadge = document.getElementById('pwa-badge-pc');
+
+        if (isIOS && iosBox) {
+          iosBox.classList.add('ring-2', 'ring-emerald-500', 'bg-emerald-50/60', 'dark:bg-emerald-950/40');
+          if (iosBadge) iosBadge.classList.remove('hidden');
+        } else if (isAndroid && androidBox) {
+          androidBox.classList.add('ring-2', 'ring-emerald-500', 'bg-emerald-50/60', 'dark:bg-emerald-950/40');
+          if (androidBadge) androidBadge.classList.remove('hidden');
+        } else if (pcBox) {
+          pcBox.classList.add('ring-2', 'ring-blue-500', 'bg-blue-50/60', 'dark:bg-blue-950/40');
+          if (pcBadge) pcBadge.classList.remove('hidden');
+        }
+      }
+    }
+
+    function closePWAInstructionModal() {
+      const modal = document.getElementById('pwa-install-modal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
     window.renderApp = () => {
       renderDashboard();
       renderWorkspaceContent();
@@ -6551,6 +6520,96 @@ function handleExportEmulationExcelClick() {
         </button>
         <button onclick="handleCopyAppsScriptClipboard()" id="btn-copy-script-code" class="px-4 py-2 bg-phuochung-600 hover:bg-phuochung-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
           <i data-lucide="copy" class="w-4 h-4"></i> Sao chép toàn bộ mã
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Hướng Dẫn Cài Đặt App Cho Mọi Thiết Bị (iPhone, Android, Windows, Mac) -->
+  <div id="pwa-install-modal" class="hidden fixed inset-0 z-[100] bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+      
+      <!-- Header -->
+      <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-phuochung-800 to-indigo-900 text-white">
+        <div class="flex items-center gap-2.5">
+          <div class="p-2 rounded-xl bg-white/10 backdrop-blur">
+            <i data-lucide="download-cloud" class="w-5 h-5 text-cyan-300"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-white text-base">Cài Đặt App 9A1 Phước Hưng</h3>
+            <p class="text-[11px] text-cyan-200">Tải & Cài đặt ứng dụng về Điện thoại / Máy tính</p>
+          </div>
+        </div>
+        <button onclick="closePWAInstructionModal()" class="text-white/80 hover:text-white p-1 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="p-5 overflow-y-auto space-y-4 text-xs">
+        <div class="p-3.5 bg-blue-50 dark:bg-blue-950/40 rounded-xl border border-blue-200 dark:border-blue-800/60 text-blue-900 dark:text-blue-200 flex items-start gap-2.5">
+          <i data-lucide="sparkles" class="w-5 h-5 text-amber-500 shrink-0 mt-0.5"></i>
+          <p class="leading-relaxed">
+            Ứng dụng được thiết kế theo chuẩn <b>Progressive Web App (PWA)</b> tiên tiến, cho phép cài đặt trực tiếp về màn hình chính của mọi điện thoại (iPhone, Android) hoặc máy tính laptop để truy cập 1-chạm cực nhanh!
+          </p>
+        </div>
+
+        <div class="space-y-3">
+          <!-- 1. Hướng dẫn iPhone / iPad (iOS Safari) -->
+          <div id="pwa-guide-ios" class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2 transition-all">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2 font-bold text-slate-900 dark:text-white text-xs">
+                <span class="w-5 h-5 rounded-full bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 font-extrabold text-[10px] flex items-center justify-center">1</span>
+                <span>Điện thoại iPhone / iPad (iOS Safari):</span>
+              </div>
+              <span id="pwa-badge-ios" class="hidden text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-600 text-white">📱 Thiết bị của bạn</span>
+            </div>
+            <p class="text-slate-700 dark:text-slate-300 pl-7 leading-relaxed">
+              1. Bấm vào nút <b>Chia sẻ (Share)</b> <i data-lucide="share" class="w-3.5 h-3.5 inline text-blue-600"></i> ở thanh công cụ dưới cùng Safari.<br>
+              2. Kéo xuống danh sách và chọn <b>"Thêm vào Màn hình chính" (Add to Home Screen)</b>.<br>
+              3. Bấm <b>"Thêm" (Add)</b> góc trên bên phải. Biểu tượng App 9A1 sẽ xuất hiện ngay trên màn hình điện thoại!
+            </p>
+          </div>
+
+          <!-- 2. Hướng dẫn Điện thoại Android (Chrome / Samsung) -->
+          <div id="pwa-guide-android" class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2 transition-all">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2 font-bold text-slate-900 dark:text-white text-xs">
+                <span class="w-5 h-5 rounded-full bg-emerald-600 text-white font-extrabold text-[10px] flex items-center justify-center">2</span>
+                <span>Điện thoại Android (Google Chrome / Samsung Internet):</span>
+              </div>
+              <span id="pwa-badge-android" class="hidden text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-600 text-white">🤖 Thiết bị của bạn</span>
+            </div>
+            <p class="text-slate-700 dark:text-slate-300 pl-7 leading-relaxed">
+              1. Bấm vào menu <b>3 chấm (⋮)</b> ở góc trên bên phải trình duyệt Chrome.<br>
+              2. Chọn <b>"Cài đặt ứng dụng"</b> (hoặc <b>"Thêm vào Màn hình chính"</b>).<br>
+              3. Bấm <b>Cài đặt</b> để hoàn tất.
+            </p>
+          </div>
+
+          <!-- 3. Hướng dẫn Máy tính / Laptop (Chrome / Edge) -->
+          <div id="pwa-guide-pc" class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2 transition-all">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2 font-bold text-slate-900 dark:text-white text-xs">
+                <span class="w-5 h-5 rounded-full bg-blue-600 text-white font-extrabold text-[10px] flex items-center justify-center">3</span>
+                <span>Máy tính / Laptop (Google Chrome / Microsoft Edge):</span>
+              </div>
+              <span id="pwa-badge-pc" class="hidden text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-600 text-white">💻 Thiết bị của bạn</span>
+            </div>
+            <p class="text-slate-700 dark:text-slate-300 pl-7 leading-relaxed">
+              1. Nhìn lên thanh địa chỉ trang web (Address Bar) góc trên bên phải.<br>
+              2. Bấm vào biểu tượng <b>Cài đặt App (màn hình máy tính có mũi tên xuống)</b>.<br>
+              3. Bấm <b>"Cài đặt" (Install)</b>. Ứng dụng sẽ mở ở cửa sổ riêng và tự tạo biểu tượng ngoài màn hình Desktop!
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="px-5 py-3.5 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-800/50">
+        <span class="text-[11px] text-slate-500 font-medium">Tương thích 100% iOS Safari, Android, Windows, Mac</span>
+        <button onclick="closePWAInstructionModal()" class="px-5 py-2 bg-phuochung-600 hover:bg-phuochung-700 text-white rounded-xl text-xs font-bold transition shadow-sm">
+          Đã Hiểu
         </button>
       </div>
     </div>
