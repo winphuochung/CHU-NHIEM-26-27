@@ -720,6 +720,26 @@ class AppStore {
     return this.state.weeklyEmulationNotes[w];
   }
 
+  recordAudit(entry) {
+    if (!this.state.auditLogs || !Array.isArray(this.state.auditLogs)) {
+      this.state.auditLogs = [];
+    }
+    const log = {
+      id: entry.id || ('LOG_' + Date.now()),
+      timestamp: entry.timestamp || new Date().toLocaleString('vi-VN'),
+      actor: entry.actor || 'Hệ thống',
+      targetStudent: entry.targetStudent || 'Lớp 9A1',
+      action: entry.action || 'Cập nhật',
+      reason: entry.reason || '',
+      verified: entry.verified !== undefined ? entry.verified : true
+    };
+    this.state.auditLogs.unshift(log);
+    if (this.state.auditLogs.length > 200) {
+      this.state.auditLogs.pop();
+    }
+    return log;
+  }
+
   saveWeekEmulationNotes(weekNumber, { officerReview, nextWeekDirection, actor = 'Lớp trưởng (Trình Minh Thiện)' }) {
     const w = parseInt(weekNumber) || 2;
     const notes = this.getWeekEmulationNotes(w);

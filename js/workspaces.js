@@ -33,9 +33,9 @@ class WorkspaceManager {
       date: new Date().toLocaleDateString('vi-VN'),
       reporter: 'Lớp trưởng Trình Minh Thiện',
       toStats,
-      topRankTo: toStats[0].toId,
-      totalViolations: window.store.state.auditLogs.filter(l => l.action.includes('Trừ')).length,
-      totalRewards: window.store.state.auditLogs.filter(l => l.action.includes('Cộng')).length,
+      topRankTo: (toStats[0] && toStats[0].toId) || 1,
+      totalViolations: ((window.store && window.store.state && window.store.state.auditLogs) || []).filter(l => l && l.action && l.action.includes('Trừ')).length,
+      totalRewards: ((window.store && window.store.state && window.store.state.auditLogs) || []).filter(l => l && l.action && l.action.includes('Cộng')).length,
       status: 'Chờ GVCN phê duyệt'
     };
 
