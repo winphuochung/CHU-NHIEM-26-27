@@ -6293,6 +6293,16 @@ function handleExportEmulationExcelClick() {
           .then(reg => console.log('PWA Service Worker registered:', reg.scope))
           .catch(err => console.warn('PWA Service Worker error:', err));
       }
+
+      // Auto Cloud Sync: Tự động đồng bộ từ Google Sheets khi vừa khởi chạy app để mọi người dùng đều thấy dữ liệu thống nhất
+      if (window.syncHub && typeof window.syncHub.pullFromGoogleSheets === 'function') {
+        window.syncHub.pullFromGoogleSheets()
+          .then(res => {
+            console.log('Tự động nạp dữ liệu đám mây Google Sheets thành công:', res);
+            if (typeof window.renderApp === 'function') window.renderApp();
+          })
+          .catch(err => console.log('Thông báo đồng bộ đám mây:', err.message));
+      }
     });
 
     window.renderApp = () => {
