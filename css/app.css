@@ -147,3 +147,24 @@ body {
   transform: scale(0.96);
 }
 
+/* Touch-friendly scrolling & mobile responsive UI optimizations */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 640px) {
+  button, select, input {
+    min-height: 38px;
+    touch-action: manipulation;
+  }
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
