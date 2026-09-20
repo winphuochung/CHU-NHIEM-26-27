@@ -767,6 +767,16 @@ class AppStore {
     if (stateToSave) this.state = stateToSave;
     try {
       localStorage.setItem(this.storageKey, JSON.stringify(this.state));
+
+      // Tự động đẩy ngầm dữ liệu động (Dynamic Cloud Auto-Sync) sang Google Sheets sau 1 giây
+      if (window.syncHub && typeof window.syncHub.pushAllToGoogleSheets === 'function' && !this._isAutoPushing) {
+        this._isAutoPushing = true;
+        setTimeout(() => {
+          window.syncHub.pushAllToGoogleSheets()
+            .catch(err => console.log('Thông báo lưu mây tự động:', err.message))
+            .finally(() => { this._isAutoPushing = false; });
+        }, 1200);
+      }
     } catch (e) {
       console.error('Lỗi khi lưu state vào LocalStorage:', e);
     }
