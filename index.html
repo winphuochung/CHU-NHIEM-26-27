@@ -142,6 +142,8 @@
   <!-- MAIN CONTENT CONTAINER -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
     
+    <!-- THANH ĐIỀU HÀNH QUY TRÌNH THI ĐUA 4 BƯỚC TOÀN CỤC (ALWAYS VISIBLE TRÊN ĐIỆN THOẠI & LAPTOP) -->
+    <div id="persistent-workflow-guide" class="mb-6"></div>
     <!-- ============================================== -->
     <!-- TAB 1: TỔNG QUAN & AI DASHBOARD (GVCN)          -->
     <!-- ============================================== -->
@@ -1968,8 +1970,8 @@
     </div>
   </div>
 
-  <!-- Thông báo nhanh Toast khi hoán đổi chỗ ngồi -->
-  <div id="seating-quick-toast" class="fixed bottom-5 right-5 z-50 bg-slate-900/90 dark:bg-slate-800/95 text-white text-xs font-bold px-4 py-2.5 rounded-2xl shadow-xl flex items-center gap-2 border border-slate-700 pointer-events-none transition-all duration-300 transform translate-y-2 opacity-0"></div>
+  <!-- Thông báo nhanh Toast toàn cục (Mobile & Laptop) -->
+  <div id="seating-quick-toast" class="fixed top-20 sm:top-24 left-1/2 -translate-x-1/2 z-[9999] max-w-[92vw] sm:max-w-md bg-slate-900/95 dark:bg-slate-800/95 text-white text-xs sm:text-sm font-bold px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 border-2 border-emerald-500 pointer-events-none transition-all duration-300 transform -translate-y-6 opacity-0"></div>
 
   <!-- FOOTER -->
   <footer class="border-t border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 py-4 mt-8 text-center text-xs text-slate-500">
@@ -1978,18 +1980,54 @@
   </footer>
 
   <!-- Scripts Core -->
-  <script src="js/store.js"></script>
-  <script src="js/security.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/ai-analytics.js"></script>
-  <script src="js/workspaces.js"></script>
-  <script src="js/exam-hub.js"></script>
-  <script src="js/gamification.js"></script>
-  <script src="js/sync-hub.js"></script>
-  <script src="js/voice-assistant.js"></script>
+  <script src="js/store.js?v=6.1.1"></script>
+  <script src="js/security.js?v=6.1.1"></script>
+  <script src="js/auth.js?v=6.1.1"></script>
+  <script src="js/ai-analytics.js?v=6.1.1"></script>
+  <script src="js/workspaces.js?v=6.1.1"></script>
+  <script src="js/exam-hub.js?v=6.1.1"></script>
+  <script src="js/gamification.js?v=6.1.1"></script>
+  <script src="js/sync-hub.js?v=6.1.1"></script>
+  <script src="js/voice-assistant.js?v=6.1.1"></script>
   
   <!-- Main Application Orchestration Script -->
   <script>
+    // Defensive Fallbacks for store & syncHub
+    if (window.store) {
+      if (!window.store.submitTeamEmulation) {
+        window.store.submitTeamEmulation = function(weekNumber, toId, actor = '') {
+          const w = parseInt(weekNumber) || 2;
+          const notes = this.getWeekEmulationNotes(w);
+          if (!notes.teamSubmissions) notes.teamSubmissions = {};
+          const submitTime = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' ' + new Date().toLocaleDateString('vi-VN');
+          notes.teamSubmissions[toId] = {
+            submitted: true,
+            submittedAt: submitTime,
+            actor: actor || `Tổ trưởng ${toId}`
+          };
+          this.saveState();
+          return notes.teamSubmissions[toId];
+        };
+      }
+      if (!window.store.isTeamSubmitted) {
+        window.store.isTeamSubmitted = function(weekNumber, toId) {
+          const w = parseInt(weekNumber) || 2;
+          const notes = this.getWeekEmulationNotes(w);
+          if (!notes || !notes.teamSubmissions) return false;
+          const sub = notes.teamSubmissions[toId] || notes.teamSubmissions[String(toId)] || notes.teamSubmissions[parseInt(toId)];
+          return Boolean(sub && sub.submitted);
+        };
+      }
+      if (!window.store.getTeamSubmissionInfo) {
+        window.store.getTeamSubmissionInfo = function(weekNumber, toId) {
+          const w = parseInt(weekNumber) || 2;
+          const notes = this.getWeekEmulationNotes(w);
+          if (!notes || !notes.teamSubmissions) return null;
+          return notes.teamSubmissions[toId] || notes.teamSubmissions[String(toId)] || notes.teamSubmissions[parseInt(toId)] || null;
+        };
+      }
+    }
+
     // State Quản lý Tuần thi đua
     let selectedEmulationWeek = 2; // Mặc định Tuần 2
     let selectedTeamFilter = 'all'; // 'all', 1, 2, 3, 4
@@ -2129,6 +2167,238 @@
       handleConfirmGVCNLogin();
     }
 
+    function renderPersistentWorkflowGuide() {
+      const container = document.getElementById('persistent-workflow-guide');
+      if (!container) return;
+
+      const w = selectedEmulationWeek || 2;
+      const curRole = (window.authManager && typeof window.authManager.getCurrentRole === 'function')
+        ? window.authManager.getCurrentRole()
+        : { id: 'gvcn', name: 'Giáo viên Chủ nhiệm' };
+      const weekNotes = window.store.getWeekEmulationNotes(w);
+      const isApproved = weekNotes.status === 'Đã duyệt';
+      const isSentToGVCN = weekNotes.status === 'Chờ GVCN duyệt' || weekNotes.bcsSubmitted;
+
+      const teamsSubStatus = [1, 2, 3, 4].map(tId => {
+        const isSub = window.store && typeof window.store.isTeamSubmitted === 'function' ? window.store.isTeamSubmitted(w, tId) : false;
+        const subInfo = window.store && typeof window.store.getTeamSubmissionInfo === 'function' ? window.store.getTeamSubmissionInfo(w, tId) : null;
+        return { tId, isSub, subInfo };
+      });
+      const subTeamsCount = teamsSubStatus.filter(t => t.isSub).length;
+
+      const isToTruong = curRole.id.startsWith('to_truong_');
+      const myToId = isToTruong ? (curRole.id === 'to_truong_2' ? 2 : (curRole.id === 'to_truong_3' ? 3 : (curRole.id === 'to_truong_4' ? 4 : 1))) : 1;
+      const myTeamSub = isToTruong ? teamsSubStatus.find(t => t.tId === myToId) : null;
+
+      const isBCS = ['lop_truong', 'lp_hoc_tap', 'lp_trat_tu', 'lp_lao_dong', 'thu_quy'].includes(curRole.id);
+      const isGVCN = curRole.id === 'gvcn';
+
+      container.innerHTML = `
+        <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white shadow-xl border border-indigo-500/40 space-y-4">
+          <!-- Header thanh quy trình -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-indigo-800/60">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-slate-950 flex items-center justify-center font-black text-lg shrink-0 shadow-md">
+                ⚡
+              </div>
+              <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h3 class="font-extrabold text-sm sm:text-base text-white">
+                    Quy Trình Thi Đua Tuần ${w} (4 Bước Khép Kín)
+                  </h3>
+                  <span class="text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-full font-black ${isApproved ? 'bg-emerald-500 text-slate-950 shadow-sm' : (isSentToGVCN ? 'bg-amber-400 text-slate-950' : 'bg-purple-400 text-slate-950')}">
+                    ${isApproved ? '✓ ĐÃ PHÊ DUYỆT' : (isSentToGVCN ? '⏳ CHỜ GVCN DUYỆT' : 'ĐANG THỰC HIỆN')}
+                  </span>
+                </div>
+                <p class="text-xs text-indigo-200 mt-0.5">
+                  Bạn đang ở vai trò: <strong class="text-amber-300 font-bold">${curRole.name}</strong> • Tiến độ 4 Tổ: <strong class="text-emerald-300 font-bold">${subTeamsCount}/4 Tổ đã nộp</strong>
+                </p>
+              </div>
+            </div>
+
+            <!-- Bộ chuyển nhanh tuần -->
+            <div class="flex items-center gap-1.5 self-start sm:self-auto bg-slate-800/80 px-3 py-1.5 rounded-xl border border-indigo-700/50 text-xs">
+              <span class="text-indigo-300 font-medium">Chọn tuần:</span>
+              <button onclick="navigateWeek(-1)" class="w-6 h-6 rounded bg-indigo-900/80 hover:bg-indigo-700 flex items-center justify-center text-xs font-bold">◀</button>
+              <span class="font-black text-amber-300 px-1">Tuần ${w}</span>
+              <button onclick="navigateWeek(1)" class="w-6 h-6 rounded bg-indigo-900/80 hover:bg-indigo-700 flex items-center justify-center text-xs font-bold">▶</button>
+            </div>
+          </div>
+
+          <!-- Lưới 4 Bước Trực Quan -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+            
+            <!-- BƯỚC 1: TỔ TRƯỞNG NHẬP LIỆU & GỬI CHO BAN CÁN SỰ -->
+            <div class="p-3.5 rounded-xl border ${isToTruong ? 'bg-purple-900/40 border-purple-400 ring-2 ring-purple-500/50' : 'bg-slate-800/60 border-slate-700/80'} flex flex-col justify-between gap-2.5 transition-all">
+              <div>
+                <div class="flex items-center justify-between">
+                  <span class="font-black text-xs text-purple-300 flex items-center gap-1.5">
+                    <span class="w-5 h-5 rounded-full bg-purple-500 text-white flex items-center justify-center text-[10px] font-extrabold">1</span>
+                    Tổ Trưởng Nộp Điểm
+                  </span>
+                  ${isToTruong ? '<span class="text-[9px] font-black uppercase bg-purple-500 text-white px-1.5 py-0.5 rounded">Vai trò bạn</span>' : ''}
+                </div>
+                <p class="text-[11px] text-slate-300 mt-1">
+                  Tổ trưởng nhập điểm, đồng bộ & gửi qua cho Lớp trưởng, Lớp phó xem và điều chỉnh.
+                </p>
+                <div class="mt-2 flex flex-wrap gap-1">
+                  ${teamsSubStatus.map(t => `
+                    <span class="px-1.5 py-0.5 rounded text-[10px] font-bold ${t.isSub ? 'bg-emerald-900/80 text-emerald-300 border border-emerald-600' : 'bg-slate-700/80 text-slate-400'}">
+                      T${t.tId}: ${t.isSub ? '✓' : '⏳'}
+                    </span>
+                  `).join('')}
+                </div>
+              </div>
+
+              <div>
+                ${isToTruong ? (
+                  myTeamSub && myTeamSub.isSub ? `
+                    <div class="space-y-1.5">
+                      <div class="w-full py-2 px-2.5 rounded-xl bg-emerald-600 text-white font-bold text-center text-xs flex items-center justify-center gap-1.5 shadow-sm">
+                        <i data-lucide="check-circle" class="w-4 h-4"></i> ✓ Đã Gửi Cho Ban Cán Sự
+                      </div>
+                      <button onclick="handleSendToBCS(${myToId}, ${w})" class="w-full py-1 rounded-lg bg-purple-800 hover:bg-purple-700 text-purple-200 text-[10px] font-bold transition flex items-center justify-center gap-1">
+                        <i data-lucide="refresh-cw" class="w-3 h-3"></i> Cập nhật gửi lại
+                      </button>
+                    </div>
+                  ` : `
+                    <button onclick="handleSendToBCS(${myToId}, ${w})" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-lg transition transform active:scale-95 animate-pulse">
+                      <i data-lucide="send" class="w-4 h-4"></i> 📥 Gửi Dữ Liệu Tổ ${myToId} Cho Ban Cán Sự
+                    </button>
+                  `
+                ) : `
+                  <button onclick="quickSelectRoleAndAction('to_truong_1', ${w})" class="w-full py-2 px-3 rounded-xl bg-slate-700 hover:bg-purple-700 text-slate-200 hover:text-white font-bold text-xs flex items-center justify-center gap-1.5 transition">
+                    <i data-lucide="user-check" class="w-3.5 h-3.5"></i> Chọn Tổ 1 & Nộp Dữ Liệu
+                  </button>
+                `}
+              </div>
+            </div>
+
+            <!-- BƯỚC 2: BAN CÁN SỰ XEM, ĐIỀU CHỈNH & GỬI LÊN GVCN -->
+            <div class="p-3.5 rounded-xl border ${isBCS ? 'bg-amber-900/40 border-amber-400 ring-2 ring-amber-500/50' : 'bg-slate-800/60 border-slate-700/80'} flex flex-col justify-between gap-2.5 transition-all">
+              <div>
+                <div class="flex items-center justify-between">
+                  <span class="font-black text-xs text-amber-300 flex items-center gap-1.5">
+                    <span class="w-5 h-5 rounded-full bg-amber-500 text-slate-950 flex items-center justify-center text-[10px] font-extrabold">2</span>
+                    Ban Cán Sự Nộp GVCN
+                  </span>
+                  ${isBCS ? '<span class="text-[9px] font-black uppercase bg-amber-500 text-slate-950 px-1.5 py-0.5 rounded">Vai trò bạn</span>' : ''}
+                </div>
+                <p class="text-[11px] text-slate-300 mt-1">
+                  Lớp trưởng & các Lớp phó xem, điều chỉnh thi đua 4 tổ rồi gửi báo cáo tổng kết qua cho GVCN.
+                </p>
+                <div class="mt-2 text-[10px] text-slate-400">
+                  Trạng thái: <strong class="${isSentToGVCN ? 'text-emerald-400 font-bold' : 'text-amber-400 font-bold'}">${isSentToGVCN ? '✓ Đã chuyển lên GVCN' : '⏳ Đang chờ gửi'}</strong>
+                </div>
+              </div>
+
+              <div>
+                ${isBCS ? (
+                  isSentToGVCN ? `
+                    <div class="space-y-1.5">
+                      <div class="w-full py-2 px-2.5 rounded-xl bg-emerald-600 text-white font-bold text-center text-xs flex items-center justify-center gap-1.5 shadow-sm">
+                        <i data-lucide="check-circle" class="w-4 h-4"></i> ✓ Đã Gửi Cho GVCN
+                      </div>
+                      <button onclick="handleSendToGVCN(${w})" class="w-full py-1 rounded-lg bg-amber-800 hover:bg-amber-700 text-amber-200 text-[10px] font-bold transition flex items-center justify-center gap-1">
+                        <i data-lucide="refresh-cw" class="w-3 h-3"></i> Cập nhật gửi lại
+                      </button>
+                    </div>
+                  ` : `
+                    <button onclick="handleSendToGVCN(${w})" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-lg transition transform active:scale-95">
+                      <i data-lucide="send" class="w-4 h-4"></i> 📤 Gửi Báo Cáo Cho GVCN
+                    </button>
+                  `
+                ) : `
+                  <button onclick="quickSelectRoleAndAction('lop_truong', ${w})" class="w-full py-2 px-3 rounded-xl bg-slate-700 hover:bg-amber-600 text-slate-200 hover:text-white font-bold text-xs flex items-center justify-center gap-1.5 transition">
+                    <i data-lucide="crown" class="w-3.5 h-3.5"></i> Chọn Lớp Trưởng & Gửi
+                  </button>
+                `}
+              </div>
+            </div>
+
+            <!-- BƯỚC 3: GVCN PHÊ DUYỆT CHÍNH THỨC -->
+            <div class="p-3.5 rounded-xl border ${isGVCN ? 'bg-emerald-900/40 border-emerald-400 ring-2 ring-emerald-500/50' : 'bg-slate-800/60 border-slate-700/80'} flex flex-col justify-between gap-2.5 transition-all">
+              <div>
+                <div class="flex items-center justify-between">
+                  <span class="font-black text-xs text-emerald-300 flex items-center gap-1.5">
+                    <span class="w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] font-extrabold">3</span>
+                    GVCN Phê Duyệt
+                  </span>
+                  ${isGVCN ? '<span class="text-[9px] font-black uppercase bg-emerald-500 text-white px-1.5 py-0.5 rounded">Vai trò bạn</span>' : ''}
+                </div>
+                <p class="text-[11px] text-slate-300 mt-1">
+                  GVCN kiểm tra và bấm phê duyệt chính thức kết quả thi đua sau khi Ban cán sự đã điều chỉnh.
+                </p>
+                <div class="mt-2 text-[10px] text-slate-400">
+                  Kết quả: <strong class="${isApproved ? 'text-emerald-400 font-bold' : 'text-slate-300'}">${isApproved ? '✓ Đã Phê Duyệt Tuần ' + w : 'Chờ GVCN phê duyệt'}</strong>
+                </div>
+              </div>
+
+              <div>
+                ${isGVCN ? (
+                  isApproved ? `
+                    <div class="space-y-1.5">
+                      <div class="w-full py-2 px-2.5 rounded-xl bg-emerald-700 text-white font-bold text-center text-xs flex items-center justify-center gap-1.5 shadow-sm">
+                        <i data-lucide="check-check" class="w-4 h-4"></i> ✓ Đã Phê Duyệt Báo Cáo
+                      </div>
+                      <button onclick="handleApproveWeeklyReportDirect(${w}, true)" class="w-full py-1 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-[10px] font-bold transition flex items-center justify-center gap-1">
+                        <i data-lucide="undo-2" class="w-3 h-3"></i> Mở lại duyệt
+                      </button>
+                    </div>
+                  ` : `
+                    <button onclick="handleApproveWeeklyReportDirect(${w})" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-lg transition transform active:scale-95">
+                      <i data-lucide="check-circle" class="w-4 h-4"></i> ✔ Phê Duyệt Báo Cáo Tuần ${w}
+                    </button>
+                  `
+                ) : `
+                  <button onclick="quickSelectRoleAndAction('gvcn', ${w})" class="w-full py-2 px-3 rounded-xl bg-slate-700 hover:bg-emerald-600 text-slate-200 hover:text-white font-bold text-xs flex items-center justify-center gap-1.5 transition">
+                    <i data-lucide="shield-check" class="w-3.5 h-3.5"></i> Chọn GVCN & Duyệt Ngay
+                  </button>
+                `}
+              </div>
+            </div>
+
+            <!-- BƯỚC 4: XUẤT BÁO CÁO WORD NGHỊ ĐỊNH 30 -->
+            <div class="p-3.5 rounded-xl border bg-slate-800/60 border-slate-700/80 flex flex-col justify-between gap-2.5">
+              <div>
+                <div class="flex items-center justify-between">
+                  <span class="font-black text-xs text-blue-300 flex items-center gap-1.5">
+                    <span class="w-5 h-5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[10px] font-extrabold">4</span>
+                    Xuất Báo Cáo Word
+                  </span>
+                  <span class="text-[9px] font-bold bg-blue-900/80 text-blue-300 border border-blue-700 px-1.5 py-0.5 rounded">NĐ 30/2020</span>
+                </div>
+                <p class="text-[11px] text-slate-300 mt-1">
+                  Xuất tệp Word đầy đủ thể thức hành chính, kèm nút gửi Zalo, lưu file PDF trên điện thoại.
+                </p>
+                <div class="mt-2 text-[10px] text-blue-300">
+                  Phù hợp in ấn, lưu trữ hồ sơ chủ nhiệm & gửi phụ huynh.
+                </div>
+              </div>
+
+              <div>
+                <button onclick="handleExportEmulationWordClick(${w})" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-lg transition transform active:scale-95">
+                  <i data-lucide="file-text" class="w-4 h-4"></i> 📄 Xuất Word (NĐ 30)
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      `;
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function quickSelectRoleAndAction(roleId, weekNum) {
+      const select = document.getElementById('role-select');
+      if (select) select.value = roleId;
+      handleRoleChange(roleId);
+      const w = parseInt(weekNum) || selectedEmulationWeek || 2;
+      selectEmulationWeek(w);
+      showSeatingToast(`Đã chuyển sang vai trò ${window.authManager.getCurrentRole().name}`);
+    }
+
     function updateRoleUI() {
       const cur = window.authManager.getCurrentRole();
       const select = document.getElementById('role-select');
@@ -2146,6 +2416,7 @@
         btnTeams.classList.remove('hidden');
       }
 
+      renderPersistentWorkflowGuide(); // Luôn cập nhật thanh 4 bước toàn cục
       renderEmulationTable(); // Tự động cập nhật bảng thi đua & banner vai trò ngay lập tức!
       renderWorkspaceContent();
       renderDashboard();
@@ -2229,6 +2500,7 @@
     function selectEmulationWeek(weekNum) {
       selectedEmulationWeek = parseInt(weekNum) || 2;
       window.selectedEmulationWeek = selectedEmulationWeek;
+      renderPersistentWorkflowGuide();
       renderEmulationTable();
       renderWorkspaceContent();
     }
@@ -2239,6 +2511,7 @@
       if (nextW > 35) nextW = 35;
       selectedEmulationWeek = nextW;
       window.selectedEmulationWeek = selectedEmulationWeek;
+      renderPersistentWorkflowGuide();
       renderEmulationTable();
       renderWorkspaceContent();
     }
@@ -5363,12 +5636,17 @@ function handleExportEmulationExcelClick() {
     // Action Handlers
     function handleSendToBCS(toId, weekNum) {
       const w = parseInt(weekNum) || selectedEmulationWeek || 2;
-      window.store.submitTeamEmulation(w, toId, `Tổ trưởng ${toId}`);
+      const curRole = (window.authManager && typeof window.authManager.getCurrentRole === 'function')
+        ? window.authManager.getCurrentRole()
+        : { name: `Tổ trưởng ${toId}` };
+      window.store.submitTeamEmulation(w, toId, curRole.name);
       if (window.syncHub && typeof window.syncHub.pushAllToGoogleSheets === 'function') {
         window.syncHub.pushAllToGoogleSheets().catch(() => {});
       }
       showSeatingToast(`✅ Đã gửi dữ liệu Tổ ${toId} Tuần ${w} cho Ban Cán Sự thành công!`);
+      renderPersistentWorkflowGuide();
       renderEmulationTable();
+      renderWorkspaceContent();
     }
 
     function handleSendToGVCN(weekNum) {
@@ -5392,8 +5670,10 @@ function handleExportEmulationExcelClick() {
       if (window.syncHub && typeof window.syncHub.pushAllToGoogleSheets === 'function') {
         window.syncHub.pushAllToGoogleSheets().catch(() => {});
       }
-      showSeatingToast(`✅ Đã gửi báo cáo thi đua Tuần ${w} cho GVCN phê duyệt!`);
+      showSeatingToast(`✅ Ban cán sự đã gửi báo cáo thi đua Tuần ${w} cho GVCN phê duyệt!`);
+      renderPersistentWorkflowGuide();
       renderEmulationTable();
+      renderWorkspaceContent();
     }
 
     function handleApproveWeeklyReportDirect(weekNum, reopen = false) {
@@ -5414,7 +5694,9 @@ function handleExportEmulationExcelClick() {
       if (window.syncHub && typeof window.syncHub.pushAllToGoogleSheets === 'function') {
         window.syncHub.pushAllToGoogleSheets().catch(() => {});
       }
+      renderPersistentWorkflowGuide();
       renderEmulationTable();
+      renderWorkspaceContent();
       renderDashboard();
     }
 
@@ -5945,12 +6227,15 @@ function handleExportEmulationExcelClick() {
     function showSeatingToast(message) {
       const toast = document.getElementById('seating-quick-toast');
       if (!toast) return;
-      toast.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4 text-emerald-400 shrink-0"></i> <span>${message}</span>`;
-      lucide.createIcons();
-      toast.classList.remove('translate-y-2', 'opacity-0');
-      setTimeout(() => {
-        toast.classList.add('translate-y-2', 'opacity-0');
-      }, 3000);
+      toast.innerHTML = `<i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-400 shrink-0"></i> <span>${message}</span>`;
+      if (window.lucide) lucide.createIcons();
+      toast.classList.remove('-translate-y-6', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      if (window._seatingToastTimer) clearTimeout(window._seatingToastTimer);
+      window._seatingToastTimer = setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('-translate-y-6', 'opacity-0');
+      }, 3500);
     }
 
     // Helper hiển thị Huy hiệu Cán sự Lớp
@@ -6698,6 +6983,7 @@ function handleExportEmulationExcelClick() {
       }
 
       initCountdown();
+      renderPersistentWorkflowGuide();
       renderDashboard();
       renderEmulationTable();
       syncRoleSelectLabels();
@@ -6803,6 +7089,7 @@ function handleExportEmulationExcelClick() {
     }
 
     window.renderApp = () => {
+      renderPersistentWorkflowGuide();
       renderDashboard();
       renderWorkspaceContent();
       renderEmulationTable();
