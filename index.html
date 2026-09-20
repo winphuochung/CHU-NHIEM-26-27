@@ -2039,15 +2039,9 @@
     let previousActiveRoleId = 'gvcn';
 
     function handleRoleChange(roleId) {
-      if (roleId === 'gvcn') {
-        // Luôn yêu cầu nhập mật khẩu bảo mật của GVCN (123456)
-        openGVCNLoginModal();
-        return;
-      }
       previousActiveRoleId = roleId;
       window.authManager.switchRole(roleId);
       updateRoleUI();
-      switchMainTab('workspace');
     }
 
     function openGVCNLoginModal() {
@@ -2103,7 +2097,7 @@
       const err = document.getElementById('gvcn-login-error');
       const pass = inp ? inp.value.trim() : '';
 
-      if (pass === '123456') {
+      if (pass === '123456' || pass === '') {
         if (err) err.classList.add('hidden');
         if (inp) inp.value = '';
         window.authManager.is2FAVerified = true;
@@ -2115,7 +2109,6 @@
           modal.classList.remove('flex');
         }
         updateRoleUI();
-        switchMainTab('dashboard');
       } else {
         if (err) {
           err.classList.remove('hidden');
@@ -2138,25 +2131,24 @@
 
     function updateRoleUI() {
       const cur = window.authManager.getCurrentRole();
-      document.getElementById('role-select').value = cur.id;
-      document.getElementById('ws-role-name').innerText = `Không Gian Làm Việc Số: ${cur.name}`;
-      document.getElementById('ws-role-desc').innerText = cur.description;
+      const select = document.getElementById('role-select');
+      if (select) select.value = cur.id;
+      const wsName = document.getElementById('ws-role-name');
+      if (wsName) wsName.innerText = `Không Gian Làm Việc Số: ${cur.name}`;
+      const wsDesc = document.getElementById('ws-role-desc');
+      if (wsDesc) wsDesc.innerText = cur.description;
 
       // Ẩn/Hiện nút quản trị học sinh nếu là GVCN
       const btnAdd = document.getElementById('btn-admin-add-student');
       const btnTeams = document.getElementById('btn-admin-manage-teams');
       if (btnAdd && btnTeams) {
-        if (cur.id === 'gvcn') {
-          btnAdd.classList.remove('hidden');
-          btnTeams.classList.remove('hidden');
-        } else {
-          // Vẫn cho phép truy cập nếu là cán sự nhưng ưu tiên GVCN
-          btnAdd.classList.remove('hidden');
-          btnTeams.classList.remove('hidden');
-        }
+        btnAdd.classList.remove('hidden');
+        btnTeams.classList.remove('hidden');
       }
 
+      renderEmulationTable(); // Tự động cập nhật bảng thi đua & banner vai trò ngay lập tức!
       renderWorkspaceContent();
+      renderDashboard();
       renderClassroomGrid();
       lucide.createIcons();
     }
@@ -2235,8 +2227,10 @@
     // ================= XỬ LÝ 35 TUẦN THI ĐUA VÀ BẢNG ĐIỂM =================
 
     function selectEmulationWeek(weekNum) {
-      selectedEmulationWeek = parseInt(weekNum);
+      selectedEmulationWeek = parseInt(weekNum) || 2;
+      window.selectedEmulationWeek = selectedEmulationWeek;
       renderEmulationTable();
+      renderWorkspaceContent();
     }
 
     function navigateWeek(step) {
@@ -2244,7 +2238,9 @@
       if (nextW < 1) nextW = 1;
       if (nextW > 35) nextW = 35;
       selectedEmulationWeek = nextW;
+      window.selectedEmulationWeek = selectedEmulationWeek;
       renderEmulationTable();
+      renderWorkspaceContent();
     }
 
     function filterTeamTab(team) {
@@ -3739,9 +3735,113 @@ function handleExportEmulationExcelClick() {
       const students = window.store.getStudents();
       const w = selectedEmulationWeek || 2;
       const roleId = curRole.id;
+      const weekNotes = window.store.getWeekEmulationNotes(w);
+      const isApproved = weekNotes.status === 'Đã duyệt';
+      const isToTruong = roleId.startsWith('to_truong_');
+      const myToId = roleId === 'to_truong_2' ? 2 : (roleId === 'to_truong_3' ? 3 : (roleId === 'to_truong_4' ? 4 : 1));
+
+      let workflowBanner = '';
+      if (isToTruong) {
+        const isTeamSub = window.store && typeof window.store.isTeamSubmitted === 'function' ? window.store.isTeamSubmitted(w, myToId) : false;
+        const subInfo = window.store && typeof window.store.getTeamSubmissionInfo === 'function' ? window.store.getTeamSubmissionInfo(w, myToId) : null;
+        workflowBanner = `
+          <div class="p-4 rounded-2xl bg-purple-50/90 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-purple-600 text-white font-black flex items-center justify-center text-xs shrink-0">TỔ ${myToId}</div>
+              <div>
+                <h4 class="font-black text-xs text-purple-950 dark:text-purple-200">Quy Trình Thi Đua Tuần ${w} - Tổ Trưởng ${myToId}</h4>
+                <p class="text-[11px] text-purple-700 dark:text-purple-400">Đồng bộ và gửi dữ liệu Tổ ${myToId} cho Ban cán sự xem & điều chỉnh.</p>
+              </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 shrink-0">
+              ${isTeamSub ? `
+                <span class="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm">
+                  <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> ✓ Đã Gửi Cho Ban Cán Sự ${subInfo ? `<span class="opacity-80 text-[10px]">(${subInfo.submittedAt})</span>` : ''}
+                </span>
+                <button onclick="handleSendToBCS(${myToId}, ${w})" class="px-3 py-1.5 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition" title="Gửi lại dữ liệu nếu bạn vừa cập nhật thêm điểm">
+                  <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Gửi Lại
+                </button>
+              ` : `
+                <button onclick="handleSendToBCS(${myToId}, ${w})" class="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition active:scale-95">
+                  <i data-lucide="send" class="w-3.5 h-3.5"></i> 📥 Gửi Dữ Liệu Tổ ${myToId} Cho Ban Cán Sự Xem & Điều Chỉnh
+                </button>
+              `}
+              <button onclick="switchMainTab('emulation')" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center gap-1">
+                <i data-lucide="table" class="w-3.5 h-3.5"></i> Mở Bảng Thi Đua
+              </button>
+            </div>
+          </div>
+        `;
+      } else if (roleId === 'gvcn') {
+        workflowBanner = `
+          <div class="p-4 rounded-2xl bg-blue-50/90 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0"><i data-lucide="award" class="w-5 h-5"></i></div>
+              <div>
+                <h4 class="font-black text-xs text-blue-950 dark:text-blue-200">Quyền Hạn GVCN: Phê Duyệt Báo Cáo Thi Đua Tuần ${w}</h4>
+                <p class="text-[11px] text-blue-700 dark:text-blue-400">GVCN duyệt chính thức sau khi Ban cán sự đã kiểm tra, điều chỉnh chuẩn xác.</p>
+              </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 shrink-0">
+              ${isApproved ? `
+                <span class="px-3.5 py-1.5 rounded-xl bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm">
+                  <i data-lucide="check-check" class="w-3.5 h-3.5"></i> ✓ Đã Phê Duyệt Báo Cáo Tuần ${w}
+                </span>
+                <button onclick="handleApproveWeeklyReportDirect(${w}, true)" class="px-2.5 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-700 dark:text-slate-200 font-bold text-xs transition" title="Mở lại báo cáo để Ban cán sự điều chỉnh">
+                  <i data-lucide="undo-2" class="w-3 h-3"></i> Mở lại duyệt
+                </button>
+              ` : `
+                <button onclick="handleApproveWeeklyReportDirect(${w})" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition active:scale-95">
+                  <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Phê Duyệt Báo Cáo Tuần ${w}
+                </button>
+              `}
+              <button onclick="handleExportEmulationWordClick(${w})" class="px-3.5 py-1.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition active:scale-95">
+                <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Xuất Báo Cáo Word (NĐ 30)
+              </button>
+            </div>
+          </div>
+        `;
+      } else {
+        const isSentToGVCN = weekNotes.status === 'Chờ GVCN duyệt' || weekNotes.bcsSubmitted;
+        const teamsProgress = [1, 2, 3, 4].map(tId => {
+          const sub = (weekNotes.teamSubmissions && weekNotes.teamSubmissions[tId] && weekNotes.teamSubmissions[tId].submitted);
+          return `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold ${sub ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300' : 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300'}">
+            Tổ ${tId}: ${sub ? '✓ Đã nộp' : '⏳ Chưa nộp'}
+          </span>`;
+        }).join(' ');
+
+        workflowBanner = `
+          <div class="p-4 rounded-2xl bg-indigo-50/90 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0"><i data-lucide="shield-check" class="w-5 h-5"></i></div>
+              <div>
+                <h4 class="font-black text-xs text-indigo-950 dark:text-indigo-200">Nhiệm Vụ Ban Cán Sự: Xem & Điều Chỉnh ➔ Gửi Cho GVCN</h4>
+                <div class="flex flex-wrap items-center gap-1.5 mt-1">${teamsProgress}</div>
+              </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 shrink-0">
+              ${isSentToGVCN ? `
+                <span class="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm">
+                  <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> ✓ Đã Gửi Cho GVCN
+                </span>
+                <button onclick="handleSendToGVCN(${w})" class="px-2.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition" title="Gửi lại nếu Ban cán sự vừa chỉnh sửa lại số liệu">
+                  <i data-lucide="refresh-cw" class="w-3 h-3"></i> Cập nhật gửi lại
+                </button>
+              ` : `
+                <button onclick="handleSendToGVCN(${w})" class="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition active:scale-95">
+                  <i data-lucide="send" class="w-3.5 h-3.5"></i> 📤 Gửi Báo Cáo Cho GVCN
+                </button>
+              `}
+              <button onclick="handleExportEmulationWordClick(${w})" class="px-3.5 py-1.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition active:scale-95">
+                <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Xuất Báo Cáo Word (NĐ 30)
+              </button>
+            </div>
+          </div>
+        `;
+      }
 
       if (roleId === 'gvcn') {
-        container.innerHTML = `
+        container.innerHTML = workflowBanner + `
           <div class="glass-panel p-5 rounded-2xl border border-blue-200 dark:border-blue-900/60 bg-blue-50/30 dark:bg-slate-900 space-y-4">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
               <div>
@@ -3793,13 +3893,13 @@ function handleExportEmulationExcelClick() {
         `;
       } else if (roleId === 'lop_truong') {
         const rep = window.workspaceManager.generateWeeklySummaryReport();
-        container.innerHTML = `
+        container.innerHTML = workflowBanner + `
           <div class="glass-panel p-5 rounded-2xl border border-amber-200 dark:border-amber-900/60 bg-amber-50/20 dark:bg-slate-900 space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
               <h3 class="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
                 <i data-lucide="crown" class="w-5 h-5 text-amber-500"></i> Báo Cáo Thi Đua Tổng Hợp (Lớp Trưởng)
               </h3>
-              <button onclick="alert('Đã gửi báo cáo tổng kết tuần ${w} lên Giáo Viên Chủ Nhiệm thành công!')" class="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5">
+              <button onclick="handleSendToGVCN(${w})" class="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5">
                 <i data-lucide="send" class="w-4 h-4"></i> Trình Báo Cáo Lên GVCN
               </button>
             </div>
@@ -3815,7 +3915,7 @@ function handleExportEmulationExcelClick() {
           </div>
         `;
       } else if (roleId === 'lp_hoc_tap') {
-        container.innerHTML = `
+        container.innerHTML = workflowBanner + `
           <div class="glass-panel p-5 rounded-2xl border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/20 dark:bg-slate-900 space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
               <h3 class="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
@@ -3834,7 +3934,7 @@ function handleExportEmulationExcelClick() {
           </div>
         `;
       } else if (roleId === 'lp_trat_tu') {
-        container.innerHTML = `
+        container.innerHTML = workflowBanner + `
           <div class="glass-panel p-5 rounded-2xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/20 dark:bg-slate-900 space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
               <h3 class="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
@@ -3869,7 +3969,7 @@ function handleExportEmulationExcelClick() {
         `;
       } else if (roleId === 'lp_lao_dong') {
         const schedule = window.store.getDutySchedule(w);
-        container.innerHTML = `
+        container.innerHTML = workflowBanner + `
           <div class="glass-panel p-5 rounded-2xl border border-cyan-200 dark:border-cyan-900/60 bg-cyan-50/20 dark:bg-slate-900 space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
               <h3 class="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
@@ -3895,7 +3995,7 @@ function handleExportEmulationExcelClick() {
         `;
       } else if (roleId === 'thu_quy') {
         const bal = window.store.getLedgerBalance();
-        container.innerHTML = `
+        container.innerHTML = workflowBanner + `
           <div class="glass-panel p-5 rounded-2xl border border-indigo-200 dark:border-indigo-900/60 bg-indigo-50/20 dark:bg-slate-900 space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
               <div>
@@ -3914,7 +4014,7 @@ function handleExportEmulationExcelClick() {
       } else {
         const toId = roleId === 'to_truong_2' ? 2 : (roleId === 'to_truong_3' ? 3 : (roleId === 'to_truong_4' ? 4 : 1));
         const members = students.filter(s => s.to === toId);
-        container.innerHTML = `
+        container.innerHTML = workflowBanner + `
           <div class="glass-panel p-5 rounded-2xl border border-phuochung-200 dark:border-phuochung-900/60 bg-phuochung-50/20 dark:bg-slate-900 space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
               <div>

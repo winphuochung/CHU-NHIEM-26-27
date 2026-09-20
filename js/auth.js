@@ -7,7 +7,7 @@ const ROLES = {
     shortTitle: 'GVCN',
     icon: 'shield-check',
     color: 'text-blue-600',
-    requires2FA: true,
+    requires2FA: false,
     description: 'Tiếp nhận báo cáo thi đua đã được Ban cán sự xem xét & điều chỉnh, phê duyệt chính thức'
   },
   LOP_TRUONG: {

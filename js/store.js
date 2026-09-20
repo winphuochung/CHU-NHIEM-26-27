@@ -789,16 +789,16 @@ class AppStore {
   isTeamSubmitted(weekNumber, toId) {
     const w = parseInt(weekNumber) || 2;
     const notes = this.getWeekEmulationNotes(w);
-    return Boolean(notes.teamSubmissions && notes.teamSubmissions[toId] && notes.teamSubmissions[toId].submitted);
+    if (!notes || !notes.teamSubmissions) return false;
+    const sub = notes.teamSubmissions[toId] || notes.teamSubmissions[String(toId)] || notes.teamSubmissions[parseInt(toId)];
+    return Boolean(sub && sub.submitted);
   }
 
   getTeamSubmissionInfo(weekNumber, toId) {
     const w = parseInt(weekNumber) || 2;
     const notes = this.getWeekEmulationNotes(w);
-    if (notes.teamSubmissions && notes.teamSubmissions[toId]) {
-      return notes.teamSubmissions[toId];
-    }
-    return null;
+    if (!notes || !notes.teamSubmissions) return null;
+    return notes.teamSubmissions[toId] || notes.teamSubmissions[String(toId)] || notes.teamSubmissions[parseInt(toId)] || null;
   }
 
   saveState(stateToSave = null) {

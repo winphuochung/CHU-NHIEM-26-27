@@ -360,8 +360,6 @@ class SyncHubManager {
       alert(`✅ Đã xuất thành công file Báo cáo Tổng hợp Thi đua Tuần ${w}!`);
     }
   }
-}
-
 
   // ================= XUẤT BÁO CÁO TUẦN FILE WORD (.DOCX) THEO NGHỊ ĐỊNH 30/2020/NĐ-CP =================
   exportEmulationWordReport(weekNumber) {
