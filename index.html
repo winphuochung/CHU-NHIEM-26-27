@@ -2330,24 +2330,18 @@
     }
 
     
-    function handleExportEmulationWordClick(weekNum) {
-      const w = parseInt(weekNum) || selectedEmulationWeek || (window.store && window.store.state.currentWeek) || 2;
-      if (window.syncHub && typeof window.syncHub.exportEmulationWordReport === 'function') {
-        window.syncHub.exportEmulationWordReport(w);
-      } else {
-        exportWordReportDirect(w);
-      }
-    }
+    let _activeWordReport = null;
 
-    function exportWordReportDirect(w) {
+    function buildWordReportPackage(w) {
       const store = window.store;
-      if (!store) return;
+      if (!store) return null;
 
+      const weekNum = parseInt(w) || selectedEmulationWeek || 2;
       const students = store.getStudents();
-      const weekTheme = store.getWeekTheme(w) || { theme: `Thi đua tuần ${w}`, criteria: [] };
-      const emulationNotes = store.getWeekEmulationNotes(w) || {};
-      const officerReviews = store.getWeeklyOfficerReviews(w) || {};
-      const commend = typeof store.getEmulationCommendations === 'function' ? store.getEmulationCommendations(w) : null;
+      const weekTheme = store.getWeekTheme(weekNum) || { theme: `Thi đua tuần ${weekNum}`, criteria: [] };
+      const emulationNotes = store.getWeekEmulationNotes(weekNum) || {};
+      const officerReviews = store.getWeeklyOfficerReviews(weekNum) || {};
+      const commend = typeof store.getEmulationCommendations === 'function' ? store.getEmulationCommendations(weekNum) : null;
 
       const today = new Date();
       const day = today.getDate();
@@ -2368,7 +2362,7 @@
         let countWarning = 0;
 
         members.forEach(m => {
-          const crit = store.getStudentWeekCriteria(w, m.id);
+          const crit = store.getStudentWeekCriteria(weekNum, m.id);
           const sc = store.calculateWeekScore(crit);
           sumScore += sc.totalScore;
           if (sc.rank === 'Tốt') countGood++;
@@ -2390,7 +2384,7 @@
 
       let studentRowsHtml = '';
       students.forEach((s, idx) => {
-        const crit = store.getStudentWeekCriteria(w, s.id);
+        const crit = store.getStudentWeekCriteria(weekNum, s.id);
         const score = store.calculateWeekScore(crit);
 
         const stReviews = officerReviews[s.id] || {};
@@ -2417,11 +2411,14 @@
         `;
       });
 
+      const isApproved = emulationNotes.status === 'Đã duyệt';
+      const statusText = isApproved ? 'ĐÃ ĐƯỢC GIÁO VIÊN CHỦ NHIỆM PHÊ DUYỆT' : 'CHỜ GVCN DUYỆT CHÍNH THỨC';
+
       const docHtml = `
-<html xmlns:o="urn:schemas-microsoft-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
 <head>
 <meta charset="utf-8">
-<title>Báo Cáo Tuần ${w} Lớp 9A1</title>
+<title>Báo Cáo Tuần ${weekNum} Lớp 9A1</title>
 <!--[if gte mso 9]>
 <xml>
  <w:WordDocument>
@@ -2445,6 +2442,7 @@
     font-size: 13pt;
     line-height: 1.4;
     color: #000000;
+    background: #ffffff;
   }
   p {
     margin: 0 0 6pt 0;
@@ -2464,7 +2462,7 @@
     margin: 12pt 0 6pt 0;
   }
   h2 {
-    font-size: 13.5pt;
+    font-size: 13pt;
     font-weight: bold;
     text-transform: uppercase;
     margin: 12pt 0 6pt 0;
@@ -2513,6 +2511,7 @@
 <body>
 <div class="WordSection1">
 
+  <!-- HÀNG THỦ TỤC HÀNH CHÍNH QUỐC HIỆU TIÊU NGỮ NGHỊ ĐỊNH 30/2020/NĐ-CP -->
   <table class="header-table">
     <tr>
       <td style="width: 45%;">
@@ -2520,7 +2519,7 @@
         <div style="font-size: 12pt; font-weight: bold; text-transform: uppercase;">TRƯỜNG TH & THCS PHƯỚC HƯNG</div>
         <div style="font-size: 12pt; font-weight: bold;">LỚP 9A1</div>
         <div class="line-divider-short"></div>
-        <div style="font-size: 13pt; margin-top: 4pt;">Số: ${w}/BC-THCS-9A1</div>
+        <div style="font-size: 13pt; margin-top: 4pt;">Số: ${weekNum}/BC-THCS-9A1</div>
       </td>
       <td style="width: 55%;">
         <div style="font-size: 12pt; font-weight: bold; text-transform: uppercase;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
@@ -2531,21 +2530,24 @@
     </tr>
   </table>
 
+  <!-- TÊN LOẠI VĂN BẢN VÀ TRÍCH YẾU NỘI DUNG -->
   <h1>BÁO CÁO</h1>
   <p class="no-indent" style="text-align: center; font-weight: bold; font-size: 13pt; margin-bottom: 4pt;">
-    Về việc tổng hợp tình hình thi đua, nề nếp và kết quả rèn luyện Lớp 9A1 - Tuần ${w}
+    Về việc tổng hợp tình hình thi đua, nề nếp và kết quả rèn luyện Lớp 9A1 - Tuần ${weekNum}
   </p>
   <p class="no-indent" style="text-align: center; font-style: italic; font-size: 12pt; margin-bottom: 14pt;">
-    (Chủ điểm tuần ${w}: ${weekTheme.theme || 'Thi đua dạy tốt - học tốt'})
+    (Chủ điểm tuần ${weekNum}: ${weekTheme.theme || 'Thi đua dạy tốt - học tốt'})
   </p>
 
+  <!-- PHẦN I: ĐÁNH GIÁ TỔNG QUAN -->
   <h2>I. ĐÁNH GIÁ TÌNH HÌNH TỔNG QUAN NỀ NẾP LỚP</h2>
-  <p>Căn cứ tình hình theo dõi nề nếp học tập, kỷ luật chuyên cần và các phong trào thi đua của Lớp 9A1 trong Tuần ${w} (Năm học 2026 - 2027), Ban cán sự lớp phối hợp cùng GVCN tổng hợp tình hình rèn luyện tập thể như sau:</p>
+  <p>Căn cứ tình hình theo dõi nề nếp học tập, kỷ luật chuyên cần và các phong trào thi đua của Lớp 9A1 trong Tuần ${weekNum} (Năm học 2026 - 2027), Ban cán sự lớp phối hợp cùng GVCN tổng hợp tình hình rèn luyện tập thể như sau:</p>
   <p>- <b>Sĩ số lớp:</b> 43/43 học sinh (Duy trì tỉ lệ chuyên cần đạt 100%).</p>
   <p>- <b>Ý thức nề nếp:</b> Tập thể lớp chấp hành tốt quy định về đồng phục, khăn quàng đỏ, không có học sinh vi phạm nghiêm trọng kỷ luật trường lớp.</p>
-  <p>- <b>Trạng thái phê duyệt báo cáo:</b> ${emulationNotes.status === 'Đã duyệt' ? 'ĐÃ ĐƯỢC GIÁO VIÊN CHỦ NHIỆM PHÊ DUYỆT' : 'CHỜ GVCN DUYỆT CHÍNH THỨC'}.</p>
+  <p>- <b>Trạng thái phê duyệt báo cáo:</b> ${statusText}.</p>
 
   ${commend ? `
+  <!-- PHẦN II: VINH DANH THỦ KHOA VÀ NGÔI SAO TIẾN BỘ -->
   <h2>II. BẢNG VINH DANH THỦ KHOA & NGÔI SAO TIẾN BỘ TUẦN</h2>
   <p>- <b>Thủ khoa thi đua toàn Lớp 9A1:</b> ${commend.topClass ? `${commend.topClass.student.name} (Tổ ${commend.topClass.student.to}) - Đạt <b>${commend.topClass.totalScore} điểm</b> (${commend.topClass.rank})` : 'Đang cập nhật'}.</p>
   <p>- <b>Thủ khoa thi đua 4 Tổ:</b></p>
@@ -2556,6 +2558,7 @@
   <p>- <b>Ngôi sao tiến bộ vượt bậc:</b> ${commend.mostImprovedWeek && commend.mostImprovedWeek.student ? `${commend.mostImprovedWeek.student.name} (Tổ ${commend.mostImprovedWeek.student.to}) - Tăng <b>+${commend.mostImprovedWeek.deltaScore} điểm</b> so với tuần trước.` : 'Không có học sinh vi phạm'}.</p>
   ` : ''}
 
+  <!-- PHẦN III: BẢNG XẾP HẠNG THI ĐUA 4 TỔ -->
   <h2>III. BẢNG TỔNG HỢP & XẾP HẠNG THI ĐUA 4 TỔ</h2>
   <table class="content-table">
     <thead>
@@ -2582,6 +2585,7 @@
     </tbody>
   </table>
 
+  <!-- PHẦN IV: BẢNG ĐIỂM CHI TIẾT 43 HỌC SINH -->
   <h2>IV. BẢNG ĐIỂM THI ĐUA RÈN LUYỆN CHI TIẾT 43 HỌC SINH (THÔNG TƯ 22)</h2>
   <table class="content-table">
     <thead>
@@ -2590,11 +2594,11 @@
         <th style="width: 8%;">Mã HS</th>
         <th style="width: 22%;">Họ và tên</th>
         <th style="width: 8%;">Tổ</th>
-        <th style="width: 14%;">Chức vụ</th>
-        <th style="width: 12%;">Ngày sinh</th>
-        <th style="width: 9%;">Điểm</th>
+        <th style="width: 12%;">Chức vụ</th>
+        <th style="width: 11%;">Ngày sinh</th>
+        <th style="width: 10%;">Tổng điểm</th>
         <th style="width: 10%;">Xếp loại</th>
-        <th style="width: 12%;">Nhận xét Ban cán sự</th>
+        <th style="width: 14%;">Nhận xét của Cán sự & GV</th>
       </tr>
     </thead>
     <tbody>
@@ -2602,22 +2606,22 @@
     </tbody>
   </table>
 
-  <h2>V. ĐÁNH GIÁ NHẬN XÉT CỦA BAN CÁN SỰ LỚP & GIÁO VIÊN CHỦ NHIỆM</h2>
-  <p><b>1. Đánh giá của Lớp trưởng và Ban cán sự lớp:</b></p>
-  <p style="font-style: italic;">"${emulationNotes.officerReview || 'Tập thể Lớp 9A1 duy trì nề nếp tốt, 100% học sinh đi học đúng giờ, chuẩn bị bài đầy đủ trước khi đến lớp.'}"</p>
-  
-  <p><b>2. Ý kiến chỉ đạo & nhận xét của Giáo viên Chủ nhiệm:</b></p>
-  <p style="font-style: italic;">"${emulationNotes.gvcnFeedback || 'GVCN ghi nhận và biểu dương sự cố gắng của tập thể 9A1 và Ban cán sự. Đề nghị các tổ trưởng tiếp tục đôn đốc thành viên giữ gìn vệ sinh và chuyên cần.'}"</p>
+  <!-- PHẦN V: Ý KIẾN BAN CÁN SỰ & GVCN -->
+  <h2>V. Ý KIẾN ĐÁNH GIÁ CỦA BAN CÁN SỰ LỚP & GIÁO VIÊN CHỦ NHIỆM</h2>
+  <p>- <b>Nhận xét của Ban cán sự (Lớp trưởng & các Lớp phó):</b> ${emulationNotes.officerReview || 'Đa số các bạn chấp hành nghiêm túc nội quy. Cần chú ý giữ gìn vệ sinh lớp cuối buổi học và không nói chuyện riêng trong giờ.'}</p>
+  <p>- <b>Ý kiến phê duyệt của Giáo viên Chủ nhiệm:</b> ${emulationNotes.gvcnFeedback || (isApproved ? 'GVCN nhất trí với báo cáo thi đua và phương hướng tuần tới của Ban cán sự.' : 'Đang chờ GVCN xem xét và duyệt chính thức.')}</p>
 
-  <h2>VI. PHƯƠNG HƯỚNG & KẾ HOẠCH HOẠT ĐỘNG TUẦN TỚI (TUẦN ${w + 1})</h2>
+  <!-- PHẦN VI: PHƯƠNG HƯỚNG TUẦN TỚI -->
+  <h2>VI. PHƯƠNG HƯỚNG & KẾ HOẠCH HOẠT ĐỘNG TUẦN TỚI (TUẦN ${weekNum + 1})</h2>
   <p>- <b>Kế hoạch hành động:</b> ${emulationNotes.nextWeekDirection || 'Tiếp tục đẩy mạnh phong trào học tập, làm bài tập về nhà 100%, tích cực phát biểu xây dựng bài.'}</p>
   <p>- <b>Chỉ tiêu phấn đấu:</b> 100% học sinh xếp loại Rèn luyện Tốt, giữ vững vị trí Tổ đầu bảng thi đua toàn trường.</p>
 
+  <!-- CHỮ KÝ VÀ NƠI NHẬN CHUẨN NGHỊ ĐỊNH 30/2020/NĐ-CP -->
   <table class="header-table" style="margin-top: 25pt; page-break-inside: avoid;">
     <tr>
       <td style="width: 45%; text-align: left; vertical-align: top;">
         <div style="font-size: 12pt; font-weight: bold; font-style: italic; margin-bottom: 4pt;">Nơi nhận:</div>
-        <div style="font-size: 11pt;">- Ban BGH Trường TH & THCS Phước Hưng;</div>
+        <div style="font-size: 11pt;">- Ban Giám hiệu Trường TH & THCS Phước Hưng;</div>
         <div style="font-size: 11pt;">- Tổng phụ trách Đội;</div>
         <div style="font-size: 11pt;">- Ban cán sự & Tổ trưởng 4 Tổ;</div>
         <div style="font-size: 11pt;">- Lưu: Hồ sơ Lớp 9A1.</div>
@@ -2631,23 +2635,174 @@
   </table>
 
 </div>
-</div>
 </body>
 </html>
       `;
 
-      const blob = new Blob(['\ufeff', docHtml], { type: 'application/msword;charset=utf-8' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `BaoCao_Tuan_${w}_Lop9A1_NghiDinh30.doc`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      let topTeamSummary = toStats.map((t, idx) => `• Hạng ${idx + 1}: Tổ ${t.toId} (${t.avg}đ) - ${t.lead}`).join('\n');
+      const plainText = `📋 BÁO CÁO THI ĐUA TUẦN ${weekNum} - LỚP 9A1\n` +
+        `Trường TH & THCS Phước Hưng (UBND Xã Nhơn Hội)\n\n` +
+        `🏆 XẾP HẠNG THI ĐUA 4 TỔ:\n${topTeamSummary}\n\n` +
+        (commend && commend.topClass ? `🌟 Thủ khoa lớp: ${commend.topClass.student.name} (${commend.topClass.totalScore}đ)\n` : '') +
+        (commend && commend.mostImprovedWeek ? `📈 Tiến bộ vượt bậc: ${commend.mostImprovedWeek.student.name} (+${commend.mostImprovedWeek.deltaScore}đ)\n\n` : '\n') +
+        `📌 Trạng thái: ${statusText}\n` +
+        `📝 Nhận xét Ban cán sự: ${emulationNotes.officerReview || 'Chấp hành tốt nề nếp.'}\n` +
+        `🎯 Phương hướng tuần tới: ${emulationNotes.nextWeekDirection || '100% rèn luyện Tốt.'}`;
 
-      if (typeof showSeatingToast === 'function') {
-        showSeatingToast(`📄 Đã xuất báo cáo Word Tuần ${w} chuẩn Nghị định 30/2020/NĐ-CP thành công!`);
+      const fileName = `BaoCao_Tuan_${weekNum}_Lop9A1_NghiDinh30.doc`;
+      const blob = new Blob(['\ufeff', docHtml], { type: 'application/msword;charset=utf-8' });
+
+      return {
+        w: weekNum,
+        docHtml,
+        plainText,
+        fileName,
+        blob
+      };
+    }
+
+    function handleExportEmulationWordClick(weekNum) {
+      const w = parseInt(weekNum) || selectedEmulationWeek || 2;
+      const reportPkg = buildWordReportPackage(w);
+      if (!reportPkg) return;
+      _activeWordReport = reportPkg;
+
+      const titleEl = document.getElementById('word-modal-title');
+      if (titleEl) titleEl.innerText = `Báo Cáo Thi Đua Tuần ${w} (Nghị Định 30/2020)`;
+
+      const previewEl = document.getElementById('word-preview-container');
+      if (previewEl) previewEl.innerHTML = reportPkg.docHtml;
+
+      const modal = document.getElementById('word-export-modal');
+      if (modal) {
+        modal.classList.remove('hidden');
+        lucide.createIcons();
       }
+
+      // Tự động tải xuống nếu là máy tính / laptop
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      if (!isMobile) {
+        triggerWordFileDownload(false);
+      }
+    }
+
+    function closeWordExportModal() {
+      const modal = document.getElementById('word-export-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function toggleWordPreview() {
+      const container = document.getElementById('word-preview-container');
+      const icon = document.getElementById('word-preview-toggle-icon');
+      if (!container) return;
+      const isHidden = container.classList.contains('hidden');
+      if (isHidden) {
+        container.classList.remove('hidden');
+        if (icon) icon.innerText = '▲';
+      } else {
+        container.classList.add('hidden');
+        if (icon) icon.innerText = '▼';
+      }
+    }
+
+    async function triggerWordShareSheet() {
+      if (!_activeWordReport) return;
+      const file = new File([_activeWordReport.blob], _activeWordReport.fileName, { type: 'application/msword' });
+
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: `Báo Cáo Tuần ${_activeWordReport.w} Lớp 9A1`,
+            text: `Báo cáo tổng kết thi đua Tuần ${_activeWordReport.w} Lớp 9A1 chuẩn Nghị định 30/2020/NĐ-CP`
+          });
+          showSeatingToast('✅ Đã kích hoạt chia sẻ tệp báo cáo thành công!');
+          return;
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            console.warn('Share error:', err);
+          }
+        }
+      }
+
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: `Báo Cáo Tuần ${_activeWordReport.w} Lớp 9A1`,
+            text: _activeWordReport.plainText
+          });
+          showSeatingToast('✅ Đã chia sẻ tóm tắt báo cáo thành công!');
+          return;
+        } catch(e) {}
+      }
+
+      triggerWordFileDownload();
+    }
+
+    function triggerWordFileDownload(notify = true) {
+      if (!_activeWordReport) return;
+      const { blob, fileName, docHtml } = _activeWordReport;
+
+      try {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }, 300);
+
+        if (notify) {
+          showSeatingToast(`📄 Đang tải xuống tệp ${fileName}...`);
+        }
+      } catch (err) {
+        const dataUri = 'data:application/msword;charset=utf-8,' + encodeURIComponent(docHtml);
+        const link = document.createElement('a');
+        link.href = dataUri;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    }
+
+    function triggerWordPrintPdf() {
+      if (!_activeWordReport) return;
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        alert('Vui lòng cho phép mở cửa sổ popup trên trình duyệt để in hoặc lưu file PDF.');
+        return;
+      }
+      printWindow.document.open();
+      printWindow.document.write(_activeWordReport.docHtml);
+      printWindow.document.close();
+      setTimeout(() => {
+        printWindow.focus();
+        printWindow.print();
+      }, 500);
+    }
+
+    function triggerWordTextCopy() {
+      if (!_activeWordReport) return;
+      navigator.clipboard.writeText(_activeWordReport.plainText).then(() => {
+        showSeatingToast('📋 Đã sao chép nội dung báo cáo để dán vào Zalo nhóm lớp!');
+      }).catch(() => {
+        const ta = document.createElement('textarea');
+        ta.value = _activeWordReport.plainText;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showSeatingToast('📋 Đã sao chép nội dung báo cáo để dán vào Zalo nhóm lớp!');
+      });
+    }
+
+    function exportWordReportDirect(w) {
+      handleExportEmulationWordClick(w);
     }
 
 function handleExportEmulationExcelClick() {
@@ -2809,8 +2964,14 @@ function handleExportEmulationExcelClick() {
       // Banner thông báo phạm vi phân quyền và trạng thái đồng bộ
       const bannerScopeEl = document.getElementById('emulation-role-scope-banner');
       if (bannerScopeEl) {
+        const weekNotes = window.store.getWeekEmulationNotes(w);
+        const isApproved = weekNotes.status === 'Đã duyệt';
+
         if (isToTruong) {
           const teamMemberCount = allStudents.filter(s => s.to === myToId).length;
+          const isTeamSub = window.store && typeof window.store.isTeamSubmitted === 'function' ? window.store.isTeamSubmitted(w, myToId) : false;
+          const subInfo = window.store && typeof window.store.getTeamSubmissionInfo === 'function' ? window.store.getTeamSubmissionInfo(w, myToId) : null;
+
           bannerScopeEl.innerHTML = `
             <div class="p-3.5 rounded-2xl bg-purple-50/90 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs mb-3">
               <div class="flex items-center gap-3">
@@ -2819,7 +2980,7 @@ function handleExportEmulationExcelClick() {
                 </div>
                 <div>
                   <h4 class="font-extrabold text-xs text-purple-950 dark:text-purple-200 flex items-center gap-2">
-                    <span>Nhiệm Vụ Tổ Trưởng ${myToId}: Nhập Dữ Liệu Thi Đua Tổ ${myToId} ➔ Đồng Bộ & Gửi Cho Ban Cán Sự Xem, Điều Chỉnh</span>
+                    <span>Nhiệm Vụ Tổ Trưởng ${myToId}: Nhập Dữ Liệu Thi Đua Tổ ${myToId} ➔ Đồng Bộ & Gửi Cho Ban Cán Sự</span>
                     <span class="text-[10px] px-2 py-0.5 rounded-full bg-purple-200 dark:bg-purple-900 text-purple-800 dark:text-purple-200 font-bold">${teamMemberCount} học sinh</span>
                   </h4>
                   <p class="text-[11px] text-purple-700 dark:text-purple-400 mt-0.5">
@@ -2827,10 +2988,19 @@ function handleExportEmulationExcelClick() {
                   </p>
                 </div>
               </div>
-              <div class="flex items-center gap-2 shrink-0">
-                <button onclick="handleSendToBCS(${myToId}, ${w})" class="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition">
-                  <i data-lucide="send" class="w-3.5 h-3.5"></i> 📥 Gửi Dữ Liệu Tổ ${myToId} Cho Ban Cán Sự Xem & Điều Chỉnh
-                </button>
+              <div class="flex flex-wrap items-center gap-2 shrink-0">
+                ${isTeamSub ? `
+                  <span class="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> ✓ Đã Gửi Cho Ban Cán Sự ${subInfo ? `<span class="opacity-80 text-[10px]">(${subInfo.submittedAt})</span>` : ''}
+                  </span>
+                  <button onclick="handleSendToBCS(${myToId}, ${w})" class="px-3 py-1.5 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition" title="Gửi lại dữ liệu nếu bạn vừa cập nhật thêm điểm">
+                    <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Gửi Lại
+                  </button>
+                ` : `
+                  <button onclick="handleSendToBCS(${myToId}, ${w})" class="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition active:scale-95">
+                    <i data-lucide="send" class="w-3.5 h-3.5"></i> 📥 Gửi Dữ Liệu Tổ ${myToId} Cho Ban Cán Sự Xem & Điều Chỉnh
+                  </button>
+                `}
               </div>
             </div>
           `;
@@ -2844,24 +3014,43 @@ function handleExportEmulationExcelClick() {
                 <div>
                   <h4 class="font-extrabold text-xs text-blue-950 dark:text-blue-200 flex items-center gap-2">
                     <span>Quyền Hạn GVCN: Xem Báo Cáo Thi Đua Đã Điều Chỉnh Từ Ban Cán Sự ➔ Phê Duyệt Chính Thức</span>
-                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-200 dark:bg-blue-900 text-blue-800 dark:text-blue-200 font-bold">Toàn Lớp 9A1</span>
+                    <span class="text-[10px] px-2 py-0.5 rounded-full ${isApproved ? 'bg-emerald-200 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200' : 'bg-blue-200 dark:bg-blue-900 text-blue-800 dark:text-blue-200'} font-bold">
+                      ${isApproved ? '✓ Đã Phê Duyệt' : 'Chờ Duyệt'}
+                    </span>
                   </h4>
                   <p class="text-[11px] text-blue-700 dark:text-blue-400 mt-0.5">
                     GVCN duyệt chính thức báo cáo thi đua tuần sau khi 4 Tổ trưởng đã nhập dữ liệu và Ban cán sự (Lớp trưởng & các Lớp phó) đã kiểm tra, điều chỉnh chuẩn xác.
                   </p>
                 </div>
               </div>
-              <div class="flex items-center gap-2 shrink-0">
-                <button onclick="handleApproveReportFast()" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition">
-                  <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Phê Duyệt Báo Cáo Tuần ${w}
-                </button>
-                <button onclick="handleExportEmulationWordClick(${w})" class="px-3.5 py-1.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition">
+              <div class="flex flex-wrap items-center gap-2 shrink-0">
+                ${isApproved ? `
+                  <span class="px-3.5 py-1.5 rounded-xl bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm">
+                    <i data-lucide="check-check" class="w-3.5 h-3.5"></i> ✓ Đã Phê Duyệt Báo Cáo Tuần ${w}
+                  </span>
+                  <button onclick="handleApproveWeeklyReportDirect(${w}, true)" class="px-2.5 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-700 dark:text-slate-200 font-bold text-xs transition" title="Mở lại báo cáo để Ban cán sự điều chỉnh">
+                    <i data-lucide="undo-2" class="w-3 h-3"></i> Mở lại duyệt
+                  </button>
+                ` : `
+                  <button onclick="handleApproveWeeklyReportDirect(${w})" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition active:scale-95">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> Phê Duyệt Báo Cáo Tuần ${w}
+                  </button>
+                `}
+                <button onclick="handleExportEmulationWordClick(${w})" class="px-3.5 py-1.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition active:scale-95">
                   <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Xuất Báo Cáo Word Tuần ${w} (NĐ 30/2020)
                 </button>
               </div>
             </div>
           `;
         } else {
+          const isSentToGVCN = weekNotes.status === 'Chờ GVCN duyệt' || weekNotes.bcsSubmitted;
+          const teamsProgress = [1, 2, 3, 4].map(tId => {
+            const sub = (weekNotes.teamSubmissions && weekNotes.teamSubmissions[tId] && weekNotes.teamSubmissions[tId].submitted);
+            return `<span class="px-2 py-0.5 rounded-md text-[10px] font-bold ${sub ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300' : 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 border border-amber-300'}">
+              Tổ ${tId}: ${sub ? '✓ Đã nộp' : '⏳ Chưa nộp'}
+            </span>`;
+          }).join(' ');
+
           bannerScopeEl.innerHTML = `
             <div class="p-3.5 rounded-2xl bg-indigo-50/90 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs mb-3">
               <div class="flex items-center gap-3">
@@ -2876,13 +3065,26 @@ function handleExportEmulationExcelClick() {
                   <p class="text-[11px] text-indigo-700 dark:text-indigo-400 mt-0.5">
                     Lớp trưởng, Lớp phó Học tập, Trật tự, Lao động tiếp nhận dữ liệu từ 4 Tổ trưởng ➔ <strong>Xem, kiểm tra & điều chỉnh cho chính xác thi đua</strong>, sau đó gửi qua cho GVCN.
                   </p>
+                  <div class="flex flex-wrap items-center gap-1.5 mt-2">
+                    <span class="text-[10px] font-bold text-slate-500">Tiến độ 4 Tổ:</span>
+                    ${teamsProgress}
+                  </div>
                 </div>
               </div>
-              <div class="flex items-center gap-2 shrink-0">
-                <button onclick="handleSendToGVCN(${w})" class="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition">
-                  <i data-lucide="send" class="w-3.5 h-3.5"></i> 📤 Gửi Báo Cáo Thi Đua Đã Điều Chỉnh Cho GVCN
-                </button>
-                <button onclick="handleExportEmulationWordClick(${w})" class="px-3.5 py-1.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition">
+              <div class="flex flex-wrap items-center gap-2 shrink-0">
+                ${isSentToGVCN ? `
+                  <span class="px-3.5 py-1.5 rounded-xl bg-emerald-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm">
+                    <i data-lucide="check-circle" class="w-3.5 h-3.5"></i> ✓ Đã Gửi Cho GVCN
+                  </span>
+                  <button onclick="handleSendToGVCN(${w})" class="px-2.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition" title="Gửi lại nếu Ban cán sự vừa chỉnh sửa lại số liệu">
+                    <i data-lucide="refresh-cw" class="w-3 h-3"></i> Cập nhật gửi lại
+                  </button>
+                ` : `
+                  <button onclick="handleSendToGVCN(${w})" class="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition active:scale-95">
+                    <i data-lucide="send" class="w-3.5 h-3.5"></i> 📤 Gửi Báo Cáo Thi Đua Đã Điều Chỉnh Cho GVCN
+                  </button>
+                `}
+                <button onclick="handleExportEmulationWordClick(${w})" class="px-3.5 py-1.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition active:scale-95">
                   <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Xuất Báo Cáo Word Tuần ${w} (NĐ 30/2020)
                 </button>
               </div>
@@ -3083,8 +3285,8 @@ function handleExportEmulationExcelClick() {
               <i data-lucide="save" class="w-4 h-4"></i> Lưu Nhận Xét & Phương Hướng
             </button>
             ${isGVCN ? `
-              <button onclick="handleApproveEmulationNotesDirect(${w})" class="px-3.5 py-2 ${isApproved ? 'bg-emerald-700' : 'bg-emerald-600 hover:bg-emerald-700'} text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95">
-                <i data-lucide="check-check" class="w-4 h-4"></i> ${isApproved ? 'Cập Nhật Duyệt' : 'GVCN Phê Duyệt Tuần ' + w}
+              <button onclick="handleApproveWeeklyReportDirect(${w})" class="px-3.5 py-2 ${isApproved ? 'bg-emerald-700' : 'bg-emerald-600 hover:bg-emerald-700'} text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95">
+                <i data-lucide="check-check" class="w-4 h-4"></i> ${isApproved ? '✓ Đã Phê Duyệt' : 'GVCN Phê Duyệt Tuần ' + w}
               </button>
             ` : ''}
             <button onclick="window.syncHub.exportEmulationExcelReport(${w})" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
@@ -5060,42 +5262,64 @@ function handleExportEmulationExcelClick() {
 
     // Action Handlers
     function handleSendToBCS(toId, weekNum) {
-      const w = weekNum || window.selectedEmulationWeek || window.store.state.currentWeek || 2;
-      window.store.recordAudit({
-        id: 'LOG_' + Date.now(),
-        timestamp: new Date().toLocaleString('vi-VN'),
-        actor: `Tổ trưởng ${toId}`,
-        targetStudent: `Lớp trưởng & các Lớp phó`,
-        action: `[Tuần ${w}] Đồng bộ & Gửi dữ liệu thi đua Tổ ${toId}`,
-        reason: `Tổ trưởng ${toId} đã hoàn tất nhập dữ liệu thi đua Tuần ${w} và gửi cho Lớp trưởng, Lớp phó xem & điều chỉnh.`,
-        verified: true
-      });
+      const w = parseInt(weekNum) || selectedEmulationWeek || 2;
+      window.store.submitTeamEmulation(w, toId, `Tổ trưởng ${toId}`);
       if (window.syncHub && typeof window.syncHub.pushAllToGoogleSheets === 'function') {
         window.syncHub.pushAllToGoogleSheets().catch(() => {});
       }
-      alert(`✅ [ĐÃ ĐỒNG BỘ & GỬI CHO BAN CÁN SỰ!]\n\nTổ trưởng ${toId} đã gửi toàn bộ dữ liệu thi đua Tổ ${toId} Tuần ${w} qua cho Lớp trưởng và các Lớp phó xem, điều chỉnh cho chính xác thi đua!\nDữ liệu cũng đã tự động đồng bộ đám mây trực tuyến.`);
+      showSeatingToast(`✅ Đã gửi dữ liệu Tổ ${toId} Tuần ${w} cho Ban Cán Sự thành công!`);
       renderEmulationTable();
     }
 
     function handleSendToGVCN(weekNum) {
-      const w = weekNum || window.selectedEmulationWeek || window.store.state.currentWeek || 2;
+      const w = parseInt(weekNum) || selectedEmulationWeek || 2;
       const notes = window.store.getWeekEmulationNotes(w);
       const role = (window.authManager && typeof window.authManager.getCurrentRole === 'function') ? window.authManager.getCurrentRole() : { name: 'Ban cán sự lớp' };
       notes.status = 'Chờ GVCN duyệt';
+      notes.bcsSubmitted = true;
       notes.submittedBy = `${role.name}`;
-      notes.updatedAt = new Date().toLocaleDateString('vi-VN');
+      notes.updatedAt = new Date().toLocaleString('vi-VN');
+      window.store.recordAudit({
+        id: 'LOG_' + Date.now(),
+        timestamp: new Date().toLocaleString('vi-VN'),
+        actor: role.name,
+        targetStudent: `GVCN (Tuần ${w})`,
+        action: `[Tuần ${w}] Gửi Báo cáo Thi đua cho GVCN`,
+        reason: `${role.name} đã kiểm tra, điều chỉnh xong thi đua 4 Tổ và chuyển cho GVCN duyệt.`,
+        verified: true
+      });
       window.store.saveState();
       if (window.syncHub && typeof window.syncHub.pushAllToGoogleSheets === 'function') {
         window.syncHub.pushAllToGoogleSheets().catch(() => {});
       }
-      alert(`✅ [ĐÃ GỬI BÁO CÁO THI ĐUA CHO GVCN!]\n\nBan cán sự lớp (${role.name}) đã xem xét, điều chỉnh dữ liệu thi đua 4 Tổ Tuần ${w} chuẩn xác và gửi báo cáo qua cho Giáo viên Chủ nhiệm phê duyệt!`);
+      showSeatingToast(`✅ Đã gửi báo cáo thi đua Tuần ${w} cho GVCN phê duyệt!`);
       renderEmulationTable();
     }
 
-    function handleApproveReportFast() {
-      const report = window.workspaceManager.approveWeeklyReport();
-      alert(`Đã phê duyệt thành công Báo cáo tuần ${report.week} của lớp 9A1 bởi GVCN!\nDữ liệu đã được lưu vào sổ điểm học kỳ.`);
+    function handleApproveWeeklyReportDirect(weekNum, reopen = false) {
+      const w = parseInt(weekNum) || selectedEmulationWeek || 2;
+      const notes = window.store.getWeekEmulationNotes(w);
+      if (reopen) {
+        notes.status = 'Chờ GVCN duyệt';
+        notes.reopenedAt = new Date().toLocaleString('vi-VN');
+        window.store.saveState();
+        showSeatingToast(`🔄 Đã mở lại Báo cáo Tuần ${w} để Ban cán sự điều chỉnh!`);
+      } else {
+        window.store.approveWeekEmulationNotes(w, 'GVCN đã phê duyệt chính thức báo cáo thi đua.');
+        if (window.workspaceManager && typeof window.workspaceManager.approveWeeklyReport === 'function') {
+          try { window.workspaceManager.approveWeeklyReport(); } catch(e) {}
+        }
+        showSeatingToast(`🎉 GVCN đã phê duyệt chính thức Báo cáo Tuần ${w} thành công!`);
+      }
+      if (window.syncHub && typeof window.syncHub.pushAllToGoogleSheets === 'function') {
+        window.syncHub.pushAllToGoogleSheets().catch(() => {});
+      }
+      renderEmulationTable();
       renderDashboard();
+    }
+
+    function handleApproveReportFast() {
+      handleApproveWeeklyReportDirect(selectedEmulationWeek || 2);
     }
 
     function handleBackupData() {
@@ -6520,6 +6744,98 @@ function handleExportEmulationExcelClick() {
         </button>
         <button onclick="handleCopyAppsScriptClipboard()" id="btn-copy-script-code" class="px-4 py-2 bg-phuochung-600 hover:bg-phuochung-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
           <i data-lucide="copy" class="w-4 h-4"></i> Sao chép toàn bộ mã
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL XUẤT BÁO CÁO WORD NGHỊ ĐỊNH 30/2020 CHO ĐIỆN THOẠI & LAPTOP -->
+  <div id="word-export-modal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 hidden transition-opacity">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl max-w-2xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in fade-in zoom-in duration-200">
+      <!-- Header -->
+      <div class="px-5 py-4 bg-gradient-to-r from-blue-700 to-indigo-700 text-white flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center shrink-0">
+            <i data-lucide="file-text" class="w-5 h-5 text-white"></i>
+          </div>
+          <div>
+            <h3 id="word-modal-title" class="font-black text-sm sm:text-base leading-tight">Báo Cáo Thi Đua Tuần (Nghị Định 30/2020)</h3>
+            <p class="text-[11px] text-blue-100">Chuẩn thể thức Nghị định 30/2020/NĐ-CP • Lớp 9A1</p>
+          </div>
+        </div>
+        <button onclick="closeWordExportModal()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-sm font-bold transition">
+          ✕
+        </button>
+      </div>
+
+      <!-- Body: 4 Action Buttons -->
+      <div class="p-4 sm:p-5 overflow-y-auto space-y-4 text-xs">
+        <p class="text-slate-600 dark:text-slate-300">
+          Báo cáo đã sẵn sàng! Bạn có thể chọn cách xuất hoặc xem phù hợp với thiết bị của mình:
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <!-- Action 1: Chia Sẻ (Native Share Sheet - Zalo / Tệp) -->
+          <button onclick="triggerWordShareSheet()" class="p-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-left flex items-start gap-3 shadow-sm transition active:scale-[0.98]">
+            <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0 mt-0.5">
+              <i data-lucide="share-2" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <div class="text-xs font-black">📲 Chia Sẻ Qua Zalo / Tệp (Files)</div>
+              <div class="text-[10px] text-purple-100 mt-0.5 font-normal">Gửi trực tiếp vào Zalo, Lưu vào Tệp trên iPhone/Android</div>
+            </div>
+          </button>
+
+          <!-- Action 2: Tải file Word (.doc) -->
+          <button onclick="triggerWordFileDownload()" class="p-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-left flex items-start gap-3 shadow-sm transition active:scale-[0.98]">
+            <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0 mt-0.5">
+              <i data-lucide="download" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <div class="text-xs font-black">📥 Tải File Word (.doc) Về Máy</div>
+              <div class="text-[10px] text-blue-100 mt-0.5 font-normal">Tải tệp văn bản mở trên Microsoft Word hoặc WPS</div>
+            </div>
+          </button>
+
+          <!-- Action 3: Xem & In / Lưu PDF -->
+          <button onclick="triggerWordPrintPdf()" class="p-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-left flex items-start gap-3 shadow-sm transition active:scale-[0.98]">
+            <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0 mt-0.5">
+              <i data-lucide="printer" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <div class="text-xs font-black">🖨️ Xem & In / Lưu Thành File PDF</div>
+              <div class="text-[10px] text-emerald-100 mt-0.5 font-normal">Mở bản in A4, chọn Lưu PDF trên điện thoại hoặc in ra giấy</div>
+            </div>
+          </button>
+
+          <!-- Action 4: Sao Chép Văn Bản -->
+          <button onclick="triggerWordTextCopy()" class="p-3.5 rounded-xl bg-slate-800 hover:bg-slate-900 text-white font-bold text-left flex items-start gap-3 shadow-sm transition active:scale-[0.98]">
+            <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shrink-0 mt-0.5">
+              <i data-lucide="copy" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <div class="text-xs font-black">📋 Sao Chép Tóm Tắt Gửi Nhóm</div>
+              <div class="text-[10px] text-slate-300 mt-0.5 font-normal">Copy nội dung để dán nhanh vào Zalo lớp / phụ huynh</div>
+            </div>
+          </button>
+        </div>
+
+        <!-- Preview Accordion -->
+        <div class="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-800/40">
+          <div class="px-3.5 py-2.5 bg-slate-100 dark:bg-slate-800 font-bold text-[11px] text-slate-700 dark:text-slate-200 flex items-center justify-between cursor-pointer" onclick="toggleWordPreview()">
+            <span class="flex items-center gap-1.5"><i data-lucide="eye" class="w-3.5 h-3.5 text-blue-600"></i> Xem trước toàn văn báo cáo</span>
+            <span id="word-preview-toggle-icon" class="text-xs font-mono">▼</span>
+          </div>
+          <div id="word-preview-container" class="p-4 max-h-60 overflow-y-auto bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-serif text-[11px] leading-relaxed hidden">
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="px-5 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between">
+        <span class="text-[10px] text-slate-400 font-medium">UBND XÃ NHƠN HỘI • TH & THCS PHƯỚC HƯNG</span>
+        <button onclick="closeWordExportModal()" class="px-4 py-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold transition">
+          Đóng
         </button>
       </div>
     </div>

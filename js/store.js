@@ -763,6 +763,44 @@ class AppStore {
     return notes;
   }
 
+  submitTeamEmulation(weekNumber, toId, actor = '') {
+    const w = parseInt(weekNumber) || 2;
+    const notes = this.getWeekEmulationNotes(w);
+    if (!notes.teamSubmissions) notes.teamSubmissions = {};
+    const submitTime = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' ' + new Date().toLocaleDateString('vi-VN');
+    notes.teamSubmissions[toId] = {
+      submitted: true,
+      submittedAt: submitTime,
+      actor: actor || `Tổ trưởng ${toId}`
+    };
+    this.recordAudit({
+      id: 'LOG_' + Date.now(),
+      timestamp: new Date().toLocaleString('vi-VN'),
+      actor: actor || `Tổ trưởng ${toId}`,
+      targetStudent: `Ban cán sự lớp (Tuần ${w})`,
+      action: `[Tuần ${w}] Đồng bộ & Gửi dữ liệu Tổ ${toId}`,
+      reason: `Tổ trưởng ${toId} hoàn tất nhập liệu thi đua và gửi cho Ban cán sự xem, điều chỉnh.`,
+      verified: true
+    });
+    this.saveState();
+    return notes.teamSubmissions[toId];
+  }
+
+  isTeamSubmitted(weekNumber, toId) {
+    const w = parseInt(weekNumber) || 2;
+    const notes = this.getWeekEmulationNotes(w);
+    return Boolean(notes.teamSubmissions && notes.teamSubmissions[toId] && notes.teamSubmissions[toId].submitted);
+  }
+
+  getTeamSubmissionInfo(weekNumber, toId) {
+    const w = parseInt(weekNumber) || 2;
+    const notes = this.getWeekEmulationNotes(w);
+    if (notes.teamSubmissions && notes.teamSubmissions[toId]) {
+      return notes.teamSubmissions[toId];
+    }
+    return null;
+  }
+
   saveState(stateToSave = null) {
     if (stateToSave) this.state = stateToSave;
     try {

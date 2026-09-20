@@ -365,6 +365,9 @@ class SyncHubManager {
 
   // ================= XUẤT BÁO CÁO TUẦN FILE WORD (.DOCX) THEO NGHỊ ĐỊNH 30/2020/NĐ-CP =================
   exportEmulationWordReport(weekNumber) {
+    if (typeof window.handleExportEmulationWordClick === 'function') {
+      return window.handleExportEmulationWordClick(weekNumber);
+    }
     const w = parseInt(weekNumber) || (window.store && window.store.state.currentWeek) || 2;
     const store = window.store;
     if (!store) {
