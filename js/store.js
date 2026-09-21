@@ -826,6 +826,11 @@ class AppStore {
     try {
       localStorage.setItem(this.storageKey, JSON.stringify(this.state));
 
+      // Tự động đẩy ngầm dữ liệu sang Supabase Cloud (Real-time Cloud Database)
+      if (window.supabaseClient && typeof window.supabaseClient.triggerAutoPush === 'function') {
+        window.supabaseClient.triggerAutoPush();
+      }
+
       // Tự động đẩy ngầm dữ liệu động (Dynamic Cloud Auto-Sync) sang Google Sheets sau 1 giây
       if (window.syncHub && typeof window.syncHub.pushAllToGoogleSheets === 'function' && !this._isAutoPushing) {
         this._isAutoPushing = true;

@@ -97,6 +97,14 @@
           </select>
         </div>
 
+        <!-- Supabase Cloud Connection Status Badge -->
+        <button onclick="handleQuickSupabaseSync()" id="supabase-header-badge" 
+                class="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-[11px] font-bold text-slate-700 dark:text-slate-300 transition shadow-2xs cursor-pointer" 
+                title="Cơ sở Dữ liệu Đám mây Supabase (Bấm để đồng bộ ngay)">
+          <span id="supabase-header-dot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span id="supabase-header-text">Supabase: Trực tuyến</span>
+        </button>
+
         <!-- Dark Mode Toggle -->
         <button onclick="toggleDarkMode()" class="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" title="Đổi giao diện Sáng / Tối">
           <i id="theme-icon" data-lucide="moon" class="w-5 h-5"></i>
@@ -134,7 +142,7 @@
         <i data-lucide="grid" class="w-4 h-4"></i> Sơ đồ lớp
       </button>
       <button onclick="switchMainTab('sync')" id="tab-btn-sync" class="tab-btn flex items-center gap-2 px-3.5 py-2 rounded-xl transition-all">
-        <i data-lucide="refresh-cw" class="w-4 h-4"></i> Google Sheets & Sync
+        <i data-lucide="database" class="w-4 h-4 text-emerald-500"></i> Supabase & Sheets
       </button>
     </div>
   </nav>
@@ -921,9 +929,78 @@
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 class="text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-            <i data-lucide="refresh-cw" class="w-6 h-6 text-emerald-600"></i> Đồng Bộ Hai Chiều Google Sheets & Google Forms
+            <i data-lucide="database" class="w-6 h-6 text-emerald-500"></i> Cơ Sở Dữ Liệu Đám Mây & Đồng Bộ Hai Chiều
           </h2>
-          <p class="text-xs text-slate-700 dark:text-slate-300 mt-0.5">Liên kết tự động qua Apps Script: Dữ liệu nộp bài & khảo sát tự động đổ về hồ sơ</p>
+          <p class="text-xs text-slate-700 dark:text-slate-300 mt-0.5">
+            Kết nối đa nền tảng: <strong>Supabase Cloud Database (PostgreSQL)</strong> & <strong>Google Sheets / Google Forms</strong>
+          </p>
+        </div>
+      </div>
+
+      <!-- CƠ SỞ DỮ LIỆU ĐÁM MÂY SUPABASE (CARD NỔI BẬT) -->
+      <div class="glass-panel p-5 sm:p-6 rounded-3xl border-2 border-emerald-500/50 bg-gradient-to-br from-emerald-50/70 via-white to-teal-50/70 dark:from-slate-900 dark:via-emerald-950/20 dark:to-slate-900 shadow-lg space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-emerald-200 dark:border-emerald-800/60">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center font-black text-xl shadow-md shrink-0">
+              ⚡
+            </div>
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <h3 class="font-extrabold text-base sm:text-lg text-slate-900 dark:text-white">
+                  Cơ Sở Dữ Liệu Đám Mây Supabase (Khuyên Dùng)
+                </h3>
+                <span id="supabase-panel-status">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Đã Kết Nối Trực Tuyến
+                  </span>
+                </span>
+              </div>
+              <p class="text-xs text-slate-600 dark:text-slate-300 mt-0.5" id="supabase-panel-time">
+                Tự động lưu trữ và đồng bộ tức thì mọi thao tác chấm điểm, thi đua qua từng tuần mà không bao giờ mất dữ liệu.
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 self-start sm:self-auto">
+            <button onclick="handleCheckSupabaseHealth()" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs">
+              <i data-lucide="activity" class="w-3.5 h-3.5 text-emerald-500"></i> Kiểm tra Ping
+            </button>
+            <button onclick="handleViewSupabaseSQLModal()" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs">
+              <i data-lucide="file-code" class="w-3.5 h-3.5 text-phuochung-600"></i> Xem Mã SQL
+            </button>
+          </div>
+        </div>
+
+        <!-- Thông tin kết nối & Tham số -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+          <div class="p-3 bg-white/80 dark:bg-slate-800/80 rounded-xl border border-emerald-100 dark:border-slate-700/80 space-y-1">
+            <span class="text-slate-500 dark:text-slate-400 text-[11px] font-medium">Supabase Host URL:</span>
+            <div class="font-mono font-bold text-emerald-700 dark:text-emerald-400 truncate" title="https://nculyagvcpbbrlfrcbnn.supabase.co">
+              https://nculyagvcpbbrlfrcbnn.supabase.co
+            </div>
+          </div>
+          <div class="p-3 bg-white/80 dark:bg-slate-800/80 rounded-xl border border-emerald-100 dark:border-slate-700/80 space-y-1">
+            <span class="text-slate-500 dark:text-slate-400 text-[11px] font-medium">Cơ Chế Lưu Trữ Đám Mây:</span>
+            <div class="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+              <i data-lucide="hard-drive" class="w-3.5 h-3.5 text-cyan-600"></i> Bucket <code>database</code> & Table <code>app_state</code>
+            </div>
+          </div>
+          <div class="p-3 bg-white/80 dark:bg-slate-800/80 rounded-xl border border-emerald-100 dark:border-slate-700/80 space-y-1">
+            <span class="text-slate-500 dark:text-slate-400 text-[11px] font-medium">Chế Độ Tự Động Đồng Bộ:</span>
+            <div class="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+              <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-500"></i> Bật (Real-time Dynamic Sync)
+            </div>
+          </div>
+        </div>
+
+        <!-- Nút thao tác Supabase -->
+        <div class="flex flex-wrap items-center gap-3 pt-1">
+          <button onclick="handlePushAllSupabase()" id="btn-push-supabase" class="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-xs font-extrabold transition shadow-md hover:shadow-lg flex items-center gap-2 transform active:scale-95">
+            <i data-lucide="cloud-upload" class="w-4 h-4"></i> 🚀 Đẩy Toàn Bộ 43 HS & Thi Đua Lên Supabase Cloud
+          </button>
+          <button onclick="handlePullSupabase()" id="btn-pull-supabase" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white dark:bg-slate-700 dark:hover:bg-slate-600 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-sm">
+            <i data-lucide="cloud-download" class="w-4 h-4 text-cyan-400"></i> 📥 Tải Dữ Liệu Mới Nhất Từ Supabase
+          </button>
         </div>
       </div>
 
@@ -1980,15 +2057,16 @@
   </footer>
 
   <!-- Scripts Core -->
-  <script src="js/store.js?v=6.2.0"></script>
-  <script src="js/security.js?v=6.2.0"></script>
-  <script src="js/auth.js?v=6.2.0"></script>
-  <script src="js/ai-analytics.js?v=6.2.0"></script>
-  <script src="js/workspaces.js?v=6.2.0"></script>
-  <script src="js/exam-hub.js?v=6.2.0"></script>
-  <script src="js/gamification.js?v=6.2.0"></script>
-  <script src="js/sync-hub.js?v=6.2.0"></script>
-  <script src="js/voice-assistant.js?v=6.2.0"></script>
+  <script src="js/store.js?v=6.3.0"></script>
+  <script src="js/security.js?v=6.3.0"></script>
+  <script src="js/auth.js?v=6.3.0"></script>
+  <script src="js/ai-analytics.js?v=6.3.0"></script>
+  <script src="js/workspaces.js?v=6.3.0"></script>
+  <script src="js/exam-hub.js?v=6.3.0"></script>
+  <script src="js/gamification.js?v=6.3.0"></script>
+  <script src="js/sync-hub.js?v=6.3.0"></script>
+  <script src="js/supabase-client.js?v=6.3.0"></script>
+  <script src="js/voice-assistant.js?v=6.3.0"></script>
   
   <!-- Main Application Orchestration Script -->
   <script>
@@ -5884,6 +5962,124 @@ function handleExportEmulationExcelClick() {
       alert('Đã lưu cấu hình Google Apps Script URL thành công!');
     }
 
+    // ================= SUPABASE CLOUD DATABASE HANDLERS =================
+    async function handlePushAllSupabase() {
+      if (!window.supabaseClient) {
+        alert('Chưa khởi tạo Supabase Client. Vui lòng tải lại trang.');
+        return;
+      }
+      const btn = document.getElementById('btn-push-supabase');
+      const origText = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin inline mr-1"></i> Đang đẩy dữ liệu lên Supabase...';
+        if (window.lucide) lucide.createIcons();
+      }
+      try {
+        const res = await window.supabaseClient.pushAllToSupabase();
+        showSeatingToast(`🚀 Đã đồng bộ thành công ${res.studentCount} học sinh lên Supabase Cloud!`);
+        alert(`✅ ĐỒNG BỘ SUPABASE CLOUD THÀNH CÔNG!\n\n- Cơ sở dữ liệu: Supabase Cloud (PostgreSQL / Storage)\n- Host: https://nculyagvcpbbrlfrcbnn.supabase.co\n- Sĩ số: ${res.studentCount} học sinh lớp 9A1\n- Thời gian: ${res.timestamp}\n\nToàn bộ dữ liệu điểm số, thi đua 35 tuần, sổ tay và quỹ lớp đã được lưu trữ an toàn trên đám mây.`);
+      } catch (e) {
+        alert('❌ Lỗi đồng bộ Supabase: ' + e.message);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = origText;
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+    }
+
+    async function handlePullSupabase() {
+      if (!window.supabaseClient) {
+        alert('Chưa khởi tạo Supabase Client. Vui lòng tải lại trang.');
+        return;
+      }
+      const btn = document.getElementById('btn-pull-supabase');
+      const origText = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin inline mr-1"></i> Đang tải từ Supabase...';
+        if (window.lucide) lucide.createIcons();
+      }
+      try {
+        const res = await window.supabaseClient.pullFromSupabase(false);
+        showSeatingToast(`📥 Đã nạp thành công ${res.studentCount} học sinh từ Supabase Cloud!`);
+        alert(`✅ TẢI DỮ LIỆU TỪ SUPABASE THÀNH CÔNG!\n\n- Đã nạp: ${res.studentCount} học sinh và dữ liệu thi đua mới nhất.\n- Lần đồng bộ: ${res.timestamp}`);
+      } catch (e) {
+        alert('❌ Lỗi tải từ Supabase: ' + e.message);
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = origText;
+          if (window.lucide) lucide.createIcons();
+        }
+      }
+    }
+
+    async function handleCheckSupabaseHealth() {
+      if (!window.supabaseClient) return;
+      const health = await window.supabaseClient.checkHealth();
+      if (health.healthy) {
+        alert(`🟢 KẾT NỐI SUPABASE CLOUD HOẠT ĐỘNG TỐT!\n\n- Host: ${window.supabaseClient.url}\n- Độ trễ mạng (Ping): ${health.latency} ms\n- Trạng thái HTTP: 200 OK\n- Lưu trữ đám mây bucket: 'database' sẵn sàng`);
+      } else {
+        alert(`⚠️ KẾT NỐI SUPABASE GẶP VẤN ĐỀ!\n\n- Chi tiết: ${health.error || 'Mã HTTP ' + health.status}`);
+      }
+    }
+
+    function handleQuickSupabaseSync() {
+      handlePushAllSupabase();
+    }
+
+    async function handleViewSupabaseSQLModal() {
+      const modal = document.getElementById('supabase-sql-modal');
+      const textarea = document.getElementById('supabase-sql-code-area');
+      if (textarea && (!textarea.value || textarea.value.trim() === '')) {
+        try {
+          const res = await fetch('./supabase-schema.sql');
+          if (res.ok) {
+            textarea.value = await res.text();
+          }
+        } catch (e) {
+          console.warn('Không thể tải file supabase-schema.sql:', e);
+        }
+      }
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function closeSupabaseSQLModal() {
+      const modal = document.getElementById('supabase-sql-modal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    function handleCopySupabaseSQLClipboard() {
+      const textarea = document.getElementById('supabase-sql-code-area');
+      const code = textarea ? textarea.value : '';
+      if (!code) {
+        alert('Vui lòng đợi tải mã nguồn xong!');
+        return;
+      }
+      navigator.clipboard.writeText(code).then(() => {
+        const btn = document.getElementById('btn-copy-supabase-sql');
+        if (btn) {
+          const old = btn.innerHTML;
+          btn.innerHTML = '<i data-lucide="check" class="w-4 h-4 text-emerald-300"></i> Đã sao chép!';
+          if (window.lucide) lucide.createIcons();
+          setTimeout(() => {
+            btn.innerHTML = old;
+            if (window.lucide) lucide.createIcons();
+          }, 2500);
+        }
+      });
+    }
+
     // ĐẨY TOÀN BỘ 43 HỌC SINH TỪ APP SANG GOOGLE SHEET LIỀN (CÓ FALLBACK TỰ CHỦ)
     async function handlePushAllGoogleSheets() {
       const inp = document.getElementById('apps-script-url-input');
@@ -7053,12 +7249,17 @@ function handleExportEmulationExcelClick() {
       syncRoleSelectLabels();
 
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js?v=6.2.0', { updateViaCache: 'none' })
+        navigator.serviceWorker.register('./sw.js?v=6.3.0', { updateViaCache: 'none' })
           .then(reg => {
             console.log('PWA Service Worker registered:', reg.scope);
             reg.update().catch(() => {});
           })
           .catch(err => console.warn('PWA Service Worker error:', err));
+      }
+
+      // Supabase Cloud Sync: Tự động kết nối và đồng bộ đám mây Supabase
+      if (window.supabaseClient && typeof window.supabaseClient.init === 'function') {
+        window.supabaseClient.init().catch(err => console.warn('Supabase init notice:', err.message));
       }
 
       // Auto Cloud Sync: Tự động đồng bộ từ Google Sheets khi vừa khởi chạy app để mọi người dùng đều thấy dữ liệu thống nhất
@@ -7198,6 +7399,44 @@ function handleExportEmulationExcelClick() {
         </button>
         <button onclick="handleCopyAppsScriptClipboard()" id="btn-copy-script-code" class="px-4 py-2 bg-phuochung-600 hover:bg-phuochung-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
           <i data-lucide="copy" class="w-4 h-4"></i> Sao chép toàn bộ mã
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Xem & Sao Chép Mã SQL Supabase -->
+  <div id="supabase-sql-modal" class="hidden fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+      <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-emerald-50 dark:bg-emerald-950/40">
+        <div class="flex items-center gap-2">
+          <i data-lucide="database" class="w-5 h-5 text-emerald-600"></i>
+          <h3 class="font-bold text-slate-900 dark:text-white text-sm md:text-base">Mã SQL Khởi Tạo Bảng Supabase PostgreSQL</h3>
+        </div>
+        <button onclick="closeSupabaseSQLModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+      
+      <div class="p-5 overflow-y-auto space-y-3 text-xs">
+        <div class="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 rounded-xl text-emerald-900 dark:text-emerald-300 space-y-1">
+          <p class="font-bold flex items-center gap-1.5"><i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i> Hướng dẫn chạy SQL trên Supabase (Nếu muốn tạo bảng quan hệ SQL):</p>
+          <p>1. Bấm nút <b>"Sao chép toàn bộ mã SQL"</b> bên dưới.</p>
+          <p>2. Mở Supabase Dashboard của bạn: <code>https://supabase.com/dashboard/project/nculyagvcpbbrlfrcbnn</code></p>
+          <p>3. Chọn menu <b>SQL Editor</b> > Bấm <b>New query</b> > Dán đoạn mã này vào > Bấm <b>[Run]</b>.</p>
+          <p>💡 <i>Lưu ý: Ngay cả khi chưa chạy SQL, ứng dụng đã tự động lưu trữ và đồng bộ 100% dữ liệu qua Supabase Cloud Storage Engine!</i></p>
+        </div>
+
+        <div class="relative">
+          <textarea id="supabase-sql-code-area" readonly class="w-full h-64 font-mono text-[11.5px] p-3 bg-slate-950 text-slate-200 rounded-xl border border-slate-700 outline-none select-all leading-relaxed"></textarea>
+        </div>
+      </div>
+
+      <div class="px-5 py-3.5 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2 bg-slate-50 dark:bg-slate-800/50">
+        <button onclick="closeSupabaseSQLModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition">
+          Đóng
+        </button>
+        <button onclick="handleCopySupabaseSQLClipboard()" id="btn-copy-supabase-sql" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+          <i data-lucide="copy" class="w-4 h-4"></i> Sao chép toàn bộ mã SQL
         </button>
       </div>
     </div>

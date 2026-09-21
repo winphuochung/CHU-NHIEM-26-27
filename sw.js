@@ -1,5 +1,5 @@
-// Service Worker cho PWA Lớp 9A1 - TH & THCS Phước Hưng (Version 6.2.0 - Network First)
-const CACHE_NAME = 'phuoc-hung-9a1-v6.2.0';
+// Service Worker cho PWA Lớp 9A1 - TH & THCS Phước Hưng (Version 6.3.0 - Network First)
+const CACHE_NAME = 'phuoc-hung-9a1-v6.3.0';
 
 const PRECACHE_ASSETS = [
   './',
@@ -14,6 +14,7 @@ const PRECACHE_ASSETS = [
   './js/exam-hub.js',
   './js/gamification.js',
   './js/sync-hub.js',
+  './js/supabase-client.js',
   './js/voice-assistant.js',
   './js/xlsx.full.min.js'
 ];
