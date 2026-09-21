@@ -961,13 +961,16 @@
             </div>
           </div>
 
-          <div class="flex items-center gap-2 self-start sm:self-auto">
+          <div class="flex items-center gap-2 self-start sm:self-auto flex-wrap">
             <button onclick="handleCheckSupabaseHealth()" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs">
               <i data-lucide="activity" class="w-3.5 h-3.5 text-emerald-500"></i> Kiểm tra Ping
             </button>
             <button onclick="handleViewSupabaseSQLModal()" class="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs">
               <i data-lucide="file-code" class="w-3.5 h-3.5 text-phuochung-600"></i> Xem Mã SQL
             </button>
+            <a href="https://supabase.com/dashboard/project/nculyagvcpbbrlfrcbnn/sql/new" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-2xs">
+              <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Mở SQL Editor
+            </a>
           </div>
         </div>
 
@@ -981,8 +984,8 @@
           </div>
           <div class="p-3 bg-white/80 dark:bg-slate-800/80 rounded-xl border border-emerald-100 dark:border-slate-700/80 space-y-1">
             <span class="text-slate-500 dark:text-slate-400 text-[11px] font-medium">Cơ Chế Lưu Trữ Đám Mây:</span>
-            <div class="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
-              <i data-lucide="hard-drive" class="w-3.5 h-3.5 text-cyan-600"></i> Bucket <code>database</code> & Table <code>app_state</code>
+            <div id="supabase-storage-mechanism" class="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1">
+              <i data-lucide="hard-drive" class="w-3.5 h-3.5 text-cyan-600"></i> Supabase Cloud Storage (Bucket <code>database</code>)
             </div>
           </div>
           <div class="p-3 bg-white/80 dark:bg-slate-800/80 rounded-xl border border-emerald-100 dark:border-slate-700/80 space-y-1">
@@ -2057,16 +2060,16 @@
   </footer>
 
   <!-- Scripts Core -->
-  <script src="js/store.js?v=6.3.1"></script>
-  <script src="js/security.js?v=6.3.1"></script>
-  <script src="js/auth.js?v=6.3.1"></script>
-  <script src="js/ai-analytics.js?v=6.3.1"></script>
-  <script src="js/workspaces.js?v=6.3.1"></script>
-  <script src="js/exam-hub.js?v=6.3.1"></script>
-  <script src="js/gamification.js?v=6.3.1"></script>
-  <script src="js/sync-hub.js?v=6.3.1"></script>
-  <script src="js/supabase-client.js?v=6.3.1"></script>
-  <script src="js/voice-assistant.js?v=6.3.1"></script>
+  <script src="js/store.js?v=6.3.2"></script>
+  <script src="js/security.js?v=6.3.2"></script>
+  <script src="js/auth.js?v=6.3.2"></script>
+  <script src="js/ai-analytics.js?v=6.3.2"></script>
+  <script src="js/workspaces.js?v=6.3.2"></script>
+  <script src="js/exam-hub.js?v=6.3.2"></script>
+  <script src="js/gamification.js?v=6.3.2"></script>
+  <script src="js/sync-hub.js?v=6.3.2"></script>
+  <script src="js/supabase-client.js?v=6.3.2"></script>
+  <script src="js/voice-assistant.js?v=6.3.2"></script>
   
   <!-- Main Application Orchestration Script -->
   <script>
@@ -7249,7 +7252,7 @@ function handleExportEmulationExcelClick() {
       syncRoleSelectLabels();
 
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js?v=6.3.1', { updateViaCache: 'none' })
+        navigator.serviceWorker.register('./sw.js?v=6.3.2', { updateViaCache: 'none' })
           .then(reg => {
             console.log('PWA Service Worker registered:', reg.scope);
             reg.update().catch(() => {});
@@ -7418,12 +7421,12 @@ function handleExportEmulationExcelClick() {
       </div>
       
       <div class="p-5 overflow-y-auto space-y-3 text-xs">
-        <div class="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 rounded-xl text-emerald-900 dark:text-emerald-300 space-y-1">
-          <p class="font-bold flex items-center gap-1.5"><i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i> Hướng dẫn chạy SQL trên Supabase (Nếu muốn tạo bảng quan hệ SQL):</p>
-          <p>1. Bấm nút <b>"Sao chép toàn bộ mã SQL"</b> bên dưới.</p>
-          <p>2. Mở Supabase Dashboard của bạn: <code>https://supabase.com/dashboard/project/nculyagvcpbbrlfrcbnn</code></p>
-          <p>3. Chọn menu <b>SQL Editor</b> > Bấm <b>New query</b> > Dán đoạn mã này vào > Bấm <b>[Run]</b>.</p>
-          <p>💡 <i>Lưu ý: Ngay cả khi chưa chạy SQL, ứng dụng đã tự động lưu trữ và đồng bộ 100% dữ liệu qua Supabase Cloud Storage Engine!</i></p>
+        <div class="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 rounded-xl text-emerald-900 dark:text-emerald-300 space-y-1.5">
+          <p class="font-bold flex items-center gap-1.5"><i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i> Hướng dẫn kích hoạt 100% PostgreSQL Table (Loại bỏ triệt để 404 trong nhật ký Edge Logs):</p>
+          <p><b>Bước 1:</b> Bấm nút <b>"Sao chép toàn bộ mã SQL"</b> bên dưới.</p>
+          <p><b>Bước 2:</b> Bấm nút <b>"Mở Supabase SQL Editor"</b> (liên kết trực tiếp vào dự án của bạn).</p>
+          <p><b>Bước 3:</b> Dán mã (<code>Ctrl+V</code>) vào ô soạn thảo và bấm nút <b>[Run]</b> màu xanh.</p>
+          <p class="text-[11px] text-emerald-700 dark:text-emerald-400 italic">💡 Sau khi chạy xong, hệ thống sẽ tự động chuyển sang chế độ Full-Stack (PostgreSQL Table & Storage), đồng bộ 43 học sinh và thi đua cả vào cơ sở dữ liệu quan hệ lẫn tệp đám mây!</p>
         </div>
 
         <div class="relative">
@@ -7431,13 +7434,16 @@ function handleExportEmulationExcelClick() {
         </div>
       </div>
 
-      <div class="px-5 py-3.5 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-2 bg-slate-50 dark:bg-slate-800/50">
+      <div class="px-5 py-3.5 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-end gap-2 bg-slate-50 dark:bg-slate-800/50">
         <button onclick="closeSupabaseSQLModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold transition">
           Đóng
         </button>
-        <button onclick="handleCopySupabaseSQLClipboard()" id="btn-copy-supabase-sql" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+        <button onclick="handleCopySupabaseSQLClipboard()" id="btn-copy-supabase-sql" class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
           <i data-lucide="copy" class="w-4 h-4"></i> Sao chép toàn bộ mã SQL
         </button>
+        <a href="https://supabase.com/dashboard/project/nculyagvcpbbrlfrcbnn/sql/new" target="_blank" rel="noopener noreferrer" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+          <i data-lucide="external-link" class="w-4 h-4"></i> Mở Supabase SQL Editor
+        </a>
       </div>
     </div>
   </div>

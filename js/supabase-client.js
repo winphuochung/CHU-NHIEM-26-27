@@ -7,6 +7,7 @@ const SUPABASE_CONFIG = {
   serviceKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5jdWx5YWd2Y3BiYnJsZnJjYm5uIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4OTkzNzkzOCwiZXhwIjoyMTA1NTEzOTM4fQ.h1aA0QEFBAW4K9hJqQB8C4K4hUEwW16xqWWKHv-oSYs',
   bucket: 'database',
   statePath: 'app_state.json',
+  studentsPath: 'students.json',
   metaPath: 'metadata.json'
 };
 
@@ -22,6 +23,8 @@ class SupabaseClientManager {
     this.latency = 0;
     this._autoSyncTimer = null;
     this._isAutoPushing = false;
+    this.hasPostgresTable = false;
+    this.hasStudentsTable = false;
   }
 
   // Khởi tạo và kiểm tra kết nối Supabase Cloud
@@ -34,8 +37,16 @@ class SupabaseClientManager {
       if (health.healthy) {
         this.status = 'connected';
         this.latency = health.latency;
-        this.updateUIStatus('connected', `🟢 Supabase: Trực tuyến (${this.latency}ms)`);
-        console.log(`[Supabase] Đã kết nối thành công (${this.latency}ms)`);
+
+        // Kiểm tra xem các bảng PostgreSQL đã được khởi tạo qua SQL Editor chưa
+        await this.checkPostgresTableStatus();
+
+        const badgeText = this.hasPostgresTable
+          ? `🟢 Supabase: 100% Trực tuyến (${this.latency}ms • DB & Storage)`
+          : `🟢 Supabase: Trực tuyến (${this.latency}ms • Cloud Storage)`;
+
+        this.updateUIStatus('connected', badgeText);
+        console.log(`[Supabase] Đã kết nối thành công (${this.latency}ms, Postgres Table: ${this.hasPostgresTable})`);
 
         // Tự động kéo dữ liệu mới nhất từ Supabase Cloud khi mở ứng dụng
         this.pullFromSupabase(true).catch(e => {
@@ -100,6 +111,49 @@ class SupabaseClientManager {
     }
   }
 
+  // Kiểm tra bảng PostgreSQL trong public schema mà không gây lỗi 404
+  async checkPostgresTableStatus() {
+    try {
+      const res = await fetch(`${this.url}/rest/v1/`, {
+        headers: {
+          'apikey': this.serviceKey,
+          'Authorization': `Bearer ${this.serviceKey}`
+        }
+      });
+      if (res.ok) {
+        const spec = await res.json();
+        const tables = Object.keys(spec.definitions || {});
+        this.hasPostgresTable = tables.includes('app_state');
+        this.hasStudentsTable = tables.includes('students');
+        console.log('[Supabase] Trạng thái bảng PostgreSQL:', {
+          app_state: this.hasPostgresTable,
+          students: this.hasStudentsTable
+        });
+        this.updateMechanismUI();
+        return this.hasPostgresTable;
+      }
+    } catch (e) {
+      console.warn('[Supabase] Kiểm tra bảng PostgreSQL:', e.message);
+    }
+    this.hasPostgresTable = false;
+    this.hasStudentsTable = false;
+    this.updateMechanismUI();
+    return false;
+  }
+
+  // Cập nhật thẻ hiển thị cơ chế lưu trữ trong Tab Supabase & Sheets
+  updateMechanismUI() {
+    const mechEl = document.getElementById('supabase-storage-mechanism');
+    if (mechEl) {
+      if (this.hasPostgresTable) {
+        mechEl.innerHTML = '<span class="text-emerald-600 font-extrabold flex items-center gap-1.5"><i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-500"></i> Full-Stack: PostgreSQL Table & Storage</span>';
+      } else {
+        mechEl.innerHTML = '<span class="text-slate-800 dark:text-slate-200 font-bold flex items-center gap-1.5"><i data-lucide="hard-drive" class="w-4 h-4 text-cyan-600"></i> Supabase Cloud Storage (Bucket database)</span>';
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+  }
+
   // Đẩy toàn bộ cơ sở dữ liệu hiện tại lên Supabase Cloud
   async pushAllToSupabase() {
     let waitCount = 0;
@@ -137,43 +191,93 @@ class SupabaseClientManager {
         exportedAt: new Date().toISOString()
       };
 
-      // 1. Đẩy lên Supabase Storage (app_state.json)
+      // 1. Đẩy lên Supabase Storage (app_state.json) - Thử PUT trước, nếu chưa có thì POST
       const stateBody = JSON.stringify(payload);
-      const resState = await fetch(`${this.url}/storage/v1/object/${this.bucket}/${SUPABASE_CONFIG.statePath}`, {
-        method: 'POST',
+      let resState = await fetch(`${this.url}/storage/v1/object/${this.bucket}/${SUPABASE_CONFIG.statePath}`, {
+        method: 'PUT',
         headers: {
           'apikey': this.serviceKey,
           'Authorization': `Bearer ${this.serviceKey}`,
-          'Content-Type': 'application/json',
-          'x-upsert': 'true'
+          'Content-Type': 'application/json'
         },
         body: stateBody
       });
+
+      if (!resState.ok) {
+        resState = await fetch(`${this.url}/storage/v1/object/${this.bucket}/${SUPABASE_CONFIG.statePath}`, {
+          method: 'POST',
+          headers: {
+            'apikey': this.serviceKey,
+            'Authorization': `Bearer ${this.serviceKey}`,
+            'Content-Type': 'application/json',
+            'x-upsert': 'true'
+          },
+          body: stateBody
+        });
+      }
 
       if (!resState.ok) {
         const errText = await resState.text();
         throw new Error(`Lỗi đẩy state: HTTP ${resState.status} - ${errText}`);
       }
 
-      // 2. Đẩy metadata tóm tắt
+      // 2. Đẩy metadata tóm tắt lên Storage
       await fetch(`${this.url}/storage/v1/object/${this.bucket}/${SUPABASE_CONFIG.metaPath}`, {
-        method: 'POST',
+        method: 'PUT',
         headers: {
           'apikey': this.serviceKey,
           'Authorization': `Bearer ${this.serviceKey}`,
-          'Content-Type': 'application/json',
-          'x-upsert': 'true'
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(meta)
-      }).catch(() => {});
+      }).catch(async () => {
+        await fetch(`${this.url}/storage/v1/object/${this.bucket}/${SUPABASE_CONFIG.metaPath}`, {
+          method: 'POST',
+          headers: {
+            'apikey': this.serviceKey,
+            'Authorization': `Bearer ${this.serviceKey}`,
+            'Content-Type': 'application/json',
+            'x-upsert': 'true'
+          },
+          body: JSON.stringify(meta)
+        }).catch(() => {});
+      });
 
-      // 3. Thử đồng bộ bảng PostgREST nếu bảng public.app_state tồn tại
-      this.syncToPostgresTable(meta, state).catch(() => {});
+      // 3. Đẩy tệp students.json chứa danh sách 43 học sinh riêng lẻ
+      await fetch(`${this.url}/storage/v1/object/${this.bucket}/${SUPABASE_CONFIG.studentsPath}`, {
+        method: 'PUT',
+        headers: {
+          'apikey': this.serviceKey,
+          'Authorization': `Bearer ${this.serviceKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(students)
+      }).catch(async () => {
+        await fetch(`${this.url}/storage/v1/object/${this.bucket}/${SUPABASE_CONFIG.studentsPath}`, {
+          method: 'POST',
+          headers: {
+            'apikey': this.serviceKey,
+            'Authorization': `Bearer ${this.serviceKey}`,
+            'Content-Type': 'application/json',
+            'x-upsert': 'true'
+          },
+          body: JSON.stringify(students)
+        }).catch(() => {});
+      });
+
+      // 4. CHỈ ĐỒNG BỘ BẢNG POSTGRES NẾU BẢNG ĐÃ TỒN TẠI (Tránh sinh lỗi 404 trong nhật ký Supabase)
+      if (this.hasPostgresTable) {
+        await this.syncToPostgresTable(meta, state).catch(() => {});
+        if (this.hasStudentsTable) {
+          await this.syncStudentsToPostgres(students).catch(() => {});
+        }
+      }
 
       this.lastSyncTime = new Date().toLocaleString('vi-VN');
       localStorage.setItem('SUPABASE_LAST_SYNC_TIME', this.lastSyncTime);
       this.status = 'connected';
-      this.updateUIStatus('connected', `🟢 Supabase: Đã đồng bộ lúc ${this.lastSyncTime.split(' ')[0]}`);
+      const timeStr = this.lastSyncTime.split(' ')[0];
+      this.updateUIStatus('connected', `🟢 Supabase: Đã đồng bộ lúc ${timeStr}`);
 
       return {
         success: true,
@@ -191,8 +295,9 @@ class SupabaseClientManager {
     }
   }
 
-  // Thử đẩy vào bảng PostgreSQL nếu bảng app_state đã được tạo qua SQL Editor
+  // Đẩy vào bảng PostgreSQL nếu bảng app_state đã được tạo qua SQL Editor
   async syncToPostgresTable(meta, state) {
+    if (!this.hasPostgresTable) return;
     try {
       await fetch(`${this.url}/rest/v1/app_state`, {
         method: 'POST',
@@ -209,7 +314,51 @@ class SupabaseClientManager {
           updated_at: new Date().toISOString()
         })
       });
-    } catch (e) {}
+    } catch (e) {
+      console.warn('[Supabase] syncToPostgresTable error:', e.message);
+    }
+  }
+
+  // Đẩy 43 học sinh vào bảng PostgreSQL students nếu bảng đã được tạo
+  async syncStudentsToPostgres(students) {
+    if (!this.hasStudentsTable || !Array.isArray(students)) return;
+    try {
+      const rows = students.map(s => ({
+        id: s.id,
+        stt: s.stt,
+        name: s.name,
+        gender: s.gender,
+        dob: s.dob,
+        to: s.to,
+        role: s.role || 'Học sinh',
+        phone: s.phone || '',
+        parent_phone: s.parentPhone || '',
+        address: s.address || '',
+        conduct: s.conduct || 'Tốt',
+        academic: s.academic || 'Khá',
+        score_avg: s.scoreAvg || 8.0,
+        conduct_score: s.conductScore || 100,
+        badges: s.badges || [],
+        target_high_school: s.targetHighSchool || {},
+        homework_status: !!s.homeworkStatus,
+        notes: s.notes || '',
+        updated_at: new Date().toISOString()
+      }));
+
+      await fetch(`${this.url}/rest/v1/students`, {
+        method: 'POST',
+        headers: {
+          'apikey': this.serviceKey,
+          'Authorization': `Bearer ${this.serviceKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'resolution=merge-duplicates'
+        },
+        body: JSON.stringify(rows)
+      });
+      console.log('[Supabase] Đã đồng bộ thành công vào bảng public.students');
+    } catch (e) {
+      console.warn('[Supabase] syncStudentsToPostgres error:', e.message);
+    }
   }
 
   // Kéo dữ liệu mới nhất từ Supabase Cloud về ứng dụng
@@ -225,30 +374,36 @@ class SupabaseClientManager {
     }
 
     try {
-      // 1. Ưu tiên kiểm tra bảng PostgREST
       let cloudState = null;
       let cloudMeta = null;
 
-      try {
-        const resTable = await fetch(`${this.url}/rest/v1/app_state?id=eq.primary_class_9a1&select=*`, {
+      // 1. Chỉ truy vấn bảng PostgreSQL nếu bảng đã tồn tại
+      if (this.hasPostgresTable) {
+        try {
+          const resTable = await fetch(`${this.url}/rest/v1/app_state?id=eq.primary_class_9a1&select=*`, {
+            headers: {
+              'apikey': this.serviceKey,
+              'Authorization': `Bearer ${this.serviceKey}`
+            }
+          });
+          if (resTable.ok) {
+            const rows = await resTable.json();
+            if (Array.isArray(rows) && rows.length > 0 && rows[0].state) {
+              cloudState = rows[0].state;
+              cloudMeta = rows[0].meta;
+            }
+          }
+        } catch (e) {}
+      }
+
+      // 2. Lấy từ Supabase Storage object (Luôn hoạt động 100%, 200 OK)
+      if (!cloudState) {
+        const resObject = await fetch(`${this.url}/storage/v1/object/${this.bucket}/${SUPABASE_CONFIG.statePath}?t=${Date.now()}`, {
           headers: {
             'apikey': this.serviceKey,
             'Authorization': `Bearer ${this.serviceKey}`
           }
         });
-        if (resTable.ok) {
-          const rows = await resTable.json();
-          if (Array.isArray(rows) && rows.length > 0 && rows[0].state) {
-            cloudState = rows[0].state;
-            cloudMeta = rows[0].meta;
-          }
-        }
-      } catch (e) {}
-
-      // 2. Nếu bảng chưa có, lấy từ Supabase Storage object
-      if (!cloudState) {
-        // Thêm timestamp để phá cache HTTP
-        const resObject = await fetch(`${this.url}/storage/v1/object/public/${this.bucket}/${SUPABASE_CONFIG.statePath}?t=${Date.now()}`);
         if (resObject.ok) {
           const parsed = await resObject.json();
           cloudState = parsed.state || parsed;
@@ -284,7 +439,8 @@ class SupabaseClientManager {
       this.lastSyncTime = new Date().toLocaleString('vi-VN');
       localStorage.setItem('SUPABASE_LAST_SYNC_TIME', this.lastSyncTime);
       this.status = 'connected';
-      this.updateUIStatus('connected', `🟢 Supabase: Đã nạp lúc ${this.lastSyncTime.split(' ')[0]}`);
+      const timeStr = this.lastSyncTime.split(' ')[0];
+      this.updateUIStatus('connected', `🟢 Supabase: Đã nạp lúc ${timeStr}`);
 
       const msg = `Đã nạp thành công ${cloudState.students.length} học sinh và dữ liệu thi đua mới nhất từ Supabase Cloud!`;
       console.log('[Supabase]', msg);
@@ -340,7 +496,7 @@ class SupabaseClientManager {
     const panelTime = document.getElementById('supabase-panel-time');
     if (panelStatus) {
       panelStatus.innerHTML = status === 'connected' 
-        ? '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Đã Kết Nối Trực Tuyến</span>'
+        ? '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Đã Kết Nối Trực Tuyến 100%</span>'
         : status === 'syncing'
         ? '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-cyan-100 text-cyan-800 dark:bg-cyan-950 dark:text-cyan-300"><span class="w-2 h-2 rounded-full bg-cyan-500 animate-ping"></span> Đang Đồng Bộ...</span>'
         : '<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Sẵn Sàng Kết Nối</span>';

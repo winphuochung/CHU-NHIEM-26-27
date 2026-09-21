@@ -1,6 +1,7 @@
 -- =========================================================================
 -- SUPABASE SCHEMA CHO LỚP 9A1 - TRƯỜNG TH & THCS PHƯỚC HƯNG (2026-2027)
 -- Dự án Supabase: https://nculyagvcpbbrlfrcbnn.supabase.co
+-- Hướng dẫn: Dán vào SQL Editor tại https://supabase.com/dashboard/project/nculyagvcpbbrlfrcbnn/sql/new và bấm RUN
 -- =========================================================================
 
 -- 1. BẢNG TRẠNG THÁI TỔNG THỂ (Full App State Store)
@@ -77,6 +78,16 @@ ALTER TABLE public.students ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.weekly_emulations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.class_ledger ENABLE ROW LEVEL SECURITY;
+
+-- Tự động dọn dẹp policy cũ để tránh lỗi trùng lặp khi chạy lại nhiều lần
+DO $$
+BEGIN
+  DROP POLICY IF EXISTS "Public full access on app_state" ON public.app_state;
+  DROP POLICY IF EXISTS "Public full access on students" ON public.students;
+  DROP POLICY IF EXISTS "Public full access on weekly_emulations" ON public.weekly_emulations;
+  DROP POLICY IF EXISTS "Public full access on audit_logs" ON public.audit_logs;
+  DROP POLICY IF EXISTS "Public full access on class_ledger" ON public.class_ledger;
+END $$;
 
 -- Chính sách công khai cho ứng dụng (Public Policy cho Anon & Authenticated)
 CREATE POLICY "Public full access on app_state" ON public.app_state FOR ALL USING (true) WITH CHECK (true);
