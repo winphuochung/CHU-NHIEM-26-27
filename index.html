@@ -91,7 +91,7 @@
             <option value="thu_quy">💰 Thủ quỹ (Trịnh Lan Phương)</option>
             <option value="to_truong_1">👥 Tổ trưởng 1 (Nguyễn Thị Ngọc Thảo)</option>
             <option value="to_truong_2">👥 Tổ trưởng 2 (Hồ Thị Kim Cương)</option>
-            <option value="to_truong_3">👥 Tổ trưởng 3 (Phan Tuấn Khang)</option>
+            <option value="to_truong_3">👥 Tổ trưởng 3 (Huỳnh Quốc Long)</option>
             <option value="to_truong_4">👥 Tổ trưởng 4 (Nguyễn Gia Thịnh)</option>
             <option value="hoc_sinh">🎒 Học sinh & Phụ huynh</option>
           </select>
@@ -2057,16 +2057,16 @@
   </footer>
 
   <!-- Scripts Core -->
-  <script src="js/store.js?v=6.3.0"></script>
-  <script src="js/security.js?v=6.3.0"></script>
-  <script src="js/auth.js?v=6.3.0"></script>
-  <script src="js/ai-analytics.js?v=6.3.0"></script>
-  <script src="js/workspaces.js?v=6.3.0"></script>
-  <script src="js/exam-hub.js?v=6.3.0"></script>
-  <script src="js/gamification.js?v=6.3.0"></script>
-  <script src="js/sync-hub.js?v=6.3.0"></script>
-  <script src="js/supabase-client.js?v=6.3.0"></script>
-  <script src="js/voice-assistant.js?v=6.3.0"></script>
+  <script src="js/store.js?v=6.3.1"></script>
+  <script src="js/security.js?v=6.3.1"></script>
+  <script src="js/auth.js?v=6.3.1"></script>
+  <script src="js/ai-analytics.js?v=6.3.1"></script>
+  <script src="js/workspaces.js?v=6.3.1"></script>
+  <script src="js/exam-hub.js?v=6.3.1"></script>
+  <script src="js/gamification.js?v=6.3.1"></script>
+  <script src="js/sync-hub.js?v=6.3.1"></script>
+  <script src="js/supabase-client.js?v=6.3.1"></script>
+  <script src="js/voice-assistant.js?v=6.3.1"></script>
   
   <!-- Main Application Orchestration Script -->
   <script>
@@ -2759,7 +2759,7 @@
       const toLeads = {
         1: 'Nguyễn Thị Ngọc Thảo (Tổ trưởng 1)',
         2: 'Hồ Thị Kim Cương (Tổ trưởng 2)',
-        3: 'Phan Tuấn Khang (Tổ trưởng 3)',
+        3: 'Huỳnh Quốc Long (Tổ trưởng 3)',
         4: 'Nguyễn Gia Thịnh (Tổ trưởng 4)'
       };
 
@@ -6933,7 +6933,7 @@ function handleExportEmulationExcelClick() {
       const nameTQ = getStudentName(tq, 'Trịnh Lan Phương');
       const nameTT1 = getStudentName(tt1, 'Nguyễn Thị Ngọc Thảo');
       const nameTT2 = getStudentName(tt2, 'Hồ Thị Kim Cương');
-      const nameTT3 = getStudentName(tt3, 'Phan Tuấn Khang');
+      const nameTT3 = getStudentName(tt3, 'Huỳnh Quốc Long');
       const nameTT4 = getStudentName(tt4, 'Nguyễn Gia Thịnh');
 
       updateOpt('lop_truong', `👑 Lớp trưởng (${nameLT})`);
@@ -7249,7 +7249,7 @@ function handleExportEmulationExcelClick() {
       syncRoleSelectLabels();
 
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js?v=6.3.0', { updateViaCache: 'none' })
+        navigator.serviceWorker.register('./sw.js?v=6.3.1', { updateViaCache: 'none' })
           .then(reg => {
             console.log('PWA Service Worker registered:', reg.scope);
             reg.update().catch(() => {});

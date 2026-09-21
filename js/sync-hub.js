@@ -253,7 +253,7 @@ class SyncHubManager {
     const toLeads = {
       1: 'Nguyễn Thị Ngọc Thảo (Tổ trưởng 1)',
       2: 'Hồ Thị Kim Cương (Tổ trưởng 2)',
-      3: 'Phan Tuấn Khang (Tổ trưởng 3)',
+      3: 'Huỳnh Quốc Long (Tổ trưởng 3)',
       4: 'Nguyễn Gia Thịnh (Tổ trưởng 4)'
     };
 
@@ -388,7 +388,7 @@ class SyncHubManager {
     const toLeads = {
       1: 'Nguyễn Thị Ngọc Thảo (Tổ trưởng 1)',
       2: 'Hồ Thị Kim Cương (Tổ trưởng 2)',
-      3: 'Phan Tuấn Khang (Tổ trưởng 3)',
+      3: 'Huỳnh Quốc Long (Tổ trưởng 3)',
       4: 'Nguyễn Gia Thịnh (Tổ trưởng 4)'
     };
 

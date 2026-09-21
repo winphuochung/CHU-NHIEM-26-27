@@ -21,9 +21,9 @@ const DEFAULT_STUDENTS = [
   { id: 'HS15', stt: 15, name: 'Lê Bích Thi', gender: 'Nữ', dob: '04/12/2011', to: 3, role: 'Học sinh', phone: '0912.345.615', parentPhone: '0903.111.215', address: 'Ấp 3, Xã Phước Hưng', conduct: 'Tốt', academic: 'Khá', scoreAvg: 7.8, conductScore: 91, badges: ['perseverance'], targetHighSchool: { nv1: 'THPT Phước Hưng', nv2: 'THPT Bình Sơn', nv3: 'Trung tâm GDNN-GDTX' }, homeworkStatus: true, notes: 'Ý thức rèn luyện tốt' },
   { id: 'HS16', stt: 16, name: 'Nguyễn Minh Triết', gender: 'Nam', dob: '17/02/2011', to: 3, role: 'Học sinh', phone: '0912.345.616', parentPhone: '0903.111.216', address: 'Ấp 1, Xã Phước Hưng', conduct: 'Tốt', academic: 'Tốt', scoreAvg: 8.3, conductScore: 93, badges: ['ambassador'], targetHighSchool: { nv1: 'THPT Phước Hưng', nv2: 'THPT Long Thành', nv3: 'THPT Bình Sơn' }, homeworkStatus: true, notes: 'Học lực vững vàng' },
   { id: 'HS17', stt: 17, name: 'Nguyễn Phú Quý', gender: 'Nam', dob: '08/04/2011', to: 3, role: 'Học sinh', phone: '0912.345.617', parentPhone: '0903.111.217', address: 'Ấp 4, Xã Phước Hưng', conduct: 'Tốt', academic: 'Khá', scoreAvg: 7.6, conductScore: 90, badges: ['cleaner'], targetHighSchool: { nv1: 'THPT Phước Hưng', nv2: 'THPT Bình Sơn', nv3: 'Trung tâm GDNN-GDTX' }, homeworkStatus: true, notes: 'Nhiệt tình giúp đỡ bạn' },
-  { id: 'HS18', stt: 18, name: 'Phan Tuấn Khang', gender: 'Nam', dob: '23/09/2011', to: 3, role: 'Tổ trưởng 3', phone: '0912.345.618', parentPhone: '0903.111.218', address: 'Ấp Phước Hưng', conduct: 'Tốt', academic: 'Khá', scoreAvg: 7.5, conductScore: 89, badges: ['perseverance', 'initiative'], targetHighSchool: { nv1: 'THPT Phước Hưng', nv2: 'THPT Long Thành', nv3: 'THPT Bình Sơn' }, homeworkStatus: true, notes: 'Tổ trưởng tổ 3 tác phong nhanh nhẹn, trách nhiệm' },
+  { id: 'HS18', stt: 18, name: 'Phan Tuấn Khang', gender: 'Nam', dob: '23/09/2011', to: 3, role: 'Học sinh', phone: '0912.345.618', parentPhone: '0903.111.218', address: 'Ấp Phước Hưng', conduct: 'Tốt', academic: 'Khá', scoreAvg: 7.5, conductScore: 89, badges: ['perseverance'], targetHighSchool: { nv1: 'THPT Phước Hưng', nv2: 'THPT Long Thành', nv3: 'THPT Bình Sơn' }, homeworkStatus: true, notes: 'Chăm ngoan, hòa đồng, có tinh thần tập thể' },
   { id: 'HS19', stt: 19, name: 'Trần Thị Thanh Ngân', gender: 'Nữ', dob: '10/01/2011', to: 3, role: 'Học sinh', phone: '0912.345.619', parentPhone: '0903.111.219', address: 'Ấp 2, Xã Phước Hưng', conduct: 'Tốt', academic: 'Tốt', scoreAvg: 8.4, conductScore: 94, badges: ['ambassador'], targetHighSchool: { nv1: 'THPT Phước Hưng', nv2: 'THPT Long Thành', nv3: 'THPT Bình Sơn' }, homeworkStatus: true, notes: 'Tích cực phát biểu' },
-  { id: 'HS20', stt: 20, name: 'Huỳnh Quốc Long', gender: 'Nam', dob: '16/07/2011', to: 3, role: 'Học sinh', phone: '0912.345.620', parentPhone: '0903.111.220', address: 'Ấp 3, Xã Phước Hưng', conduct: 'Tốt', academic: 'Khá', scoreAvg: 7.3, conductScore: 88, badges: ['cleaner'], targetHighSchool: { nv1: 'THPT Phước Hưng', nv2: 'THPT Bình Sơn', nv3: 'Trung tâm GDNN-GDTX' }, homeworkStatus: true, notes: 'Có tinh thần tập thể' },
+  { id: 'HS20', stt: 20, name: 'Huỳnh Quốc Long', gender: 'Nam', dob: '16/07/2011', to: 3, role: 'Tổ trưởng 3', phone: '0912.345.620', parentPhone: '0903.111.220', address: 'Ấp 3, Xã Phước Hưng', conduct: 'Tốt', academic: 'Khá', scoreAvg: 7.3, conductScore: 92, badges: ['perseverance', 'initiative'], targetHighSchool: { nv1: 'THPT Phước Hưng', nv2: 'THPT Bình Sơn', nv3: 'Trung tâm GDNN-GDTX' }, homeworkStatus: true, notes: 'Tổ trưởng tổ 3 tác phong gương mẫu, nhiệt tình, trách nhiệm cao' },
   { id: 'HS21', stt: 21, name: 'Nguyễn Thanh Duy', gender: 'Nam', dob: '02/06/2011', to: 3, role: 'Học sinh', phone: '0912.345.621', parentPhone: '0903.111.221', address: 'Ấp Phước Hưng', conduct: 'Tốt', academic: 'Khá', scoreAvg: 7.2, conductScore: 87, badges: ['perseverance'], targetHighSchool: { nv1: 'THPT Phước Hưng', nv2: 'THPT Bình Sơn', nv3: 'Trung cấp Nghề' }, homeworkStatus: true, notes: 'Cố gắng trong môn Toán' },
 
   // TỔ 2 (10 HS - Dãy 2)
@@ -315,8 +315,8 @@ const DEFAULT_SEATING_PLAN = [
       { row: 1, left: 'HS12', right: 'HS13' }, // Trương Hữu Nghĩa & Trương Kim Ngân
       { row: 2, left: 'HS14', right: 'HS15' }, // Nguyễn Thị Kim Anh & Lê Bích Thi
       { row: 3, left: 'HS16', right: 'HS17' }, // Nguyễn Minh Triết & Nguyễn Phú Quý
-      { row: 4, left: 'HS18', right: 'HS19' }, // Phan Tuấn Khang (Tổ trưởng 3) & Trần Thị Thanh Ngân
-      { row: 5, left: 'HS20', right: 'HS21' }, // Huỳnh Quốc Long & Nguyễn Thanh Duy
+      { row: 4, left: 'HS18', right: 'HS19' }, // Phan Tuấn Khang & Trần Thị Thanh Ngân
+      { row: 5, left: 'HS20', right: 'HS21' }, // Huỳnh Quốc Long (Tổ trưởng 3) & Nguyễn Thanh Duy
       { row: 6, left: null, right: null }
     ]
   },
@@ -372,7 +372,7 @@ class AppStore {
             'HS38': { name: 'Trịnh Lan Phương', role: 'Thủ quỹ', to: 1 },
             'HS39': { name: 'Nguyễn Thị Ngọc Thảo', role: 'Tổ trưởng 1', to: 1 },
             'HS27': { name: 'Hồ Thị Kim Cương', role: 'Tổ trưởng 2', to: 2 },
-            'HS18': { name: 'Phan Tuấn Khang', role: 'Tổ trưởng 3', to: 3 },
+            'HS20': { name: 'Huỳnh Quốc Long', role: 'Tổ trưởng 3', to: 3 },
             'HS04': { name: 'Nguyễn Gia Thịnh', role: 'Tổ trưởng 4', to: 4 }
           };
           parsed.students.forEach(s => {
@@ -387,6 +387,12 @@ class AppStore {
               }
             }
           });
+
+          // Tự động chuyển đổi nếu máy người dùng đang lưu HS18 làm Tổ trưởng 3
+          const hs18 = parsed.students.find(s => s.id === 'HS18');
+          if (hs18 && hs18.role === 'Tổ trưởng 3') hs18.role = 'Học sinh';
+          const hs20 = parsed.students.find(s => s.id === 'HS20');
+          if (hs20) hs20.role = 'Tổ trưởng 3';
 
           if (!parsed.weeksThemes || !Array.isArray(parsed.weeksThemes)) parsed.weeksThemes = WEEKS_THEMES;
           if (!parsed.weeklyCriteriaScores) parsed.weeklyCriteriaScores = this.generateInitialWeeklyCriteriaScores();
@@ -551,11 +557,10 @@ class AppStore {
       to_truong_4: { comment: 'Đã nhắc nhở đi học đúng giờ hơn', rating: 'Cần nhắc nhở', actor: 'Tổ trưởng 4', time: '08/09/2026' }
     };
     reviews[1]['HS18'] = {
-      lop_truong: { comment: 'Tổ trưởng 3 năng nổ, quản lý tổ tốt', rating: 'Tốt', actor: 'Lớp trưởng', time: '08/09/2026' }
+      lop_truong: { comment: 'Chăm ngoan, hòa đồng, hoàn thành tốt nhiệm vụ', rating: 'Tốt', actor: 'Lớp trưởng', time: '08/09/2026' }
     };
     reviews[1]['HS20'] = {
-      lp_trat_tu: { comment: 'Còn nói chuyện riêng trong giờ sinh hoạt đầu tuần', rating: 'Cần nhắc nhở', actor: 'LP Trật tự', time: '09/09/2026' },
-      to_truong_3: { comment: 'Cần chú ý giữ trật tự chung trong giờ học', rating: 'Cần nhắc nhở', actor: 'Tổ trưởng 3', time: '09/09/2026' }
+      lop_truong: { comment: 'Tổ trưởng 3 năng nổ, quản lý tổ 3 nề nếp và trách nhiệm', rating: 'Tốt', actor: 'Lớp trưởng', time: '08/09/2026' }
     };
     reviews[1]['HS27'] = {
       lop_truong: { comment: 'Tổ trưởng 2 theo dõi nề nếp tổ nghiêm túc', rating: 'Tốt', actor: 'Lớp trưởng', time: '07/09/2026' }

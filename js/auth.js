@@ -75,7 +75,7 @@ const ROLES = {
   },
   TO_TRUONG_3: {
     id: 'to_truong_3',
-    name: 'Tổ trưởng 3 (Phan Tuấn Khang)',
+    name: 'Tổ trưởng 3 (Huỳnh Quốc Long)',
     shortTitle: 'Tổ 3',
     icon: 'users',
     color: 'text-purple-500',
