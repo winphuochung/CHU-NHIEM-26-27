@@ -166,9 +166,6 @@ class AuthManager {
     this.currentRole = null;
     this.isAuthenticated = false;
     this.is2FAVerified = false;
-    this.idleTimeoutMinutes = 30; // 30 phút cho tiện sử dụng trong lớp
-    this.lastActivity = Date.now();
-    this.setupIdleTimer();
   }
 
   getCurrentRole() {
@@ -290,33 +287,10 @@ class AuthManager {
     return false;
   }
 
-  // Quản lý Idle Timeout
-  setupIdleTimer() {
-    ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'].forEach(evt => {
-      window.addEventListener(evt, () => this.resetActivity(), { passive: true });
-    });
-
-    setInterval(() => {
-      const elapsedMinutes = (Date.now() - this.lastActivity) / 60000;
-      if (elapsedMinutes >= this.idleTimeoutMinutes && this.isAuthenticated && this.currentRole.id !== 'hoc_sinh') {
-        this.lockSession();
-      }
-    }, 30000);
-  }
-
-  resetActivity() {
-    this.lastActivity = Date.now();
-  }
-
-  lockSession() {
-    this.currentRole = ROLES.HOC_SINH;
-    try {
-      localStorage.setItem('currentUserRoleId', 'hoc_sinh');
-    } catch(e) {}
-    this.isAuthenticated = true;
-    this.is2FAVerified = false;
-    if (window.renderApp) window.renderApp();
-  }
+  // Tính năng tự động khóa phiên khi không thao tác đã được tắt bỏ hoàn toàn theo yêu cầu
+  setupIdleTimer() {}
+  resetActivity() {}
+  lockSession() {}
 }
 
 window.ROLES = ROLES;
