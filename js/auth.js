@@ -26,7 +26,7 @@ const ROLES = {
     bgColor: 'bg-amber-500',
     category: 'lop_truong',
     requires2FA: true,
-    defaultPassword: '123456',
+    defaultPassword: '12345',
     description: 'Chỉ huy nề nếp toàn lớp, kiểm tra nhận xét 4 tổ, tổng hợp báo cáo gửi qua cho GVCN'
   },
   LP_HOC_TAP: {
@@ -40,7 +40,7 @@ const ROLES = {
     bgColor: 'bg-emerald-500',
     category: 'lop_pho',
     requires2FA: true,
-    defaultPassword: '123456',
+    defaultPassword: '12345',
     description: 'Theo dõi bài tập, truy bài 15 phút đầu giờ, kiểm tra nhận xét học tập 4 tổ'
   },
   LP_TRAT_TU: {
@@ -54,7 +54,7 @@ const ROLES = {
     bgColor: 'bg-rose-500',
     category: 'lop_pho',
     requires2FA: true,
-    defaultPassword: '123456',
+    defaultPassword: '12345',
     description: 'Theo dõi kỷ luật, ghi nhận vi phạm nề nếp, trừ điểm rèn luyện học sinh'
   },
   LP_LAO_DONG: {
@@ -68,7 +68,7 @@ const ROLES = {
     bgColor: 'bg-cyan-500',
     category: 'lop_pho',
     requires2FA: true,
-    defaultPassword: '123456',
+    defaultPassword: '12345',
     description: 'Phân công và chấm điểm trực nhật, vệ sinh lớp học 4 tổ mỗi buổi sáng'
   },
   THU_QUY: {
@@ -82,7 +82,7 @@ const ROLES = {
     bgColor: 'bg-indigo-500',
     category: 'lop_pho',
     requires2FA: true,
-    defaultPassword: '123456',
+    defaultPassword: '12345',
     description: 'Quản lý sổ quỹ E-Ledger, thu chi minh bạch và quét biên lai qua AI OCR'
   },
   TO_TRUONG_1: {
@@ -97,7 +97,7 @@ const ROLES = {
     category: 'to_truong',
     teamId: 1,
     requires2FA: true,
-    defaultPassword: '123456',
+    defaultPassword: '12345',
     description: 'Quản lý 11 học sinh Tổ 1, ghi nhận xét tuần và đồng bộ gửi Ban cán sự lớp'
   },
   TO_TRUONG_2: {
@@ -112,7 +112,7 @@ const ROLES = {
     category: 'to_truong',
     teamId: 2,
     requires2FA: true,
-    defaultPassword: '123456',
+    defaultPassword: '12345',
     description: 'Quản lý 11 học sinh Tổ 2, ghi nhận xét tuần và đồng bộ gửi Ban cán sự lớp'
   },
   TO_TRUONG_3: {
@@ -127,7 +127,7 @@ const ROLES = {
     category: 'to_truong',
     teamId: 3,
     requires2FA: true,
-    defaultPassword: '123456',
+    defaultPassword: '12345',
     description: 'Quản lý 11 học sinh Tổ 3, ghi nhận xét tuần và đồng bộ gửi Ban cán sự lớp'
   },
   TO_TRUONG_4: {
@@ -142,7 +142,7 @@ const ROLES = {
     category: 'to_truong',
     teamId: 4,
     requires2FA: true,
-    defaultPassword: '123456',
+    defaultPassword: '12345',
     description: 'Quản lý 10 học sinh Tổ 4, ghi nhận xét tuần và đồng bộ gửi Ban cán sự lớp'
   },
   HOC_SINH: {
@@ -163,7 +163,6 @@ const ROLES = {
 
 class AuthManager {
   constructor() {
-    // Khôi phục phiên đăng nhập từ localStorage nếu có
     let initialRole = ROLES.GVCN;
     try {
       const savedRoleId = localStorage.getItem('currentUserRoleId');
@@ -176,7 +175,6 @@ class AuthManager {
     this.currentRole = initialRole;
     this.isAuthenticated = true;
     this.is2FAVerified = true;
-    this.pending2FACode = null;
     this.idleTimeoutMinutes = 30; // 30 phút cho tiện sử dụng trong lớp
     this.lastActivity = Date.now();
     this.setupIdleTimer();
@@ -194,8 +192,13 @@ class AuthManager {
     }
 
     const inputPass = String(password || '').trim();
-    // Chấp nhận mật khẩu mặc định 123456 hoặc defaultPassword
-    if (inputPass === '123456' || inputPass === targetRole.defaultPassword || targetRole.id === 'hoc_sinh' || !targetRole.requires2FA) {
+    const isGvcn = targetRole.id === 'gvcn';
+    // GVCN: 123456; Cán sự (Lớp trưởng, Lớp phó, Tổ trưởng): 12345
+    const isPassValid = isGvcn
+      ? (inputPass === '123456' || inputPass === targetRole.defaultPassword)
+      : (inputPass === '12345' || inputPass === targetRole.defaultPassword);
+
+    if (isPassValid || targetRole.id === 'hoc_sinh' || !targetRole.requires2FA) {
       this.currentRole = targetRole;
       this.isAuthenticated = true;
       this.is2FAVerified = true;
@@ -221,7 +224,7 @@ class AuthManager {
       return { success: true, role: targetRole };
     }
 
-    return { success: false, error: 'Mật khẩu không chính xác. Mật khẩu mặc định là 123456.' };
+    return { success: false, error: 'Mật khẩu không chính xác. Vui lòng thử lại.' };
   }
 
   // Đăng xuất an toàn về chế độ xem học sinh công khai
