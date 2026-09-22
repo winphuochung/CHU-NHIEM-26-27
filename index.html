@@ -2799,13 +2799,28 @@
         const score = store.calculateWeekScore(crit);
 
         const stReviews = officerReviews[s.id] || {};
-        const revItems = [];
+        const toReviews = [];
+        const bcsReviews = [];
         Object.entries(stReviews).forEach(([rKey, rev]) => {
           if (rev && rev.comment) {
-            revItems.push(`${rev.comment} (${rev.rating})`);
+            if (rKey.startsWith('to_truong_')) {
+              toReviews.push(`[Tổ ${s.to}]: ${rev.comment} (${rev.rating})`);
+            } else {
+              const actorLabel = rev.actor || 'Ban cán sự';
+              bcsReviews.push(`[${actorLabel}]: ${rev.comment} (${rev.rating})`);
+            }
           }
         });
-        const officerComments = revItems.length > 0 ? revItems.join('; ') : 'Chấp hành tốt nề nếp chung';
+        let officerComments = '';
+        if (toReviews.length > 0 && bcsReviews.length > 0) {
+          officerComments = `${toReviews.join('; ')} • ${bcsReviews.join('; ')}`;
+        } else if (toReviews.length > 0) {
+          officerComments = toReviews.join('; ');
+        } else if (bcsReviews.length > 0) {
+          officerComments = bcsReviews.join('; ');
+        } else {
+          officerComments = 'Chấp hành tốt nề nếp chung';
+        }
 
         studentRowsHtml += `
           <tr style="height: 22pt;">
@@ -3019,8 +3034,10 @@
 
   <!-- PHẦN V: Ý KIẾN BAN CÁN SỰ & GVCN -->
   <h2>V. Ý KIẾN ĐÁNH GIÁ CỦA BAN CÁN SỰ LỚP & GIÁO VIÊN CHỦ NHIỆM</h2>
-  <p>- <b>Nhận xét của Ban cán sự (Lớp trưởng & các Lớp phó):</b> ${emulationNotes.officerReview || 'Đa số các bạn chấp hành nghiêm túc nội quy. Cần chú ý giữ gìn vệ sinh lớp cuối buổi học và không nói chuyện riêng trong giờ.'}</p>
-  <p>- <b>Ý kiến phê duyệt của Giáo viên Chủ nhiệm:</b> ${emulationNotes.gvcnFeedback || (isApproved ? 'GVCN nhất trí với báo cáo thi đua và phương hướng tuần tới của Ban cán sự.' : 'Đang chờ GVCN xem xét và duyệt chính thức.')}</p>
+  <p>- <b>Nhận xét của Ban cán sự (Lớp trưởng & các Lớp phó) & 4 Tổ trưởng:</b><br/>
+  ${(emulationNotes.officerReview || 'Đa số các bạn chấp hành nghiêm túc nội quy. Cần chú ý giữ gìn vệ sinh lớp cuối buổi học và không nói chuyện riêng trong giờ.').split('\n').join('<br/>')}</p>
+  <p>- <b>Ý kiến phê duyệt của Giáo viên Chủ nhiệm:</b><br/>
+  ${(emulationNotes.gvcnFeedback || (isApproved ? 'GVCN nhất trí với báo cáo thi đua và phương hướng tuần tới của Ban cán sự.' : 'Đang chờ GVCN xem xét và duyệt chính thức.')).split('\n').join('<br/>')}</p>
 
   <!-- PHẦN VI: PHƯƠNG HƯỚNG TUẦN TỚI -->
   <h2>VI. PHƯƠNG HƯỚNG & KẾ HOẠCH HOẠT ĐỘNG TUẦN TỚI (TUẦN ${weekNum + 1})</h2>
@@ -4642,6 +4659,38 @@ function handleExportEmulationExcelClick() {
       renderWorkspaceContent();
     }
 
+    // ================= 3 BƯỚC ĐỒNG BỘ NHẬN XÉT SỔ TAY CÁN SỰ =================
+    // Bước 1: Tổ trưởng đồng bộ nhận xét của tổ mình gửi Lớp trưởng & các Lớp phó
+    function handleSubmitTeamReviews(toId, weekNum, allWeeks = false) {
+      const curRole = window.authManager.getCurrentRole();
+      if (!window.store || typeof window.store.submitTeamOfficerReviews !== 'function') return;
+      const res = window.store.submitTeamOfficerReviews(weekNum, toId, curRole.name, allWeeks);
+      if (allWeeks) {
+        alert(`✅ ĐÃ ĐỒNG BỘ THÀNH CÔNG NHẬN XÉT TỔ ${toId}!\n\nĐã đồng bộ dữ liệu qua ${res.syncedWeeks.length} tuần cho Lớp trưởng và các Lớp phó kiểm tra, bổ sung.`);
+      } else {
+        alert(`✅ ĐÃ ĐỒNG BỘ THÀNH CÔNG NHẬN XÉT TỔ ${toId} (TUẦN ${weekNum})!\n\nLớp trưởng và các Lớp phó đã có thể xem, kiểm tra và bổ sung nhận xét.`);
+      }
+      renderWorkspaceContent();
+    }
+
+    // Bước 2: Ban cán sự (Lớp trưởng & Lớp phó) gửi đồng bộ nhận xét lên GVCN
+    function handleSubmitBcsReviews(weekNum) {
+      const curRole = window.authManager.getCurrentRole();
+      if (!window.store || typeof window.store.submitBcsOfficerReviewsToGVCN !== 'function') return;
+      const res = window.store.submitBcsOfficerReviewsToGVCN(weekNum, curRole.name);
+      alert(`✅ ĐÃ GỬI ĐỒNG BỘ NHẬN XÉT TOÀN LỚP TUẦN ${weekNum} LÊN GVCN!\n\nBan cán sự (${curRole.name}) đã hoàn tất kiểm tra nhận xét của 4 Tổ trưởng và chuyển dữ liệu cho Giáo viên Chủ nhiệm.`);
+      renderWorkspaceContent();
+    }
+
+    // Bước 3: GVCN đồng bộ nhận xét của Cán sự & Tổ trưởng vào Báo cáo Tuần xuất file
+    function handleGvcnSyncReviews(weekNum) {
+      if (!window.store || typeof window.store.syncOfficerReviewsToWeeklyReport !== 'function') return;
+      const res = window.store.syncOfficerReviewsToWeeklyReport(weekNum);
+      alert(`✅ GVCN ĐÃ ĐỒNG BỘ THÀNH CÔNG VÀO BÁO CÁO TUẦN ${weekNum}!\n\nToàn bộ nhận xét của 4 Tổ trưởng và Ban cán sự đã được tích hợp đầy đủ vào Báo cáo Word (Nghị định 30/2020) và Bảng điểm Excel.`);
+      renderWorkspaceContent();
+      renderEmulationTable();
+    }
+
     function updateWorkspaceReviewProgress() {
       const curRole = window.authManager.getCurrentRole();
       const roleKey = getOfficerRoleKey(curRole.id);
@@ -4814,6 +4863,20 @@ function handleExportEmulationExcelClick() {
         }
       });
 
+      // Dữ liệu trạng thái quy trình đồng bộ 3 bước
+      const weekNotes = window.store.getWeekEmulationNotes(w);
+      const isTeamSub = isToTruong && window.store.isTeamOfficerReviewsSubmitted(w, toTruongId);
+      const teamSubInfo = isToTruong ? window.store.getTeamOfficerReviewSubmissionInfo(w, toTruongId) : null;
+      const isBcsSub = Boolean(weekNotes && weekNotes.bcsReviewSubmitted);
+      const isGvcnSynced = Boolean(weekNotes && weekNotes.gvcnSyncReport);
+
+      const toLeadsNames = {
+        1: 'Nguyễn Thị Ngọc Thảo',
+        2: 'Hồ Thị Kim Cương',
+        3: 'Huỳnh Quốc Long',
+        4: 'Nguyễn Gia Thịnh'
+      };
+
       const quickTags = getRoleQuickTags(roleId);
       const isHocSinhRole = roleId === 'hoc_sinh';
 
@@ -4901,6 +4964,149 @@ function handleExportEmulationExcelClick() {
               }).join('')}
             </div>
           </div>
+
+          <!-- ================= 3 BƯỚC ĐỒNG BỘ THEO VAI TRÒ ================= -->
+          ${isToTruong ? `
+            <!-- BƯỚC 1: TỔ TRƯỞNG ĐỒNG BỘ GỬI LỚP TRƯỞNG & LỚP PHÓ -->
+            <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950/40 dark:to-indigo-950/40 border-2 border-purple-300 dark:border-purple-800 space-y-3 shadow-sm">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-sm">
+                    BƯỚC 1
+                  </div>
+                  <div>
+                    <h4 class="font-black text-sm text-purple-950 dark:text-purple-200 flex items-center gap-2">
+                      Đồng Bộ Nhận Xét Tổ ${toTruongId} Cho Lớp Trưởng & Lớp Phó (Tuần ${w})
+                      ${isTeamSub 
+                        ? '<span class="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold border border-emerald-300">✓ Đã Đồng Bộ</span>' 
+                        : '<span class="text-[10px] px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-extrabold border border-amber-300">⏳ Chưa Đồng Bộ</span>'}
+                    </h4>
+                    <p class="text-xs text-purple-700 dark:text-purple-400 mt-0.5">
+                      Tổ trưởng nhận xét cho ${targetScopeStudents.length} bạn trong Tổ ${toTruongId} và bấm đồng bộ để Lớp trưởng và các Lớp phó kiểm tra, bổ sung ý kiến.
+                    </p>
+                  </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 shrink-0">
+                  <button onclick="handleSubmitTeamReviews(${toTruongId}, ${w}, false)" class="px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95">
+                    <i data-lucide="${isTeamSub ? 'refresh-cw' : 'send'}" class="w-4 h-4"></i> ${isTeamSub ? `Đồng Bộ Lại (Tuần ${w})` : `📤 Đồng Bộ Nhận Xét Tổ ${toTruongId} (Tuần ${w})`}
+                  </button>
+                  <button onclick="handleSubmitTeamReviews(${toTruongId}, ${w}, true)" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95" title="Đồng bộ tất cả các tuần bạn đã nhập nhận xét">
+                    <i data-lucide="layers" class="w-4 h-4"></i> Đồng Bộ Tất Cả Các Tuần
+                  </button>
+                </div>
+              </div>
+              ${isTeamSub && teamSubInfo ? `
+                <div class="text-[11px] text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-1.5 pt-1 border-t border-purple-200/60 dark:border-purple-800/60">
+                  <i data-lucide="check-check" class="w-4 h-4"></i>
+                  <span>Đã đồng bộ nhận xét lúc <strong>${teamSubInfo.submittedAt}</strong> (${teamSubInfo.reviewCount || reviewedCount} học sinh đã nhận xét). Lớp trưởng & các Lớp phó đã có thể xem và kiểm tra.</span>
+                </div>
+              ` : ''}
+            </div>
+          ` : (roleId === 'gvcn' ? `
+            <!-- BƯỚC 3: GVCN TIẾP NHẬN & ĐỒNG BỘ VÀO BÁO CÁO TUẦN -->
+            <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-blue-50 to-teal-50 dark:from-blue-950/40 dark:to-teal-950/40 border-2 border-blue-300 dark:border-blue-800 space-y-3.5 shadow-sm">
+              <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-sm">
+                    BƯỚC 3
+                  </div>
+                  <div>
+                    <h4 class="font-black text-sm text-blue-950 dark:text-blue-200 flex items-center gap-2">
+                      GVCN Đồng Bộ Nhận Xét Cán Sự & Tổ Vào Báo Cáo Xuất File Tuần ${w}
+                      ${isGvcnSynced 
+                        ? '<span class="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold border border-emerald-300">✓ Đã Đồng Bộ Vào Báo Cáo</span>' 
+                        : '<span class="text-[10px] px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-extrabold border border-amber-300">⏳ Chưa Đồng Bộ Báo Cáo</span>'}
+                    </h4>
+                    <p class="text-xs text-blue-700 dark:text-blue-400 mt-0.5">
+                      ${isBcsSub 
+                        ? `✓ Ban cán sự đã gửi đồng bộ nhận xét (${weekNotes.bcsReviewSubmittedBy || 'Lớp trưởng'} lúc ${weekNotes.bcsReviewSubmittedAt}). Hãy nhấn nút dưới đây để tổng hợp vào báo cáo tuần.`
+                        : `Ban cán sự đang hoàn thiện nhận xét tuần. GVCN có thể xem trước hoặc bấm đồng bộ ngay để xuất file.`}
+                    </p>
+                  </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-2 shrink-0">
+                  <button onclick="handleGvcnSyncReviews(${w})" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95">
+                    <i data-lucide="${isGvcnSynced ? 'refresh-cw' : 'check-circle-2'}" class="w-4 h-4"></i> ${isGvcnSynced ? `Cập Nhật Đồng Bộ Vào Báo Cáo` : `🔄 Đồng Bộ Vào Nội Dung Báo Cáo Tuần ${w}`}
+                  </button>
+                  <button onclick="handleExportEmulationWordClick(${w})" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95">
+                    <i data-lucide="file-text" class="w-4 h-4"></i> Xuất Báo Cáo Word (NĐ 30)
+                  </button>
+                  <button onclick="exportEmulationWeekExcel(${w})" class="px-3 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95">
+                    <i data-lucide="file-spreadsheet" class="w-4 h-4"></i> Xuất Excel
+                  </button>
+                </div>
+              </div>
+
+              ${isGvcnSynced ? `
+                <div class="text-[11px] text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-1.5 pt-1 border-t border-blue-200/60 dark:border-blue-800/60">
+                  <i data-lucide="check-check" class="w-4 h-4"></i>
+                  <span>Đã đồng bộ thành công vào Báo cáo Tuần ${w} lúc <strong>${weekNotes.gvcnSyncReportAt}</strong>. Toàn bộ nhận xét của 4 Tổ và Ban cán sự đã được tự động đưa vào file xuất Word & Excel.</span>
+                </div>
+              ` : ''}
+            </div>
+          ` : `
+            <!-- BƯỚC 2: BAN CÁN SỰ (LỚP TRƯỞNG & LỚP PHÓ) KIỂM TRA 4 TỔ & ĐỒNG BỘ GỬI GVCN -->
+            <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-950/40 dark:to-blue-950/40 border-2 border-indigo-300 dark:border-indigo-800 space-y-3.5 shadow-sm">
+              <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-2 border-b border-indigo-200/60 dark:border-indigo-800/60">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-sm">
+                    BƯỚC 2
+                  </div>
+                  <div>
+                    <h4 class="font-black text-sm text-indigo-950 dark:text-indigo-200 flex items-center gap-2">
+                      Kiểm Tra Nhận Xét Tổ Trưởng & Đồng Bộ Toàn Lớp Lên GVCN (Tuần ${w})
+                      ${isBcsSub 
+                        ? '<span class="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-extrabold border border-emerald-300">✓ Đã Gửi GVCN</span>' 
+                        : '<span class="text-[10px] px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-extrabold border border-amber-300">⏳ Chưa Gửi GVCN</span>'}
+                    </h4>
+                    <p class="text-xs text-indigo-700 dark:text-indigo-400 mt-0.5">
+                      Lớp trưởng và các Lớp phó kiểm tra nhận xét của 4 Tổ trưởng dưới đây, bổ sung thêm ý kiến nếu cần, sau đó gửi đồng bộ lên GVCN.
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                  <button onclick="handleSubmitBcsReviews(${w})" class="px-4 py-2 ${isBcsSub ? 'bg-indigo-700 hover:bg-indigo-800' : 'bg-indigo-600 hover:bg-indigo-700'} text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95">
+                    <i data-lucide="${isBcsSub ? 'refresh-cw' : 'send'}" class="w-4 h-4"></i> ${isBcsSub ? `Cập Nhật & Gửi Lại Cho GVCN (Tuần ${w})` : `📤 Gửi Đồng Bộ Nhận Xét Toàn Lớp Cho GVCN (Tuần ${w})`}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Tiến độ đồng bộ nhận xét của 4 Tổ trưởng -->
+              <div class="space-y-1.5">
+                <div class="text-[11px] font-bold text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                  <i data-lucide="users" class="w-3.5 h-3.5 text-indigo-600"></i>
+                  <span>TIẾN ĐỘ ĐỒNG BỘ NHẬN XÉT CỦA 4 TỔ TRƯỞNG (TUẦN ${w}):</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                  ${[1, 2, 3, 4].map(tId => {
+                    const sub = weekNotes && weekNotes.teamReviewSubmissions && weekNotes.teamReviewSubmissions[tId];
+                    const isSynced = Boolean(sub && sub.submitted);
+                    const tRevCount = Object.values(wReviews).filter(obj => obj[`to_truong_${tId}`] && obj[`to_truong_${tId}`].comment).length;
+                    return `
+                      <div class="p-2.5 rounded-xl border ${isSynced ? 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200' : 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'} flex items-center justify-between text-xs">
+                        <div>
+                          <span class="font-extrabold block">Tổ ${tId} (${toLeadsNames[tId]})</span>
+                          <span class="text-[10px] ${isSynced ? 'text-emerald-700 dark:text-emerald-300 font-bold' : 'text-slate-500'}">
+                            ${isSynced ? `✓ Đã đồng bộ (${tRevCount} HS lúc ${sub.submittedAt})` : `⏳ Chưa nộp (${tRevCount} đã nhập)`}
+                          </span>
+                        </div>
+                        <button onclick="filterWorkspaceTeam(${tId})" class="p-1.5 rounded-lg hover:bg-white dark:hover:bg-slate-700 text-indigo-600 transition" title="Xem riêng Tổ ${tId}">
+                          <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                        </button>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+
+              ${isBcsSub ? `
+                <div class="text-[11px] text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-1.5 pt-1">
+                  <i data-lucide="check-check" class="w-4 h-4"></i>
+                  <span>Ban cán sự đã gửi đồng bộ nhận xét lên GVCN lúc <strong>${weekNotes.bcsReviewSubmittedAt}</strong> (thực hiện bởi <strong>${weekNotes.bcsReviewSubmittedBy || 'Ban cán sự'}</strong>).</span>
+                </div>
+              ` : ''}
+            </div>
+          `)}
 
           <!-- Role Scope Banner -->
           ${isToTruong ? `
@@ -4991,6 +5197,9 @@ function handleExportEmulationExcelClick() {
               const allReviewsForStudent = window.store.getAllStudentOfficerReviews(w, s.id);
               const otherReviewsCount = Object.keys(allReviewsForStudent).length;
               const hasReviewed = !!(existing && existing.comment);
+              const toTruongKey = `to_truong_${s.to}`;
+              const toReview = allReviewsForStudent[toTruongKey] || null;
+              const hasToReview = Boolean(toReview && toReview.comment);
 
               return `
                 <div class="p-4 rounded-2xl bg-white dark:bg-slate-800/90 border ${hasReviewed ? 'border-purple-200 dark:border-purple-900/80 shadow-xs' : 'border-slate-200 dark:border-slate-700'} space-y-3 transition hover:shadow-md" id="student-review-card-${s.id}">
@@ -5042,6 +5251,32 @@ function handleExportEmulationExcelClick() {
                       </button>
                     </div>
                   </div>
+
+                  <!-- Khung kiểm tra nhận xét Tổ trưởng dành cho Ban cán sự & GVCN -->
+                  ${!isToTruong ? (hasToReview ? `
+                    <div class="p-3 rounded-2xl bg-purple-50/80 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 text-xs flex items-start gap-2.5">
+                      <div class="w-7 h-7 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0 text-[10px] font-black shadow-xs">
+                        T${s.to}
+                      </div>
+                      <div class="space-y-0.5 flex-1 min-w-0">
+                        <div class="flex items-center justify-between gap-2">
+                          <span class="font-extrabold text-[11px] text-purple-950 dark:text-purple-200 flex items-center gap-1.5">
+                            <i data-lucide="user-check" class="w-3.5 h-3.5 text-purple-600"></i>
+                            Nhận xét từ Tổ trưởng ${s.to} (${toReview.actor || ('Tổ trưởng ' + s.to)}):
+                          </span>
+                          <span class="text-[10px] px-2.5 py-0.5 rounded-full font-black bg-purple-200 dark:bg-purple-900 text-purple-800 dark:text-purple-200 shrink-0">
+                            ⭐ ${toReview.rating || 'Tốt'} • ${toReview.time || ''}
+                          </span>
+                        </div>
+                        <p class="text-slate-800 dark:text-slate-200 italic font-medium leading-relaxed">"${toReview.comment}"</p>
+                      </div>
+                    </div>
+                  ` : `
+                    <div class="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-700 text-[11px] text-slate-500 flex items-center gap-2">
+                      <i data-lucide="clock" class="w-3.5 h-3.5 text-amber-500 shrink-0"></i>
+                      <span>Tổ trưởng ${s.to} chưa ghi nhận xét cho bạn này trong Tuần ${w}. Cán sự lớp có thể ghi nhận xét trực tiếp bên dưới.</span>
+                    </div>
+                  `) : ''}
 
                   <!-- Review Input Body -->
                   <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-start">

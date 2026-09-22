@@ -682,7 +682,13 @@ class AppStore {
         gvcnFeedback: '',
         status: 'Chờ duyệt',
         submittedBy: 'Lớp trưởng (Trình Minh Thiện)',
-        updatedAt: ''
+        updatedAt: '',
+        teamReviewSubmissions: {},
+        bcsReviewSubmitted: false,
+        bcsReviewSubmittedAt: '',
+        bcsReviewSubmittedBy: '',
+        gvcnSyncReport: false,
+        gvcnSyncReportAt: ''
       };
     }
 
@@ -693,7 +699,18 @@ class AppStore {
       gvcnFeedback: 'GVCN biểu dương tinh thần trách nhiệm của Ban cán sự lớp trong tuần đầu năm học. Nhất trí với phương hướng tuần 2, yêu cầu các tổ trưởng theo dõi sát sĩ số và nề nếp truy bài.',
       status: 'Đã duyệt',
       submittedBy: 'Lớp trưởng (Trình Minh Thiện)',
-      updatedAt: '12/09/2026'
+      updatedAt: '12/09/2026',
+      teamReviewSubmissions: {
+        1: { submitted: true, submittedAt: '12/09/2026 10:30', actor: 'Tổ trưởng 1 (Nguyễn Thị Ngọc Thảo)', reviewCount: 11 },
+        2: { submitted: true, submittedAt: '12/09/2026 10:45', actor: 'Tổ trưởng 2 (Hồ Thị Kim Cương)', reviewCount: 11 },
+        3: { submitted: true, submittedAt: '12/09/2026 11:00', actor: 'Tổ trưởng 3 (Huỳnh Quốc Long)', reviewCount: 11 },
+        4: { submitted: true, submittedAt: '12/09/2026 11:15', actor: 'Tổ trưởng 4 (Nguyễn Gia Thịnh)', reviewCount: 10 }
+      },
+      bcsReviewSubmitted: true,
+      bcsReviewSubmittedAt: '12/09/2026 15:00',
+      bcsReviewSubmittedBy: 'Lớp trưởng (Trình Minh Thiện)',
+      gvcnSyncReport: true,
+      gvcnSyncReportAt: '12/09/2026 17:00'
     };
 
     // Dữ liệu mẫu Tuần 2
@@ -703,7 +720,18 @@ class AppStore {
       gvcnFeedback: 'Đánh giá cao sự tiến bộ của Tổ 1. Đề nghị Lớp phó Trật tự Bảo phối hợp chặt chẽ với Tổ trưởng 2 nhắc nhở bạn HS25.',
       status: 'Đang theo dõi',
       submittedBy: 'Lớp trưởng (Trình Minh Thiện)',
-      updatedAt: '19/09/2026'
+      updatedAt: '19/09/2026',
+      teamReviewSubmissions: {
+        1: { submitted: true, submittedAt: '19/09/2026 09:30', actor: 'Tổ trưởng 1 (Nguyễn Thị Ngọc Thảo)', reviewCount: 11 },
+        2: { submitted: true, submittedAt: '19/09/2026 09:45', actor: 'Tổ trưởng 2 (Hồ Thị Kim Cương)', reviewCount: 11 },
+        3: { submitted: true, submittedAt: '19/09/2026 10:00', actor: 'Tổ trưởng 3 (Huỳnh Quốc Long)', reviewCount: 11 },
+        4: { submitted: true, submittedAt: '19/09/2026 10:15', actor: 'Tổ trưởng 4 (Nguyễn Gia Thịnh)', reviewCount: 10 }
+      },
+      bcsReviewSubmitted: true,
+      bcsReviewSubmittedAt: '19/09/2026 14:30',
+      bcsReviewSubmittedBy: 'Lớp trưởng (Trình Minh Thiện)',
+      gvcnSyncReport: true,
+      gvcnSyncReportAt: '19/09/2026 16:00'
     };
 
     return notes;
@@ -719,8 +747,18 @@ class AppStore {
         gvcnFeedback: '',
         status: 'Chờ duyệt',
         submittedBy: 'Lớp trưởng (Trình Minh Thiện)',
-        updatedAt: ''
+        updatedAt: '',
+        teamReviewSubmissions: {},
+        bcsReviewSubmitted: false,
+        bcsReviewSubmittedAt: '',
+        bcsReviewSubmittedBy: '',
+        gvcnSyncReport: false,
+        gvcnSyncReportAt: ''
       };
+    }
+    // Đảm bảo các thuộc tính đồng bộ luôn tồn tại
+    if (!this.state.weeklyEmulationNotes[w].teamReviewSubmissions) {
+      this.state.weeklyEmulationNotes[w].teamReviewSubmissions = {};
     }
     return this.state.weeklyEmulationNotes[w];
   }
@@ -824,6 +862,190 @@ class AppStore {
     const notes = this.getWeekEmulationNotes(w);
     if (!notes || !notes.teamSubmissions) return null;
     return notes.teamSubmissions[toId] || notes.teamSubmissions[String(toId)] || notes.teamSubmissions[parseInt(toId)] || null;
+  }
+
+  // ================= 3 BƯỚC ĐỒNG BỘ NHẬN XÉT: TỔ TRƯỞNG -> BAN CÁN SỰ -> GVCN -> BÁO CÁO TUẦN =================
+
+  // BƯỚC 1: Tổ trưởng đồng bộ nhận xét của tổ mình gửi cho Lớp trưởng & các Lớp phó
+  submitTeamOfficerReviews(weekNumber, toId, actor = '', allWeeks = false) {
+    const targetToId = parseInt(toId);
+    const students = this.getStudents().filter(s => s.to === targetToId);
+    const submitTime = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' ' + new Date().toLocaleDateString('vi-VN');
+    const roleKey = `to_truong_${targetToId}`;
+
+    let syncedWeeks = [];
+    if (allWeeks) {
+      for (let wk = 1; wk <= 35; wk++) {
+        const wReviews = this.getWeeklyOfficerReviews(wk);
+        let revCount = 0;
+        students.forEach(s => {
+          if (wReviews[s.id] && wReviews[s.id][roleKey] && wReviews[s.id][roleKey].comment) {
+            revCount++;
+          }
+        });
+        if (revCount > 0 || wk === parseInt(weekNumber)) {
+          const notes = this.getWeekEmulationNotes(wk);
+          if (!notes.teamReviewSubmissions) notes.teamReviewSubmissions = {};
+          notes.teamReviewSubmissions[targetToId] = {
+            submitted: true,
+            submittedAt: submitTime,
+            actor: actor || `Tổ trưởng ${targetToId}`,
+            reviewCount: revCount
+          };
+          syncedWeeks.push(wk);
+        }
+      }
+    } else {
+      const wk = parseInt(weekNumber) || 2;
+      const wReviews = this.getWeeklyOfficerReviews(wk);
+      let revCount = 0;
+      students.forEach(s => {
+        if (wReviews[s.id] && wReviews[s.id][roleKey] && wReviews[s.id][roleKey].comment) {
+          revCount++;
+        }
+      });
+      const notes = this.getWeekEmulationNotes(wk);
+      if (!notes.teamReviewSubmissions) notes.teamReviewSubmissions = {};
+      notes.teamReviewSubmissions[targetToId] = {
+        submitted: true,
+        submittedAt: submitTime,
+        actor: actor || `Tổ trưởng ${targetToId}`,
+        reviewCount: revCount
+      };
+      syncedWeeks.push(wk);
+    }
+
+    this.recordAudit({
+      id: 'LOG_' + Date.now(),
+      timestamp: new Date().toLocaleString('vi-VN'),
+      actor: actor || `Tổ trưởng ${targetToId}`,
+      targetStudent: `Lớp trưởng & Lớp phó (Tổ ${targetToId})`,
+      action: `[Đồng bộ nhận xét] Tổ trưởng ${targetToId} gửi Ban cán sự`,
+      reason: `Đã đồng bộ nhận xét của Tổ ${targetToId} qua ${syncedWeeks.map(w => 'Tuần ' + w).join(', ')} cho Ban cán sự kiểm tra, bổ sung.`,
+      verified: true
+    });
+
+    this.saveState();
+    return {
+      toId: targetToId,
+      syncedWeeks,
+      submittedAt: submitTime,
+      actor: actor || `Tổ trưởng ${targetToId}`
+    };
+  }
+
+  isTeamOfficerReviewsSubmitted(weekNumber, toId) {
+    const w = parseInt(weekNumber) || 2;
+    const notes = this.getWeekEmulationNotes(w);
+    if (!notes || !notes.teamReviewSubmissions) return false;
+    const sub = notes.teamReviewSubmissions[toId] || notes.teamReviewSubmissions[String(toId)] || notes.teamReviewSubmissions[parseInt(toId)];
+    return Boolean(sub && sub.submitted);
+  }
+
+  getTeamOfficerReviewSubmissionInfo(weekNumber, toId) {
+    const w = parseInt(weekNumber) || 2;
+    const notes = this.getWeekEmulationNotes(w);
+    if (!notes || !notes.teamReviewSubmissions) return null;
+    return notes.teamReviewSubmissions[toId] || notes.teamReviewSubmissions[String(toId)] || notes.teamReviewSubmissions[parseInt(toId)] || null;
+  }
+
+  // BƯỚC 2: Lớp trưởng & các Lớp phó kiểm tra, thêm nhận xét rồi gửi đồng bộ qua cho GVCN
+  submitBcsOfficerReviewsToGVCN(weekNumber, actor = 'Lớp trưởng (Trình Minh Thiện)') {
+    const w = parseInt(weekNumber) || 2;
+    const notes = this.getWeekEmulationNotes(w);
+    const submitTime = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' ' + new Date().toLocaleDateString('vi-VN');
+
+    notes.bcsReviewSubmitted = true;
+    notes.bcsReviewSubmittedAt = submitTime;
+    notes.bcsReviewSubmittedBy = actor;
+    if (notes.status !== 'Đã duyệt') {
+      notes.status = 'Chờ GVCN duyệt';
+    }
+
+    this.recordAudit({
+      id: 'LOG_' + Date.now(),
+      timestamp: new Date().toLocaleString('vi-VN'),
+      actor: actor,
+      targetStudent: `GVCN (Tuần ${w})`,
+      action: `[Tuần ${w}] Ban cán sự gửi đồng bộ nhận xét lên GVCN`,
+      reason: `Ban cán sự đã kiểm tra nhận xét của 4 Tổ trưởng, bổ sung đánh giá và chuyển đồng bộ cho GVCN phê duyệt.`,
+      verified: true
+    });
+
+    this.saveState();
+    return {
+      week: w,
+      submittedAt: submitTime,
+      actor: actor
+    };
+  }
+
+  // BƯỚC 3: GVCN đồng bộ nhận xét của Ban cán sự & Tổ trưởng vào Báo cáo Tuần (Word & Excel)
+  syncOfficerReviewsToWeeklyReport(weekNumber) {
+    const w = parseInt(weekNumber) || 2;
+    const notes = this.getWeekEmulationNotes(w);
+    const wReviews = this.getWeeklyOfficerReviews(w);
+    const students = this.getStudents();
+    const syncTime = new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) + ' ' + new Date().toLocaleDateString('vi-VN');
+
+    // Tổng hợp nhận xét nổi bật từ 4 tổ và Ban cán sự
+    const teamHighlights = { 1: [], 2: [], 3: [], 4: [] };
+    const bcsHighlights = [];
+
+    students.forEach(s => {
+      const revObj = wReviews[s.id] || {};
+      Object.entries(revObj).forEach(([rKey, rev]) => {
+        if (rev && rev.comment) {
+          if (rKey.startsWith('to_truong_')) {
+            const tId = parseInt(rKey.replace('to_truong_', '')) || s.to;
+            if (teamHighlights[tId]) {
+              teamHighlights[tId].push(`${s.name}: "${rev.comment}" (${rev.rating})`);
+            }
+          } else {
+            bcsHighlights.push(`${s.name}: "${rev.comment}" (${rev.actor || 'Cán sự'}, ${rev.rating})`);
+          }
+        }
+      });
+    });
+
+    let autoSynthesized = `* Tổng hợp nhận xét Tuần ${w} của 4 Tổ & Ban cán sự lớp:\n`;
+    for (let t = 1; t <= 4; t++) {
+      if (teamHighlights[t].length > 0) {
+        autoSynthesized += `- Tổ ${t} (${teamHighlights[t].length} lượt đánh giá): ${teamHighlights[t].slice(0, 3).join('; ')}${teamHighlights[t].length > 3 ? '...' : ''}\n`;
+      } else {
+        autoSynthesized += `- Tổ ${t}: Nề nếp ổn định, hoàn thành nhiệm vụ tuần.\n`;
+      }
+    }
+    if (bcsHighlights.length > 0) {
+      autoSynthesized += `- Ý kiến Ban cán sự lớp: ${bcsHighlights.slice(0, 4).join('; ')}${bcsHighlights.length > 4 ? '...' : ''}\n`;
+    }
+
+    // Nếu officerReview hiện tại chưa có nội dung hoặc cần cập nhật
+    if (!notes.officerReview || notes.officerReview.trim() === '') {
+      notes.officerReview = autoSynthesized;
+    } else if (!notes.officerReview.includes('Tổng hợp nhận xét Tuần ' + w)) {
+      notes.officerReview = notes.officerReview + '\n\n' + autoSynthesized;
+    }
+
+    notes.gvcnSyncReport = true;
+    notes.gvcnSyncReportAt = syncTime;
+
+    this.recordAudit({
+      id: 'LOG_' + Date.now(),
+      timestamp: new Date().toLocaleString('vi-VN'),
+      actor: 'Giáo viên Chủ nhiệm (Admin)',
+      targetStudent: `Báo cáo Xuất File Tuần ${w}`,
+      action: `[Tuần ${w}] GVCN đồng bộ nhận xét vào Báo cáo xuất file`,
+      reason: `Đã tích hợp toàn bộ nhận xét của 4 Tổ trưởng và Ban cán sự vào nội dung Báo cáo Tuần ${w} (Word NĐ 30/2020 & Excel).`,
+      verified: true
+    });
+
+    this.saveState();
+    return {
+      week: w,
+      syncedAt: syncTime,
+      officerReview: notes.officerReview
+    };
   }
 
   saveState(stateToSave = null) {
