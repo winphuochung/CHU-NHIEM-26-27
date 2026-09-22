@@ -163,25 +163,20 @@ const ROLES = {
 
 class AuthManager {
   constructor() {
-    let initialRole = ROLES.GVCN;
-    try {
-      const savedRoleId = localStorage.getItem('currentUserRoleId');
-      if (savedRoleId) {
-        const found = Object.values(ROLES).find(r => r.id === savedRoleId);
-        if (found) initialRole = found;
-      }
-    } catch(e) {}
-
-    this.currentRole = initialRole;
-    this.isAuthenticated = true;
-    this.is2FAVerified = true;
+    this.currentRole = null;
+    this.isAuthenticated = false;
+    this.is2FAVerified = false;
     this.idleTimeoutMinutes = 30; // 30 phút cho tiện sử dụng trong lớp
     this.lastActivity = Date.now();
     this.setupIdleTimer();
   }
 
   getCurrentRole() {
-    return this.currentRole;
+    return this.currentRole || ROLES.HOC_SINH;
+  }
+
+  isLoggedIn() {
+    return this.isAuthenticated && this.currentRole !== null;
   }
 
   // Đăng nhập có xác thực thông tin tài khoản
@@ -202,9 +197,6 @@ class AuthManager {
       this.currentRole = targetRole;
       this.isAuthenticated = true;
       this.is2FAVerified = true;
-      try {
-        localStorage.setItem('currentUserRoleId', targetRole.id);
-      } catch(e) {}
       this.resetActivity();
 
       // Ghi Audit Log nếu có store
@@ -227,13 +219,10 @@ class AuthManager {
     return { success: false, error: 'Mật khẩu không chính xác. Vui lòng thử lại.' };
   }
 
-  // Đăng xuất an toàn về chế độ xem học sinh công khai
+  // Đăng xuất an toàn về màn hình đăng nhập
   logout() {
-    this.currentRole = ROLES.HOC_SINH;
-    try {
-      localStorage.setItem('currentUserRoleId', 'hoc_sinh');
-    } catch(e) {}
-    this.isAuthenticated = true;
+    this.currentRole = null;
+    this.isAuthenticated = false;
     this.is2FAVerified = false;
     this.resetActivity();
 
@@ -244,12 +233,11 @@ class AuthManager {
         actor: 'Người dùng',
         targetStudent: 'Hệ thống Lớp 9A1',
         action: 'Đăng xuất tài khoản',
-        reason: 'Chuyển về chế độ xem công khai của Học sinh & Phụ huynh',
+        reason: 'Đăng xuất về cổng đăng nhập bảo mật',
         verified: true
       });
     }
 
-    if (window.renderApp) window.renderApp();
     return { success: true };
   }
 
