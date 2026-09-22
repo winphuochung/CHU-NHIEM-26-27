@@ -1078,11 +1078,20 @@ class AppStore {
     return this.state.students;
   }
 
+  isReadOnly() {
+    return !!(window.authManager && typeof window.authManager.getCurrentRole === 'function' && window.authManager.getCurrentRole().id === 'hoc_sinh');
+  }
+
   getStudentById(id) {
     return this.state.students.find(s => s.id === id);
   }
 
   addStudent(studentData) {
+    if (this.isReadOnly()) {
+      console.warn('[Store] Chế độ xem của Học sinh & Phụ huynh: Từ chối thêm học sinh mới.');
+      return null;
+    }
+
     // Tự sinh mã HS nếu chưa có
     const newId = studentData.id || `HS${String(this.state.students.length + 1).padStart(2, '0')}`;
     const newStt = this.state.students.length + 1;
@@ -1130,6 +1139,11 @@ class AppStore {
   }
 
   updateStudentOrganization(studentId, { to, role }) {
+    if (this.isReadOnly()) {
+      console.warn('[Store] Chế độ xem của Học sinh & Phụ huynh: Từ chối điều chỉnh tổ/chức vụ.');
+      return null;
+    }
+
     const s = this.getStudentById(studentId);
     if (!s) return null;
 
@@ -1143,8 +1157,8 @@ class AppStore {
       timestamp: new Date().toLocaleString('vi-VN'),
       actor: 'Giáo viên Chủ nhiệm (Admin)',
       targetStudent: `${s.name}`,
-      action: 'Sắp xếp tổ & Chức vụ',
-      reason: `Chuyển từ Tổ ${oldTo} (${oldRole}) ➔ Tổ ${s.to} (${s.role})`,
+      action: 'Điều chỉnh sơ đồ tổ/chức vụ',
+      reason: `Chuyển từ Tổ ${oldTo} (${oldRole}) sang Tổ ${s.to} (${s.role})`,
       verified: true
     });
 
@@ -1153,6 +1167,11 @@ class AppStore {
   }
 
   deleteStudent(studentId) {
+    if (this.isReadOnly()) {
+      console.warn('[Store] Chế độ xem của Học sinh & Phụ huynh: Từ chối xóa học sinh.');
+      return false;
+    }
+
     const idx = this.state.students.findIndex(s => s.id === studentId);
     if (idx !== -1) {
       const removed = this.state.students.splice(idx, 1)[0];
@@ -1176,6 +1195,11 @@ class AppStore {
   }
 
   updateStudent(id, partial) {
+    if (this.isReadOnly()) {
+      console.warn('[Store] Chế độ xem của Học sinh & Phụ huynh: Từ chối cập nhật thông tin học sinh.');
+      return null;
+    }
+
     const idx = this.state.students.findIndex(s => s.id === id);
     if (idx !== -1) {
       this.state.students[idx] = { ...this.state.students[idx], ...partial };
@@ -1186,6 +1210,9 @@ class AppStore {
   }
 
   importStudentsFromExcel(studentsList, mode = 'replace') {
+    if (this.isReadOnly()) {
+      throw new Error('Chế độ xem của Học sinh & Phụ huynh: Không thể nhập dữ liệu từ Excel.');
+    }
     if (!Array.isArray(studentsList) || studentsList.length === 0) {
       throw new Error('Danh sách học sinh rỗng hoặc không hợp lệ!');
     }
@@ -1359,6 +1386,11 @@ class AppStore {
   }
 
   updateStudentWeekCriteria(weekNumber, studentId, field, delta, actor = 'Ban cán sự', note = '') {
+    if (this.isReadOnly()) {
+      console.warn('[Store] Chế độ xem của Học sinh & Phụ huynh: Từ chối cập nhật điểm tiêu chí.');
+      return null;
+    }
+
     const w = parseInt(weekNumber);
     const s = this.getStudentById(studentId);
     if (!s) return null;
@@ -1407,6 +1439,11 @@ class AppStore {
   }
 
   setStudentWeekCriteria(weekNumber, studentId, newCrit, actor = 'Ban cán sự') {
+    if (this.isReadOnly()) {
+      console.warn('[Store] Chế độ xem của Học sinh & Phụ huynh: Từ chối cập nhật phiếu thi đua.');
+      return null;
+    }
+
     const w = parseInt(weekNumber);
     const s = this.getStudentById(studentId);
     if (!s) return null;

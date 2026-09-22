@@ -312,6 +312,17 @@
   <!-- APP MAIN LAYOUT (CHỈ HIỂN THỊ SAU KHI ĐĂNG NHẬP THÀNH CÔNG) -->
   <div id="app-main-layout" class="hidden flex-1 flex flex-col w-full min-h-screen">
 
+    <!-- BANNER CỐ ĐỊNH: CHẾ ĐỘ CHỈ XEM CHO HỌC SINH & PHỤ HUYNH -->
+    <div id="banner-readonly-mode" class="hidden bg-gradient-to-r from-amber-600 via-amber-500 to-orange-500 text-white px-4 py-2.5 shadow-md flex items-center justify-between gap-3 sticky top-0 z-50 text-xs font-semibold">
+      <div class="flex items-center gap-2">
+        <i data-lucide="eye" class="w-4 h-4 shrink-0 text-amber-200"></i>
+        <span><strong>CHẾ ĐỘ CHỈ XEM (HỌC SINH & PHỤ HUYNH):</strong> Quý phụ huynh & học sinh có quyền tra cứu toàn bộ thông tin học tập và thi đua. Mọi thao tác nhập liệu, sửa đổi hoặc nộp báo cáo đã được khóa an toàn.</span>
+      </div>
+      <button onclick="openLoginModal('gvcn')" class="px-2.5 py-1 rounded-lg bg-white text-amber-900 font-bold hover:bg-amber-100 transition inline-flex items-center gap-1 shrink-0 shadow-xs cursor-pointer">
+        <i data-lucide="log-in" class="w-3.5 h-3.5"></i> Đăng nhập Cán sự / GVCN
+      </button>
+    </div>
+
   <!-- TOP APP BAR -->
   <header class="sticky top-0 z-40 glass-nav border-b border-slate-200 dark:border-slate-800 shadow-sm">
     <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-20 sm:h-24 flex items-center justify-between gap-2 sm:gap-4">
@@ -935,7 +946,7 @@
           </h2>
           <p class="text-xs text-slate-700 dark:text-slate-300 mt-0.5">Gửi lời cảm ơn, động viên ẩn danh đến bạn bè và thầy cô. Xây dựng tình bạn trong sáng, văn minh.</p>
         </div>
-        <button onclick="openAddKudosModal()" class="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2">
+        <button onclick="openAddKudosModal()" id="btn-open-add-kudos" class="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-2">
           <i data-lucide="plus-circle" class="w-4 h-4"></i> Gửi lời nhắn Kudos
         </button>
       </div>
@@ -2057,10 +2068,10 @@
       <input type="hidden" id="sc-target-week">
 
       <div class="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
-        <button onclick="closeStudentCriteriaModal()" class="px-4 py-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold">
+        <button id="btn-cancel-student-criteria" onclick="closeStudentCriteriaModal()" class="px-4 py-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold">
           Hủy
         </button>
-        <button onclick="handleSaveStudentCriteria()" class="px-5 py-2 bg-phuochung-600 hover:bg-phuochung-700 text-white rounded-xl text-xs font-bold transition">
+        <button id="btn-save-student-criteria" onclick="handleSaveStudentCriteria()" class="px-5 py-2 bg-phuochung-600 hover:bg-phuochung-700 text-white rounded-xl text-xs font-bold transition">
           Lưu Phiếu Chấm Điểm
         </button>
       </div>
@@ -2273,19 +2284,36 @@
   </div> <!-- END #app-main-layout -->
 
   <!-- Scripts Core -->
-  <script src="js/store.js?v=6.4.5"></script>
-  <script src="js/security.js?v=6.4.5"></script>
-  <script src="js/auth.js?v=6.4.5"></script>
-  <script src="js/ai-analytics.js?v=6.4.5"></script>
-  <script src="js/workspaces.js?v=6.4.5"></script>
-  <script src="js/exam-hub.js?v=6.4.5"></script>
-  <script src="js/gamification.js?v=6.4.5"></script>
-  <script src="js/sync-hub.js?v=6.4.5"></script>
-  <script src="js/supabase-client.js?v=6.4.5"></script>
-  <script src="js/voice-assistant.js?v=6.4.5"></script>
+  <script src="js/store.js?v=6.4.6"></script>
+  <script src="js/security.js?v=6.4.6"></script>
+  <script src="js/auth.js?v=6.4.6"></script>
+  <script src="js/ai-analytics.js?v=6.4.6"></script>
+  <script src="js/workspaces.js?v=6.4.6"></script>
+  <script src="js/exam-hub.js?v=6.4.6"></script>
+  <script src="js/gamification.js?v=6.4.6"></script>
+  <script src="js/sync-hub.js?v=6.4.6"></script>
+  <script src="js/supabase-client.js?v=6.4.6"></script>
+  <script src="js/voice-assistant.js?v=6.4.6"></script>
   
   <!-- Main Application Orchestration Script -->
   <script>
+    // Quyền hạn & Chế độ chỉ xem (Dành riêng cho Học sinh & Phụ huynh)
+    function isReadOnlyView() {
+      return !!(window.authManager && typeof window.authManager.getCurrentRole === 'function' && window.authManager.getCurrentRole().id === 'hoc_sinh');
+    }
+
+    function checkReadOnlyAndBlock(actionName = 'Thao tác này') {
+      if (isReadOnlyView()) {
+        try {
+          showSeatingToast(`⚠️ Chế độ xem Học sinh & Phụ huynh: ${actionName} đã bị khóa. Bạn chỉ được xem, không được chỉnh sửa.`);
+        } catch(e) {
+          alert(`Chế độ xem Học sinh & Phụ huynh: ${actionName} đã bị khóa. Bạn chỉ được xem, không được chỉnh sửa.`);
+        }
+        return true;
+      }
+      return false;
+    }
+
     // Defensive Fallbacks for store & syncHub
     if (window.store) {
       if (!window.store.submitTeamEmulation) {
@@ -2700,6 +2728,7 @@
     }
 
     function executeStep1Send(toId, weekNum) {
+      if (checkReadOnlyAndBlock('Gửi dữ liệu thi đua cho Ban cán sự')) return;
       const w = parseInt(weekNum) || selectedEmulationWeek || 2;
       const targetTo = parseInt(toId) || workflowSelectedTeamId || 1;
       const roleId = `to_truong_${targetTo}`;
@@ -2710,6 +2739,7 @@
     }
 
     function executeStep2Send(weekNum) {
+      if (checkReadOnlyAndBlock('Gửi báo cáo thi đua cho GVCN')) return;
       const w = parseInt(weekNum) || selectedEmulationWeek || 2;
       const select = document.getElementById('role-select');
       if (select) select.value = 'lop_truong';
@@ -2718,6 +2748,7 @@
     }
 
     function executeStep3Approve(weekNum, reopen = false) {
+      if (checkReadOnlyAndBlock('Phê duyệt báo cáo thi đua')) return;
       const w = parseInt(weekNum) || selectedEmulationWeek || 2;
       const select = document.getElementById('role-select');
       if (select) select.value = 'gvcn';
@@ -2754,6 +2785,7 @@
       const weekNotes = window.store.getWeekEmulationNotes(w);
       const isApproved = weekNotes.status === 'Đã duyệt';
       const isSentToGVCN = weekNotes.status === 'Chờ GVCN duyệt' || weekNotes.bcsSubmitted;
+      const isReadOnly = isReadOnlyView();
 
       const teamsSubStatus = [1, 2, 3, 4].map(tId => {
         const isSub = window.store && typeof window.store.isTeamSubmitted === 'function' ? window.store.isTeamSubmitted(w, tId) : false;
@@ -2834,7 +2866,11 @@
               </div>
 
               <div>
-                ${targetTeamSub && targetTeamSub.isSub ? `
+                ${isReadOnly ? `
+                  <div class="w-full py-2 px-2.5 rounded-xl bg-slate-800/90 text-purple-300 text-center text-xs flex items-center justify-center gap-1.5 border border-purple-500/30">
+                    <i data-lucide="eye" class="w-3.5 h-3.5"></i> Chế độ chỉ xem
+                  </div>
+                ` : (targetTeamSub && targetTeamSub.isSub ? `
                   <div class="space-y-1.5">
                     <div class="w-full py-2 px-2.5 rounded-xl bg-emerald-600 text-white font-bold text-center text-xs flex items-center justify-center gap-1.5 shadow-sm">
                       <i data-lucide="check-circle" class="w-4 h-4"></i> ✓ Đã Gửi Cho Ban Cán Sự ${targetTeamSub.subInfo ? `<span class="opacity-80 text-[10px]">(${targetTeamSub.subInfo.submittedAt})</span>` : ''}
@@ -2847,7 +2883,7 @@
                   <button onclick="executeStep1Send(${workflowSelectedTeamId}, ${w})" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-lg transition transform active:scale-95 animate-pulse">
                     <i data-lucide="send" class="w-4 h-4"></i> 📥 Gửi Dữ Liệu Tổ ${workflowSelectedTeamId} Cho Ban Cán Sự
                   </button>
-                `}
+                `)}
               </div>
             </div>
 
@@ -2873,7 +2909,11 @@
               </div>
 
               <div>
-                ${isSentToGVCN ? `
+                ${isReadOnly ? `
+                  <div class="w-full py-2 px-2.5 rounded-xl bg-slate-800/90 text-amber-300 text-center text-xs flex items-center justify-center gap-1.5 border border-amber-500/30">
+                    <i data-lucide="eye" class="w-3.5 h-3.5"></i> Chế độ chỉ xem
+                  </div>
+                ` : (isSentToGVCN ? `
                   <div class="space-y-1.5">
                     <div class="w-full py-2 px-2.5 rounded-xl bg-emerald-600 text-white font-bold text-center text-xs flex items-center justify-center gap-1.5 shadow-sm">
                       <i data-lucide="check-circle" class="w-4 h-4"></i> ✓ Đã Gửi Cho GVCN
@@ -2886,7 +2926,7 @@
                   <button onclick="executeStep2Send(${w})" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-lg transition transform active:scale-95">
                     <i data-lucide="send" class="w-4 h-4"></i> 📤 Gửi Báo Cáo Cho GVCN
                   </button>
-                `}
+                `)}
               </div>
             </div>
 
@@ -2911,7 +2951,11 @@
               </div>
 
               <div>
-                ${isApproved ? `
+                ${isReadOnly ? `
+                  <div class="w-full py-2 px-2.5 rounded-xl bg-slate-800/90 text-emerald-300 text-center text-xs flex items-center justify-center gap-1.5 border border-emerald-500/30">
+                    <i data-lucide="eye" class="w-3.5 h-3.5"></i> ${isApproved ? '✓ Đã phê duyệt' : 'Chờ GVCN phê duyệt'}
+                  </div>
+                ` : (isApproved ? `
                   <div class="space-y-1.5">
                     <div class="w-full py-2 px-2.5 rounded-xl bg-emerald-700 text-white font-bold text-center text-xs flex items-center justify-center gap-1.5 shadow-sm">
                       <i data-lucide="check-check" class="w-4 h-4"></i> ✓ Đã Phê Duyệt Báo Cáo
@@ -2924,7 +2968,7 @@
                   <button onclick="executeStep3Approve(${w})" class="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-lg transition transform active:scale-95">
                     <i data-lucide="check-circle" class="w-4 h-4"></i> ✔ Phê Duyệt Báo Cáo Tuần ${w}
                   </button>
-                `}
+                `)}
               </div>
             </div>
 
@@ -2971,6 +3015,7 @@
 
     function updateRoleUI() {
       const cur = window.authManager.getCurrentRole();
+      const isReadOnly = isReadOnlyView();
       const select = document.getElementById('role-select');
       if (select) select.value = cur.id;
       const wsName = document.getElementById('ws-role-name');
@@ -2978,22 +3023,50 @@
       const wsDesc = document.getElementById('ws-role-desc');
       if (wsDesc) wsDesc.innerText = cur.description;
 
+      // Cập nhật Banner Cố Định Chế Độ Chỉ Xem
+      const roBanner = document.getElementById('banner-readonly-mode');
+      if (roBanner) {
+        if (isReadOnly) {
+          roBanner.classList.remove('hidden');
+          roBanner.classList.add('flex');
+        } else {
+          roBanner.classList.add('hidden');
+          roBanner.classList.remove('flex');
+        }
+      }
+
       // Cập nhật User Profile Widget trên Header
       const roleText = document.getElementById('header-user-role');
       const nameText = document.getElementById('header-user-name');
       const avatarBox = document.getElementById('header-user-avatar');
       const avatarIcon = document.getElementById('header-user-icon');
-      if (roleText) roleText.innerText = cur.shortTitle || cur.name;
+      if (roleText) roleText.innerText = isReadOnly ? 'Chỉ xem (Học sinh & Phụ huynh)' : (cur.shortTitle || cur.name);
       if (nameText) nameText.innerText = cur.personName || cur.name;
       if (avatarBox) avatarBox.className = `w-6 h-6 rounded-lg ${cur.bgColor || 'bg-blue-600'} text-white flex items-center justify-center text-xs shrink-0 shadow-2xs group-hover:scale-105 transition-transform`;
       if (avatarIcon) avatarIcon.setAttribute('data-lucide', cur.icon || 'shield-check');
 
-      // Ẩn/Hiện nút quản trị học sinh nếu là GVCN
+      // Ẩn/Hiện nút quản trị học sinh và gửi Kudos
       const btnAdd = document.getElementById('btn-admin-add-student');
       const btnTeams = document.getElementById('btn-admin-manage-teams');
-      if (btnAdd && btnTeams) {
-        btnAdd.classList.remove('hidden');
-        btnTeams.classList.remove('hidden');
+      const btnImportExcel = document.getElementById('btn-admin-import-excel');
+      const btnOpenAddKudos = document.getElementById('btn-open-add-kudos');
+
+      if (isReadOnly) {
+        if (btnAdd) btnAdd.classList.add('hidden');
+        if (btnTeams) btnTeams.classList.add('hidden');
+        if (btnImportExcel) btnImportExcel.classList.add('hidden');
+        if (btnOpenAddKudos) btnOpenAddKudos.classList.add('hidden');
+      } else {
+        if (btnOpenAddKudos) btnOpenAddKudos.classList.remove('hidden');
+        if (cur.id === 'gvcn') {
+          if (btnAdd) btnAdd.classList.remove('hidden');
+          if (btnTeams) btnTeams.classList.remove('hidden');
+          if (btnImportExcel) btnImportExcel.classList.remove('hidden');
+        } else {
+          if (btnAdd) btnAdd.classList.add('hidden');
+          if (btnTeams) btnTeams.classList.add('hidden');
+          if (btnImportExcel) btnImportExcel.classList.add('hidden');
+        }
       }
 
       renderPersistentWorkflowGuide(); // Luôn cập nhật thanh 4 bước toàn cục
@@ -3001,7 +3074,7 @@
       renderWorkspaceContent();
       renderDashboard();
       renderClassroomGrid();
-      lucide.createIcons();
+      if (window.lucide) lucide.createIcons();
     }
 
     // Render AI Dashboard
@@ -3127,6 +3200,15 @@
       const color = count > 0 
         ? (isPenalty ? 'text-rose-600 font-extrabold bg-rose-50 dark:bg-rose-950/40 rounded px-1' : 'text-emerald-600 font-extrabold bg-emerald-50 dark:bg-emerald-950/40 rounded px-1') 
         : 'text-slate-400';
+
+      if (isReadOnlyView()) {
+        return `
+          <td class="p-1 text-center border-r border-slate-200 dark:border-slate-800">
+            <span class="inline-block text-center text-xs ${color}">${count > 0 ? count : '-'}</span>
+          </td>
+        `;
+      }
+
       return `
         <td class="p-1 text-center border-r border-slate-200 dark:border-slate-800">
           <div class="inline-flex items-center gap-0.5 justify-center">
@@ -3139,6 +3221,7 @@
     }
 
     function handleQuickCriteriaChange(week, studentId, field, delta) {
+      if (checkReadOnlyAndBlock('Thay đổi điểm thi đua')) return;
       const curRole = window.authManager ? window.authManager.getCurrentRole() : { id: 'gvcn', name: 'Giáo viên Chủ nhiệm' };
       if (curRole.id.startsWith('to_truong_')) {
         const myTo = curRole.id === 'to_truong_2' ? 2 : (curRole.id === 'to_truong_3' ? 3 : (curRole.id === 'to_truong_4' ? 4 : 1));
@@ -3156,6 +3239,7 @@
     }
 
     function handleResetStudentWeekCriteria(week, studentId) {
+      if (checkReadOnlyAndBlock('Đặt lại điểm thi đua')) return;
       const curRole = window.authManager ? window.authManager.getCurrentRole() : { id: 'gvcn', name: 'Giáo viên Chủ nhiệm' };
       if (curRole.id.startsWith('to_truong_')) {
         const myTo = curRole.id === 'to_truong_2' ? 2 : (curRole.id === 'to_truong_3' ? 3 : (curRole.id === 'to_truong_4' ? 4 : 1));
@@ -3680,8 +3764,9 @@ function handleExportEmulationExcelClick() {
       const s = window.store.getStudentById(studentId);
       if (!s) return;
 
+      const isReadOnly = isReadOnlyView();
       const curRole = window.authManager ? window.authManager.getCurrentRole() : { id: 'gvcn', name: 'Giáo viên Chủ nhiệm' };
-      if (curRole.id.startsWith('to_truong_')) {
+      if (!isReadOnly && curRole.id.startsWith('to_truong_')) {
         const myTo = curRole.id === 'to_truong_2' ? 2 : (curRole.id === 'to_truong_3' ? 3 : (curRole.id === 'to_truong_4' ? 4 : 1));
         if (s.to !== myTo) {
           alert(`Quy định quản lý: Bạn là Tổ trưởng ${myTo}, chỉ được phép chấm điểm cho học sinh thuộc Tổ ${myTo}!`);
@@ -3694,16 +3779,48 @@ function handleExportEmulationExcelClick() {
 
       document.getElementById('sc-target-student-id').value = s.id;
       document.getElementById('sc-target-week').value = w;
-      document.getElementById('sc-modal-title').innerText = `Chấm Điểm Thi Đua Tuần ${w}`;
+      document.getElementById('sc-modal-title').innerText = isReadOnly ? `Phiếu Theo Dõi Thi Đua Tuần ${w}` : `Chấm Điểm Thi Đua Tuần ${w}`;
       document.getElementById('sc-modal-subtitle').innerText = `${s.name} (Tổ ${s.to}) • Chức vụ: ${s.role}`;
 
       const fields = ['vangP', 'vangK', 'truyBai', 'diTre', 'dongPhuc', 'mtt', 'kttx04', 'kttx57', 'kttx810', 'gioTay', 'phatBieu', 'veSinh', 'viPham'];
       fields.forEach(f => {
         const inp = document.getElementById('sc-' + f);
-        if (inp) inp.value = crit[f] || 0;
+        if (inp) {
+          inp.value = crit[f] || 0;
+          inp.disabled = isReadOnly;
+          inp.readOnly = isReadOnly;
+        }
       });
 
-      document.getElementById('sc-note').value = crit.note || '';
+      const noteInp = document.getElementById('sc-note');
+      if (noteInp) {
+        noteInp.value = crit.note || '';
+        noteInp.disabled = isReadOnly;
+        noteInp.readOnly = isReadOnly;
+      }
+
+      // Xử lý nút lưu và nút hủy trong modal
+      const btnSave = document.getElementById('btn-save-student-criteria');
+      const btnCancel = document.getElementById('btn-cancel-student-criteria');
+      if (btnSave) {
+        if (isReadOnly) btnSave.classList.add('hidden');
+        else btnSave.classList.remove('hidden');
+      }
+      if (btnCancel) {
+        btnCancel.innerText = isReadOnly ? 'Đóng' : 'Hủy';
+      }
+
+      // Ẩn các nút cộng trừ trong modal nếu là read-only
+      const modalEl = document.getElementById('modal-record-student-criteria');
+      if (modalEl) {
+        modalEl.querySelectorAll('button[onclick^="adjustScInput"]').forEach(btn => {
+          if (isReadOnly) {
+            btn.classList.add('hidden');
+          } else {
+            btn.classList.remove('hidden');
+          }
+        });
+      }
 
       updateScPreview();
       document.getElementById('modal-record-student-criteria').classList.remove('hidden');
@@ -3716,6 +3833,7 @@ function handleExportEmulationExcelClick() {
     }
 
     function adjustScInput(inputId, delta) {
+      if (checkReadOnlyAndBlock('Điều chỉnh điểm tiêu chí')) return;
       const inp = document.getElementById(inputId);
       if (inp) {
         let val = parseInt(inp.value) || 0;
@@ -3741,6 +3859,7 @@ function handleExportEmulationExcelClick() {
     }
 
     function handleSaveStudentCriteria() {
+      if (checkReadOnlyAndBlock('Lưu phiếu chấm điểm')) return;
       const studentId = document.getElementById('sc-target-student-id').value;
       const w = parseInt(document.getElementById('sc-target-week').value);
       const fields = ['vangP', 'vangK', 'truyBai', 'diTre', 'dongPhuc', 'mtt', 'kttx04', 'kttx57', 'kttx810', 'gioTay', 'phatBieu', 'veSinh', 'viPham'];
@@ -3833,7 +3952,31 @@ function handleExportEmulationExcelClick() {
         const weekNotes = window.store.getWeekEmulationNotes(w);
         const isApproved = weekNotes.status === 'Đã duyệt';
 
-        if (isToTruong) {
+        if (curRole.id === 'hoc_sinh') {
+          bannerScopeEl.innerHTML = `
+            <div class="p-3.5 rounded-2xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs mb-3">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-amber-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                  <i data-lucide="eye" class="w-5 h-5"></i>
+                </div>
+                <div>
+                  <h4 class="font-extrabold text-xs text-amber-950 dark:text-amber-200 flex items-center gap-2">
+                    <span>Chế Độ Xem Tra Cứu (Học Sinh & Phụ Huynh Lớp 9A1)</span>
+                    <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-200 dark:bg-amber-900 text-amber-800 dark:text-amber-200 font-bold">Chỉ Xem</span>
+                  </h4>
+                  <p class="text-[11px] text-amber-700 dark:text-amber-400 mt-0.5">
+                    Quý phụ huynh & học sinh theo dõi kết quả thi đua và rèn luyện Tuần ${w}. Toàn bộ tính năng chấm điểm và sửa đổi đã được khóa an toàn.
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <button onclick="handleExportEmulationWordClick(${w})" class="px-3.5 py-1.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition active:scale-95">
+                  <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Xuất Báo Cáo Word Tuần ${w} (NĐ 30/2020)
+                </button>
+              </div>
+            </div>
+          `;
+        } else if (isToTruong) {
           const teamMemberCount = allStudents.filter(s => s.to === myToId).length;
           const isTeamSub = window.store && typeof window.store.isTeamSubmitted === 'function' ? window.store.isTeamSubmitted(w, myToId) : false;
           const subInfo = window.store && typeof window.store.getTeamSubmissionInfo === 'function' ? window.store.getTeamSubmissionInfo(w, myToId) : null;
@@ -4079,12 +4222,18 @@ function handleExportEmulationExcelClick() {
               </td>
               <td class="p-2 text-center">
                 <div class="flex items-center justify-center gap-1">
-                  <button onclick="openStudentCriteriaModal('${s.id}')" class="px-2 py-1 bg-phuochung-100 hover:bg-phuochung-200 text-phuochung-800 rounded font-bold text-[10px]" title="Mở phiếu chấm điểm chi tiết">
-                    Chấm
-                  </button>
-                  <button onclick="handleResetStudentWeekCriteria(${w}, '${s.id}')" class="p-1 text-slate-400 hover:text-rose-500 rounded" title="Đặt lại về 0">
-                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
-                  </button>
+                  ${isReadOnlyView() ? `
+                    <button onclick="openStudentCriteriaModal('${s.id}')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded font-bold text-[10px] flex items-center gap-1 cursor-pointer" title="Xem chi tiết phiếu thi đua">
+                      <i data-lucide="eye" class="w-3 h-3"></i> Xem
+                    </button>
+                  ` : `
+                    <button onclick="openStudentCriteriaModal('${s.id}')" class="px-2 py-1 bg-phuochung-100 hover:bg-phuochung-200 text-phuochung-800 rounded font-bold text-[10px]" title="Mở phiếu chấm điểm chi tiết">
+                      Chấm
+                    </button>
+                    <button onclick="handleResetStudentWeekCriteria(${w}, '${s.id}')" class="p-1 text-slate-400 hover:text-rose-500 rounded" title="Đặt lại về 0">
+                      <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                    </button>
+                  `}
                 </div>
               </td>
             </tr>
@@ -4124,6 +4273,7 @@ function handleExportEmulationExcelClick() {
         : { id: 'gvcn', name: 'Giáo viên Chủ nhiệm' };
       const isGVCN = curRole.id === 'gvcn';
       const isApproved = notes.status === 'Đã duyệt';
+      const isReadOnly = isReadOnlyView();
 
       container.innerHTML = `
         <!-- Top Section Header -->
@@ -4147,10 +4297,12 @@ function handleExportEmulationExcelClick() {
 
           <!-- Actions -->
           <div class="flex flex-wrap items-center gap-2">
-            <button onclick="handleSaveEmulationNotes(${w})" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95">
-              <i data-lucide="save" class="w-4 h-4"></i> Lưu Nhận Xét & Phương Hướng
-            </button>
-            ${isGVCN ? `
+            ${!isReadOnly ? `
+              <button onclick="handleSaveEmulationNotes(${w})" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95">
+                <i data-lucide="save" class="w-4 h-4"></i> Lưu Nhận Xét & Phương Hướng
+              </button>
+            ` : ''}
+            ${(!isReadOnly && isGVCN) ? `
               <button onclick="handleApproveWeeklyReportDirect(${w})" class="px-3.5 py-2 ${isApproved ? 'bg-emerald-700' : 'bg-emerald-600 hover:bg-emerald-700'} text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95">
                 <i data-lucide="check-check" class="w-4 h-4"></i> ${isApproved ? '✓ Đã Phê Duyệt' : 'GVCN Phê Duyệt Tuần ' + w}
               </button>
@@ -4177,17 +4329,23 @@ function handleExportEmulationExcelClick() {
               <span class="text-[10px] text-slate-400 font-medium">Người ghi: ${notes.submittedBy || 'Ban cán sự'}</span>
             </div>
             
-            <!-- Quick Tag Pills -->
-            <div class="flex flex-wrap gap-1.5 pt-1">
-              ${['100% đồng phục, khăn quàng nghiêm trang', '15p đầu giờ truy bài tốt', 'Trực nhật lớp sạch sẽ', 'Còn hiện tượng đi trễ', 'Nói chuyện riêng phòng bộ môn', 'Tuyên dương Tổ 1 thi đua xuất sắc'].map(tag => `
-                <button type="button" onclick="insertNoteTag('en-officer-review', '${tag}')" class="px-2 py-0.5 rounded-lg bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-indigo-50 hover:text-indigo-600 border border-slate-200 dark:border-slate-600 font-medium text-[10px] transition">
-                  + ${tag}
-                </button>
-              `).join('')}
-            </div>
+            ${!isReadOnly ? `
+              <!-- Quick Tag Pills -->
+              <div class="flex flex-wrap gap-1.5 pt-1">
+                ${['100% đồng phục, khăn quàng nghiêm trang', '15p đầu giờ truy bài tốt', 'Trực nhật lớp sạch sẽ', 'Còn hiện tượng đi trễ', 'Nói chuyện riêng phòng bộ môn', 'Tuyên dương Tổ 1 thi đua xuất sắc'].map(tag => `
+                  <button type="button" onclick="insertNoteTag('en-officer-review', '${tag}')" class="px-2 py-0.5 rounded-lg bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-indigo-50 hover:text-indigo-600 border border-slate-200 dark:border-slate-600 font-medium text-[10px] transition">
+                    + ${tag}
+                  </button>
+                `).join('')}
+              </div>
 
-            <textarea id="en-officer-review" rows="5" placeholder="Ghi nhận xét đánh giá tổng kết tuần của Lớp trưởng, các Lớp phó và các Tổ trưởng (Ưu điểm, Tồn tại, Tuyên dương, Phê bình)..."
-                      class="w-full p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs leading-relaxed focus:ring-2 focus:ring-indigo-500 outline-none resize-none font-medium">${notes.officerReview || ''}</textarea>
+              <textarea id="en-officer-review" rows="5" placeholder="Ghi nhận xét đánh giá tổng kết tuần của Lớp trưởng, các Lớp phó và các Tổ trưởng (Ưu điểm, Tồn tại, Tuyên dương, Phê bình)..."
+                        class="w-full p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs leading-relaxed focus:ring-2 focus:ring-indigo-500 outline-none resize-none font-medium">${notes.officerReview || ''}</textarea>
+            ` : `
+              <div class="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs leading-relaxed whitespace-pre-wrap font-medium min-h-[100px]">
+                ${notes.officerReview ? notes.officerReview : '<em class="text-slate-400">Ban cán sự chưa cập nhật nhận xét tuần này.</em>'}
+              </div>
+            `}
           </div>
 
           <!-- Column 2: Phương hướng & Kế hoạch tuần tới w+1 -->
@@ -4200,17 +4358,23 @@ function handleExportEmulationExcelClick() {
               <span class="text-[10px] text-slate-400 font-medium">Chỉ tiêu tuần mới</span>
             </div>
 
-            <!-- Quick Direction Tags -->
-            <div class="flex flex-wrap gap-1.5 pt-1">
-              ${['100% chuyên cần không đi muộn', 'Ôn tập kiểm tra định kỳ nghiêm túc', 'Tăng cường đôi bạn cùng tiến môn Toán & KHTN', 'Tổ trực nhật đến sớm trước 6h30', 'Quyết tâm giữ vững hạng Nhất toàn trường'].map(tag => `
-                <button type="button" onclick="insertNoteTag('en-next-direction', '${tag}')" class="px-2 py-0.5 rounded-lg bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-purple-50 hover:text-purple-600 border border-slate-200 dark:border-slate-600 font-medium text-[10px] transition">
-                  + ${tag}
-                </button>
-              `).join('')}
-            </div>
+            ${!isReadOnly ? `
+              <!-- Quick Direction Tags -->
+              <div class="flex flex-wrap gap-1.5 pt-1">
+                ${['100% chuyên cần không đi muộn', 'Ôn tập kiểm tra định kỳ nghiêm túc', 'Tăng cường đôi bạn cùng tiến môn Toán & KHTN', 'Tổ trực nhật đến sớm trước 6h30', 'Quyết tâm giữ vững hạng Nhất toàn trường'].map(tag => `
+                  <button type="button" onclick="insertNoteTag('en-next-direction', '${tag}')" class="px-2 py-0.5 rounded-lg bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-purple-50 hover:text-purple-600 border border-slate-200 dark:border-slate-600 font-medium text-[10px] transition">
+                    + ${tag}
+                  </button>
+                `).join('')}
+              </div>
 
-            <textarea id="en-next-direction" rows="5" placeholder="Đề ra kế hoạch, mục tiêu và phương hướng phấn đấu cho tuần tiếp theo (Học tập, Nề nếp, Trực nhật, Hoạt động phong trào)..."
-                      class="w-full p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs leading-relaxed focus:ring-2 focus:ring-purple-500 outline-none resize-none font-medium">${notes.nextWeekDirection || ''}</textarea>
+              <textarea id="en-next-direction" rows="5" placeholder="Đề ra kế hoạch, mục tiêu và phương hướng phấn đấu cho tuần tiếp theo (Học tập, Nề nếp, Trực nhật, Hoạt động phong trào)..."
+                        class="w-full p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs leading-relaxed focus:ring-2 focus:ring-purple-500 outline-none resize-none font-medium">${notes.nextWeekDirection || ''}</textarea>
+            ` : `
+              <div class="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs leading-relaxed whitespace-pre-wrap font-medium min-h-[100px]">
+                ${notes.nextWeekDirection ? notes.nextWeekDirection : '<em class="text-slate-400">Ban cán sự chưa cập nhật phương hướng tuần tới.</em>'}
+              </div>
+            `}
           </div>
 
         </div>
@@ -4227,7 +4391,7 @@ function handleExportEmulationExcelClick() {
             </span>
           </div>
           
-          ${isGVCN ? `
+          ${(!isReadOnly && isGVCN) ? `
             <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
               <input type="text" id="en-gvcn-feedback" value="${notes.gvcnFeedback || ''}" placeholder="GVCN nhập ý kiến chỉ đạo, nhận xét nỗ lực của Ban cán sự và phương hướng tuần tới..."
                      class="flex-1 p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-blue-300 dark:border-blue-800 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-blue-500">
@@ -4243,10 +4407,11 @@ function handleExportEmulationExcelClick() {
         </div>
       `;
 
-      lucide.createIcons();
+      if (window.lucide) lucide.createIcons();
     }
 
     function insertNoteTag(textareaId, tag) {
+      if (checkReadOnlyAndBlock('Thêm thẻ nhận xét')) return;
       const el = document.getElementById(textareaId);
       if (!el) return;
       if (!el.value) {
@@ -4258,6 +4423,7 @@ function handleExportEmulationExcelClick() {
     }
 
     function handleSaveEmulationNotes(w) {
+      if (checkReadOnlyAndBlock('Lưu nhận xét & phương hướng tuần')) return;
       const revEl = document.getElementById('en-officer-review');
       const dirEl = document.getElementById('en-next-direction');
       if (!revEl || !dirEl) return;
@@ -4277,6 +4443,7 @@ function handleExportEmulationExcelClick() {
     }
 
     function handleQuickGVCNApprove(w) {
+      if (checkReadOnlyAndBlock('Phê duyệt báo cáo tuần')) return;
       const fbEl = document.getElementById('en-gvcn-feedback');
       const feedback = fbEl ? fbEl.value.trim() : '';
       window.store.approveWeekEmulationNotes(w, feedback);
@@ -4285,6 +4452,7 @@ function handleExportEmulationExcelClick() {
     }
 
     function handleApproveEmulationNotesDirect(w) {
+      if (checkReadOnlyAndBlock('Phê duyệt báo cáo tuần')) return;
       const fbEl = document.getElementById('en-gvcn-feedback');
       const feedback = fbEl ? fbEl.value.trim() : 'GVCN nhất trí với báo cáo và phương hướng tuần tới của Ban cán sự.';
       window.store.approveWeekEmulationNotes(w, feedback);
@@ -4881,6 +5049,30 @@ function handleExportEmulationExcelClick() {
             </div>
           </div>
         `;
+      } else if (roleId === 'hoc_sinh') {
+        container.innerHTML = `
+          <div class="p-4 rounded-2xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs mb-4">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-amber-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                <i data-lucide="eye" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <h4 class="font-black text-xs text-amber-950 dark:text-amber-200">Không Gian Tra Cứu (Học Sinh & Phụ Huynh Lớp 9A1)</h4>
+                <p class="text-[11px] text-amber-700 dark:text-amber-400">Tra cứu sổ tay nhận xét, theo dõi nề nếp và tiến độ rèn luyện của 43 học sinh. Chế độ chỉ xem, không chỉnh sửa.</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <button onclick="switchMainTab('emulation')" class="px-3.5 py-1.5 rounded-xl bg-phuochung-600 hover:bg-phuochung-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition">
+                <i data-lucide="table" class="w-3.5 h-3.5"></i> Bảng Thi Đua
+              </button>
+              <button onclick="handleExportEmulationWordClick(${w})" class="px-3.5 py-1.5 rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition">
+                <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Tải Báo Cáo Tuần
+              </button>
+            </div>
+          </div>
+        ` + renderWorkspaceReviewsSection(curRole, selectedWorkspaceWeek);
+        if (window.lucide) lucide.createIcons();
+        return;
       } else {
         const toId = roleId === 'to_truong_2' ? 2 : (roleId === 'to_truong_3' ? 3 : (roleId === 'to_truong_4' ? 4 : 1));
         const members = students.filter(s => s.to === toId);
@@ -5007,6 +5199,7 @@ function handleExportEmulationExcelClick() {
     }
 
     function handleSaveOfficerReview(studentId) {
+      if (checkReadOnlyAndBlock('Lưu nhận xét học sinh')) return;
       const curRole = window.authManager.getCurrentRole();
       const roleKey = getOfficerRoleKey(curRole.id);
       const ratingEl = document.getElementById(`review-rating-${studentId}`);
@@ -5059,6 +5252,7 @@ function handleExportEmulationExcelClick() {
     }
 
     function handleSaveAllOfficerReviews() {
+      if (checkReadOnlyAndBlock('Lưu tất cả nhận xét')) return;
       const curRole = window.authManager.getCurrentRole();
       const roleKey = getOfficerRoleKey(curRole.id);
       const isToTruong = curRole.id.startsWith('to_truong_');
@@ -5100,6 +5294,7 @@ function handleExportEmulationExcelClick() {
     // ================= 3 BƯỚC ĐỒNG BỘ NHẬN XÉT SỔ TAY CÁN SỰ =================
     // Bước 1: Tổ trưởng đồng bộ nhận xét của tổ mình gửi Lớp trưởng & các Lớp phó
     function handleSubmitTeamReviews(toId, weekNum, allWeeks = false) {
+      if (checkReadOnlyAndBlock('Đồng bộ nhận xét tổ')) return;
       const curRole = window.authManager.getCurrentRole();
       if (!window.store || typeof window.store.submitTeamOfficerReviews !== 'function') return;
       const res = window.store.submitTeamOfficerReviews(weekNum, toId, curRole.name, allWeeks);
@@ -5113,6 +5308,7 @@ function handleExportEmulationExcelClick() {
 
     // Bước 2: Ban cán sự (Lớp trưởng & Lớp phó) gửi đồng bộ nhận xét lên GVCN
     function handleSubmitBcsReviews(weekNum) {
+      if (checkReadOnlyAndBlock('Gửi nhận xét lên GVCN')) return;
       const curRole = window.authManager.getCurrentRole();
       if (!window.store || typeof window.store.submitBcsOfficerReviewsToGVCN !== 'function') return;
       const res = window.store.submitBcsOfficerReviewsToGVCN(weekNum, curRole.name);
@@ -5122,6 +5318,7 @@ function handleExportEmulationExcelClick() {
 
     // Bước 3: GVCN đồng bộ nhận xét của Cán sự & Tổ trưởng vào Báo cáo Tuần xuất file
     function handleGvcnSyncReviews(weekNum) {
+      if (checkReadOnlyAndBlock('Đồng bộ nhận xét vào Báo cáo')) return;
       if (!window.store || typeof window.store.syncOfficerReviewsToWeeklyReport !== 'function') return;
       const res = window.store.syncOfficerReviewsToWeeklyReport(weekNum);
       alert(`✅ GVCN ĐÃ ĐỒNG BỘ THÀNH CÔNG VÀO BÁO CÁO TUẦN ${weekNum}!\n\nToàn bộ nhận xét của 4 Tổ trưởng và Ban cán sự đã được tích hợp đầy đủ vào Báo cáo Word (Nghị định 30/2020) và Bảng điểm Excel.`);
@@ -5368,9 +5565,11 @@ function handleExportEmulationExcelClick() {
               </div>
 
               <!-- Action Buttons -->
-              <button onclick="handleSaveAllOfficerReviews()" class="px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm shadow-purple-600/20 active:scale-95">
-                <i data-lucide="save" class="w-4 h-4"></i> Lưu Tất Cả (Tuần ${w})
-              </button>
+              ${!isHocSinhRole ? `
+                <button onclick="handleSaveAllOfficerReviews()" class="px-3.5 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm shadow-purple-600/20 active:scale-95">
+                  <i data-lucide="save" class="w-4 h-4"></i> Lưu Tất Cả (Tuần ${w})
+                </button>
+              ` : ''}
 
               <button onclick="handlePrintWorkspaceReviews()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
                 <i data-lucide="printer" class="w-4 h-4"></i> In Bảng Nhận Xét
@@ -5404,7 +5603,7 @@ function handleExportEmulationExcelClick() {
           </div>
 
           <!-- ================= 3 BƯỚC ĐỒNG BỘ THEO VAI TRÒ ================= -->
-          ${isToTruong ? `
+          ${isHocSinhRole ? '' : (isToTruong ? `
             <!-- BƯỚC 1: TỔ TRƯỞNG ĐỒNG BỘ GỬI LỚP TRƯỞNG & LỚP PHÓ -->
             <div class="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950/40 dark:to-indigo-950/40 border-2 border-purple-300 dark:border-purple-800 space-y-3 shadow-sm">
               <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -5544,10 +5743,32 @@ function handleExportEmulationExcelClick() {
                 </div>
               ` : ''}
             </div>
-          `)}
+          `))}
 
           <!-- Role Scope Banner -->
-          ${isToTruong ? `
+          ${isHocSinhRole ? `
+            <div class="p-4 rounded-2xl bg-sky-50/80 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-sky-600 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-sm">
+                  <i data-lucide="eye" class="w-5 h-5"></i>
+                </div>
+                <div>
+                  <h4 class="font-black text-sm text-sky-950 dark:text-sky-200 flex items-center gap-2">
+                    Không Gian Tra Cứu Nhận Xét Của Học Sinh & Phụ Huynh (Tuần ${w})
+                    <span class="text-[11px] px-2 py-0.5 rounded-full bg-sky-200 dark:bg-sky-900 text-sky-800 dark:text-sky-200 font-bold">${allStudents.length} học sinh</span>
+                  </h4>
+                  <p class="text-xs text-sky-700 dark:text-sky-400">
+                    Chế độ xem công khai minh bạch. Phụ huynh và học sinh có thể theo dõi nhận xét, đánh giá từ Ban cán sự, Tổ trưởng và Giáo viên chủ nhiệm.
+                  </p>
+                </div>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <span class="text-xs font-bold px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-sky-200 dark:border-sky-800 text-sky-800 dark:text-sky-300 shadow-xs flex items-center gap-1.5">
+                  <i data-lucide="shield-check" class="w-3.5 h-3.5 text-sky-600"></i> Chế độ Chỉ xem
+                </span>
+              </div>
+            </div>
+          ` : (isToTruong ? `
             <div class="p-4 rounded-2xl bg-purple-50/70 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-sm">
@@ -5591,7 +5812,7 @@ function handleExportEmulationExcelClick() {
                 </span>
               </div>
             </div>
-          `}
+          `)}
 
           <!-- Filters & Search Bar -->
           <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
@@ -5671,17 +5892,23 @@ function handleExportEmulationExcelClick() {
 
                     <!-- Other Reviews Badge & Status -->
                     <div class="flex items-center gap-2 shrink-0">
-                      <div id="review-status-badge-${s.id}">
-                        ${hasReviewed ? `
-                          <span class="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-200 dark:border-emerald-800">
-                            <i data-lucide="check" class="w-3.5 h-3.5"></i> Đã nhận xét
-                          </span>
-                        ` : `
-                          <span class="text-[11px] px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 font-medium">
-                            Chưa nhận xét
-                          </span>
-                        `}
-                      </div>
+                      ${!isHocSinhRole ? `
+                        <div id="review-status-badge-${s.id}">
+                          ${hasReviewed ? `
+                            <span class="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-200 dark:border-emerald-800">
+                              <i data-lucide="check" class="w-3.5 h-3.5"></i> Đã nhận xét
+                            </span>
+                          ` : `
+                            <span class="text-[11px] px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-500 font-medium">
+                              Chưa nhận xét
+                            </span>
+                          `}
+                        </div>
+                      ` : `
+                        <span class="text-[11px] px-2.5 py-1 rounded-full bg-sky-50 dark:bg-sky-950 text-sky-700 dark:text-sky-300 font-bold border border-sky-200 dark:border-sky-800">
+                          Chỉ xem
+                        </span>
+                      `}
 
                       <button onclick="openOtherReviewsModal('${s.id}', ${w})" class="px-2.5 py-1 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/60 dark:hover:bg-purple-900 text-purple-700 dark:text-purple-300 text-xs font-bold transition flex items-center gap-1 border border-purple-200/50 dark:border-purple-800/50" title="Xem nhận xét của các cán sự khác về bạn này">
                         <i data-lucide="messages-square" class="w-3.5 h-3.5"></i>
@@ -5691,7 +5918,7 @@ function handleExportEmulationExcelClick() {
                   </div>
 
                   <!-- Khung kiểm tra nhận xét Tổ trưởng dành cho Ban cán sự & GVCN -->
-                  ${!isToTruong ? (hasToReview ? `
+                  ${!isToTruong && !isHocSinhRole ? (hasToReview ? `
                     <div class="p-3 rounded-2xl bg-purple-50/80 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 text-xs flex items-start gap-2.5">
                       <div class="w-7 h-7 rounded-xl bg-purple-600 text-white flex items-center justify-center shrink-0 text-[10px] font-black shadow-xs">
                         T${s.to}
@@ -5716,45 +5943,88 @@ function handleExportEmulationExcelClick() {
                     </div>
                   `) : ''}
 
-                  <!-- Review Input Body -->
-                  <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-start">
-                    
-                    <!-- Rating Select -->
-                    <div class="md:col-span-3 space-y-1">
-                      <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300">Đánh giá tuần ${w}:</label>
-                      <select id="review-rating-${s.id}" class="w-full p-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 outline-none focus:border-purple-500">
-                        <option value="Tốt" ${existing?.rating === 'Tốt' || !existing ? 'selected' : ''}>⭐ Tốt (Gương mẫu)</option>
-                        <option value="Khá" ${existing?.rating === 'Khá' ? 'selected' : ''}>👍 Khá (Nề nếp tốt)</option>
-                        <option value="Có tiến bộ" ${existing?.rating === 'Có tiến bộ' ? 'selected' : ''}>📈 Có tiến bộ rõ rệt</option>
-                        <option value="Cần nhắc nhở" ${existing?.rating === 'Cần nhắc nhở' ? 'selected' : ''}>⚠️ Cần nhắc nhở</option>
-                      </select>
-                    </div>
-
-                    <!-- Comment Textarea & Quick Tags -->
-                    <div class="md:col-span-7 space-y-1.5">
-                      <div class="flex items-center justify-between">
-                        <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300">Nội dung nhận xét chi tiết:</label>
-                        <span class="text-[10px] text-slate-400">Bấm tag để chèn nhanh</span>
+                  <!-- Review Input Body hoặc Readonly Showcase cho Học sinh -->
+                  ${isHocSinhRole ? (() => {
+                    const allRevObj = window.store.getAllStudentOfficerReviews(w, s.id) || {};
+                    const revList = Object.entries(allRevObj).filter(([k, r]) => r && r.comment);
+                    if (revList.length === 0) {
+                      return `
+                        <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-dashed border-slate-200 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                          <i data-lucide="info" class="w-4 h-4 text-sky-500 shrink-0"></i>
+                          <span>Chưa có nhận xét nào được ghi nhận cho <strong>${s.name}</strong> trong Tuần ${w}.</span>
+                        </div>
+                      `;
+                    }
+                    return `
+                      <div class="space-y-2 pt-1">
+                        <div class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                          <i data-lucide="message-square" class="w-3.5 h-3.5 text-purple-600"></i>
+                          Nhận xét ghi nhận cho học sinh trong Tuần ${w}:
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                          ${revList.map(([key, rev]) => {
+                            const roleMeta = OFFICER_ROLE_DISPLAY_MAP[key] || { name: rev.actor || key, icon: 'user' };
+                            return `
+                              <div class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-1.5 text-xs">
+                                <div class="flex items-center justify-between gap-2">
+                                  <span class="font-extrabold text-purple-900 dark:text-purple-300 flex items-center gap-1.5">
+                                    <i data-lucide="${roleMeta.icon || 'user'}" class="w-3.5 h-3.5 text-purple-600"></i>
+                                    ${rev.actor || roleMeta.name}
+                                  </span>
+                                  <span class="text-[10px] px-2 py-0.5 rounded-full font-black bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300">
+                                    ⭐ ${rev.rating || 'Tốt'}
+                                  </span>
+                                </div>
+                                <p class="text-slate-800 dark:text-slate-200 italic font-medium leading-relaxed bg-white dark:bg-slate-900 p-2 rounded-xl border border-slate-100 dark:border-slate-800">
+                                  "${rev.comment}"
+                                </p>
+                                ${rev.time ? `<div class="text-[10px] text-slate-400 text-right">Thời gian: ${rev.time}</div>` : ''}
+                              </div>
+                            `;
+                          }).join('')}
+                        </div>
                       </div>
-                      <textarea id="review-comment-${s.id}" rows="2" placeholder="Ghi nhận xét của ${curRole.shortTitle || curRole.name} về ${s.name} trong Tuần ${w}..." class="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-purple-500 transition resize-none leading-relaxed">${existing?.comment || ''}</textarea>
+                    `;
+                  })() : `
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-start">
                       
-                      <!-- Quick Tags -->
-                      <div class="flex flex-wrap items-center gap-1">
-                        ${quickTags.map(tag => `
-                          <button type="button" onclick="appendQuickTag('${s.id}', '${tag}')" class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 hover:bg-purple-100 hover:text-purple-700 dark:hover:bg-purple-900/60 text-slate-600 dark:text-slate-300 text-[10px] font-medium transition">
-                            + ${tag}
-                          </button>
-                        `).join('')}
+                      <!-- Rating Select -->
+                      <div class="md:col-span-3 space-y-1">
+                        <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300">Đánh giá tuần ${w}:</label>
+                        <select id="review-rating-${s.id}" class="w-full p-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-200 outline-none focus:border-purple-500">
+                          <option value="Tốt" ${existing?.rating === 'Tốt' || !existing ? 'selected' : ''}>⭐ Tốt (Gương mẫu)</option>
+                          <option value="Khá" ${existing?.rating === 'Khá' ? 'selected' : ''}>👍 Khá (Nề nếp tốt)</option>
+                          <option value="Có tiến bộ" ${existing?.rating === 'Có tiến bộ' ? 'selected' : ''}>📈 Có tiến bộ rõ rệt</option>
+                          <option value="Cần nhắc nhở" ${existing?.rating === 'Cần nhắc nhở' ? 'selected' : ''}>⚠️ Cần nhắc nhở</option>
+                        </select>
+                      </div>
+
+                      <!-- Comment Textarea & Quick Tags -->
+                      <div class="md:col-span-7 space-y-1.5">
+                        <div class="flex items-center justify-between">
+                          <label class="block text-[11px] font-bold text-slate-700 dark:text-slate-300">Nội dung nhận xét chi tiết:</label>
+                          <span class="text-[10px] text-slate-400">Bấm tag để chèn nhanh</span>
+                        </div>
+                        <textarea id="review-comment-${s.id}" rows="2" placeholder="Ghi nhận xét của ${curRole.shortTitle || curRole.name} về ${s.name} trong Tuần ${w}..." class="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-purple-500 transition resize-none leading-relaxed">${existing?.comment || ''}</textarea>
+                        
+                        <!-- Quick Tags -->
+                        <div class="flex flex-wrap items-center gap-1">
+                          ${quickTags.map(tag => `
+                            <button type="button" onclick="appendQuickTag('${s.id}', '${tag}')" class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 hover:bg-purple-100 hover:text-purple-700 dark:hover:bg-purple-900/60 text-slate-600 dark:text-slate-300 text-[10px] font-medium transition">
+                              + ${tag}
+                            </button>
+                          `).join('')}
+                        </div>
+                      </div>
+
+                      <!-- Save Button -->
+                      <div class="md:col-span-2 flex md:flex-col justify-end gap-2 pt-2 md:pt-4">
+                        <button onclick="handleSaveOfficerReview('${s.id}')" id="btn-save-review-${s.id}" class="w-full py-2.5 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
+                          <i data-lucide="check" class="w-4 h-4"></i> Lưu Nhận Xét
+                        </button>
                       </div>
                     </div>
-
-                    <!-- Save Button -->
-                    <div class="md:col-span-2 flex md:flex-col justify-end gap-2 pt-2 md:pt-4">
-                      <button onclick="handleSaveOfficerReview('${s.id}')" id="btn-save-review-${s.id}" class="w-full py-2.5 px-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
-                        <i data-lucide="check" class="w-4 h-4"></i> Lưu Nhận Xét
-                      </button>
-                    </div>
-                  </div>
+                  `}
 
                 </div>
               `;
@@ -5839,6 +6109,7 @@ function handleExportEmulationExcelClick() {
     let parsedExcelStudents = [];
 
     function openImportExcelModal() {
+      if (checkReadOnlyAndBlock('Nhập học sinh từ Excel')) return;
       parsedExcelStudents = [];
       const fileInput = document.getElementById('excel-file-input');
       if (fileInput) fileInput.value = '';
@@ -6208,6 +6479,7 @@ function handleExportEmulationExcelClick() {
     // ================= MODAL GVCN QUẢN TRỊ HỌC SINH & PHÂN TỔ =================
 
     function openAddStudentModal() {
+      if (checkReadOnlyAndBlock('Thêm học sinh')) return;
       const nextId = `HS${String(window.store.getStudents().length + 1).padStart(2, '0')}`;
       document.getElementById('new-hs-id').value = nextId;
       document.getElementById('new-hs-name').value = '';
@@ -6223,6 +6495,7 @@ function handleExportEmulationExcelClick() {
     }
 
     function handleSaveNewStudent() {
+      if (checkReadOnlyAndBlock('Lưu học sinh mới')) return;
       const name = document.getElementById('new-hs-name').value.trim();
       if (!name) {
         alert('Vui lòng nhập họ và tên học sinh!');
@@ -6250,6 +6523,7 @@ function handleExportEmulationExcelClick() {
     }
 
     function openManageTeamsModal() {
+      if (checkReadOnlyAndBlock('Quản trị phân tổ & chức vụ')) return;
       renderManageTeamsTable();
       document.getElementById('modal-manage-teams').classList.remove('hidden');
       document.getElementById('modal-manage-teams').classList.add('flex');
@@ -6312,6 +6586,7 @@ function handleExportEmulationExcelClick() {
     }
 
     function handleUpdateStudentTo(studentId, newTo) {
+      if (checkReadOnlyAndBlock('Thay đổi tổ học sinh')) return;
       window.store.updateStudentOrganization(studentId, { to: parseInt(newTo) });
       renderManageTeamsTable();
       renderClassroomGrid();
@@ -6320,6 +6595,7 @@ function handleExportEmulationExcelClick() {
     }
 
     function handleUpdateStudentRole(studentId, newRole) {
+      if (checkReadOnlyAndBlock('Thay đổi chức vụ học sinh')) return;
       window.store.updateStudentOrganization(studentId, { role: newRole });
       renderManageTeamsTable();
       renderClassroomGrid();
@@ -6329,6 +6605,7 @@ function handleExportEmulationExcelClick() {
     }
 
     function handleDeleteStudent(studentId, name) {
+      if (checkReadOnlyAndBlock('Xóa học sinh')) return;
       if (confirm(`Thầy/Cô có chắc chắn muốn xóa học sinh "${name}" khỏi danh sách lớp 9A1 không?`)) {
         window.store.deleteStudent(studentId);
         renderManageTeamsTable();
@@ -6423,6 +6700,7 @@ function handleExportEmulationExcelClick() {
 
     // Modal Kudos
     function openAddKudosModal() {
+      if (checkReadOnlyAndBlock('Gửi lời khen Kudos')) return;
       const students = window.store.getStudents();
       document.getElementById('kudos-to-select').innerHTML = students.map(s => `
         <option value="${s.name} (Tổ ${s.to})">${s.name} (Tổ ${s.to})</option>
@@ -6432,6 +6710,7 @@ function handleExportEmulationExcelClick() {
     }
 
     function handleSaveKudos() {
+      if (checkReadOnlyAndBlock('Gửi lời khen Kudos')) return;
       const to = document.getElementById('kudos-to-select').value;
       const from = document.getElementById('kudos-from-input').value.trim();
       const msg = document.getElementById('kudos-message-input').value.trim();
@@ -6450,6 +6729,7 @@ function handleExportEmulationExcelClick() {
 
     // Action Handlers
     function handleSendToBCS(toId, weekNum) {
+      if (checkReadOnlyAndBlock('Gửi dữ liệu cho Ban Cán Sự')) return;
       const w = parseInt(weekNum) || selectedEmulationWeek || 2;
       const curRole = (window.authManager && typeof window.authManager.getCurrentRole === 'function')
         ? window.authManager.getCurrentRole()
@@ -6465,6 +6745,7 @@ function handleExportEmulationExcelClick() {
     }
 
     function handleSendToGVCN(weekNum) {
+      if (checkReadOnlyAndBlock('Gửi báo cáo cho GVCN')) return;
       const w = parseInt(weekNum) || selectedEmulationWeek || 2;
       const notes = window.store.getWeekEmulationNotes(w);
       const role = (window.authManager && typeof window.authManager.getCurrentRole === 'function') ? window.authManager.getCurrentRole() : { name: 'Ban cán sự lớp' };
@@ -6492,6 +6773,7 @@ function handleExportEmulationExcelClick() {
     }
 
     function handleApproveWeeklyReportDirect(weekNum, reopen = false) {
+      if (checkReadOnlyAndBlock(reopen ? 'Mở lại báo cáo tuần' : 'Phê duyệt báo cáo tuần')) return;
       const w = parseInt(weekNum) || selectedEmulationWeek || 2;
       const notes = window.store.getWeekEmulationNotes(w);
       if (reopen) {
@@ -6550,6 +6832,7 @@ function handleExportEmulationExcelClick() {
     }
 
     function handleRecordViolationSubmit() {
+      if (checkReadOnlyAndBlock('Ghi nhận vi phạm nề nếp')) return;
       const studentId = document.getElementById('violation-student-select').value;
       const ruleCode = document.getElementById('violation-rule-select').value;
       const note = document.getElementById('violation-note').value.trim();
@@ -6565,17 +6848,20 @@ function handleExportEmulationExcelClick() {
     }
 
     function handleGradeDuty(toId, grade) {
+      if (checkReadOnlyAndBlock('Chấm điểm trực nhật')) return;
       window.workspaceManager.evaluateDuty({ toId, grade, note: 'Kiểm tra trực nhật' });
       alert(`Đã đánh giá trực nhật Tổ ${toId}: ${grade === 'excellent' ? 'Cộng 5 điểm' : 'Trừ 5 điểm'}`);
       renderDashboard();
     }
 
     function handleSendDutyNotification() {
+      if (checkReadOnlyAndBlock('Gửi nhắc nhở trực nhật')) return;
       const msg = window.workspaceManager.sendMorningDutyNotification();
       alert(msg);
     }
 
     async function handleScanReceipt(e) {
+      if (checkReadOnlyAndBlock('Quét hóa đơn biên lai')) return;
       const file = e.target.files[0];
       if (!file) return;
       alert('Đang dùng AI OCR quét hóa đơn biên lai...');
@@ -7938,7 +8224,7 @@ function handleExportEmulationExcelClick() {
       }
 
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js?v=6.4.5', { updateViaCache: 'none' })
+        navigator.serviceWorker.register('./sw.js?v=6.4.6', { updateViaCache: 'none' })
           .then(reg => {
             console.log('PWA Service Worker registered:', reg.scope);
             reg.update().catch(() => {});
