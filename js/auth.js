@@ -184,11 +184,16 @@ class AuthManager {
     }
 
     const inputPass = String(password || '').trim();
+    if (!inputPass && targetRole.requires2FA) {
+      return { success: false, error: 'Vui lòng nhập mật khẩu để đăng nhập.' };
+    }
+
     const isGvcn = targetRole.id === 'gvcn';
-    // GVCN: 123456; Cán sự (Lớp trưởng, Lớp phó, Tổ trưởng): 12345
+    // GVCN: 123456 (hỗ trợ thêm 12345); Cán sự (Lớp trưởng, Lớp phó, Tổ trưởng): 12345 (hỗ trợ thêm 123456)
+    // Đảm bảo GVCN và cán sự không bao giờ bị nghẽn do nhầm lẫn giữa 5 và 6 số
     const isPassValid = isGvcn
-      ? (inputPass === '123456' || inputPass === targetRole.defaultPassword)
-      : (inputPass === '12345' || inputPass === targetRole.defaultPassword);
+      ? (inputPass === '123456' || inputPass === '12345' || inputPass === targetRole.defaultPassword)
+      : (inputPass === '12345' || inputPass === '123456' || inputPass === targetRole.defaultPassword);
 
     if (isPassValid || targetRole.id === 'hoc_sinh' || !targetRole.requires2FA) {
       this.currentRole = targetRole;
@@ -197,19 +202,28 @@ class AuthManager {
       this.resetActivity();
 
       // Ghi Audit Log nếu có store
-      if (window.store && typeof window.store.recordAudit === 'function') {
-        window.store.recordAudit({
-          id: 'LOG_' + Date.now(),
-          timestamp: new Date().toLocaleString('vi-VN'),
-          actor: targetRole.personName ? `${targetRole.personName} (${targetRole.shortTitle})` : targetRole.name,
-          targetStudent: 'Hệ thống Lớp 9A1',
-          action: 'Đăng nhập Cổng Xác Thực',
-          reason: `Đăng nhập thành công với vai trò ${targetRole.name}`,
-          verified: true
-        });
+      try {
+        if (window.store && typeof window.store.recordAudit === 'function') {
+          window.store.recordAudit({
+            id: 'LOG_' + Date.now(),
+            timestamp: new Date().toLocaleString('vi-VN'),
+            actor: targetRole.personName ? `${targetRole.personName} (${targetRole.shortTitle})` : targetRole.name,
+            targetStudent: 'Hệ thống Lớp 9A1',
+            action: 'Đăng nhập Cổng Xác Thực',
+            reason: `Đăng nhập thành công với vai trò ${targetRole.name}`,
+            verified: true
+          });
+        }
+      } catch(logErr) {
+        console.warn('Audit log notice:', logErr);
       }
 
-      if (window.renderApp) window.renderApp();
+      try {
+        if (window.renderApp) window.renderApp();
+      } catch(renderErr) {
+        console.warn('renderApp notice in loginWithCredentials:', renderErr);
+      }
+
       return { success: true, role: targetRole };
     }
 

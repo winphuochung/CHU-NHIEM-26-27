@@ -128,7 +128,7 @@
             </div>
           </div>
           <div class="pt-1">
-            <button onclick="executeLoginAction('gvcn')" class="w-full py-3 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-black rounded-xl text-xs sm:text-sm shadow-md shadow-blue-600/30 transition flex items-center justify-center gap-2 cursor-pointer">
+            <button type="button" onclick="executeLoginAction('gvcn')" class="w-full py-3 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-black rounded-xl text-xs sm:text-sm shadow-md shadow-blue-600/30 transition flex items-center justify-center gap-2 cursor-pointer">
               <i data-lucide="log-in" class="w-4 h-4"></i>
               <span>ĐĂNG NHẬP GIÁO VIÊN CHỦ NHIỆM</span>
             </button>
@@ -162,7 +162,7 @@
             </div>
           </div>
           <div class="pt-1">
-            <button onclick="executeLoginAction('lop_truong')" class="w-full py-3 bg-amber-500 hover:bg-amber-600 active:scale-[0.99] text-white font-black rounded-xl text-xs sm:text-sm shadow-md shadow-amber-500/30 transition flex items-center justify-center gap-2 cursor-pointer">
+            <button type="button" onclick="executeLoginAction('lop_truong')" class="w-full py-3 bg-amber-500 hover:bg-amber-600 active:scale-[0.99] text-white font-black rounded-xl text-xs sm:text-sm shadow-md shadow-amber-500/30 transition flex items-center justify-center gap-2 cursor-pointer">
               <i data-lucide="log-in" class="w-4 h-4"></i>
               <span>ĐĂNG NHẬP LỚP TRƯỞNG (TRÌNH MINH THIỆN)</span>
             </button>
@@ -223,7 +223,7 @@
             </div>
           </div>
           <div class="pt-1">
-            <button onclick="executeLoginSelectedLopPho()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white font-black rounded-xl text-xs sm:text-sm shadow-md shadow-indigo-600/30 transition flex items-center justify-center gap-2 cursor-pointer">
+            <button type="button" onclick="executeLoginSelectedLopPho()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white font-black rounded-xl text-xs sm:text-sm shadow-md shadow-indigo-600/30 transition flex items-center justify-center gap-2 cursor-pointer">
               <i data-lucide="log-in" class="w-4 h-4"></i>
               <span>ĐĂNG NHẬP BAN CÁN SỰ LỚP</span>
             </button>
@@ -284,7 +284,7 @@
             </div>
           </div>
           <div class="pt-1">
-            <button onclick="executeLoginSelectedToTruong()" class="w-full py-3 bg-purple-600 hover:bg-purple-700 active:scale-[0.99] text-white font-black rounded-xl text-xs sm:text-sm shadow-md shadow-purple-600/30 transition flex items-center justify-center gap-2 cursor-pointer">
+            <button type="button" onclick="executeLoginSelectedToTruong()" class="w-full py-3 bg-purple-600 hover:bg-purple-700 active:scale-[0.99] text-white font-black rounded-xl text-xs sm:text-sm shadow-md shadow-purple-600/30 transition flex items-center justify-center gap-2 cursor-pointer">
               <i data-lucide="log-in" class="w-4 h-4"></i>
               <span>ĐĂNG NHẬP TỔ TRƯỞNG</span>
             </button>
@@ -2273,16 +2273,16 @@
   </div> <!-- END #app-main-layout -->
 
   <!-- Scripts Core -->
-  <script src="js/store.js?v=6.3.3"></script>
-  <script src="js/security.js?v=6.3.3"></script>
-  <script src="js/auth.js?v=6.3.3"></script>
-  <script src="js/ai-analytics.js?v=6.3.3"></script>
-  <script src="js/workspaces.js?v=6.3.3"></script>
-  <script src="js/exam-hub.js?v=6.3.3"></script>
-  <script src="js/gamification.js?v=6.3.3"></script>
-  <script src="js/sync-hub.js?v=6.3.3"></script>
-  <script src="js/supabase-client.js?v=6.3.3"></script>
-  <script src="js/voice-assistant.js?v=6.3.3"></script>
+  <script src="js/store.js?v=6.4.5"></script>
+  <script src="js/security.js?v=6.4.5"></script>
+  <script src="js/auth.js?v=6.4.5"></script>
+  <script src="js/ai-analytics.js?v=6.4.5"></script>
+  <script src="js/workspaces.js?v=6.4.5"></script>
+  <script src="js/exam-hub.js?v=6.4.5"></script>
+  <script src="js/gamification.js?v=6.4.5"></script>
+  <script src="js/sync-hub.js?v=6.4.5"></script>
+  <script src="js/supabase-client.js?v=6.4.5"></script>
+  <script src="js/voice-assistant.js?v=6.4.5"></script>
   
   <!-- Main Application Orchestration Script -->
   <script>
@@ -2393,22 +2393,43 @@
     }
 
     function onLoginSuccess(role) {
-      clearAllLoginInputs();
+      console.log('[Auth] onLoginSuccess triggered for:', role ? role.id : 'unknown');
+
+      // 1. Gỡ ẩn layout chính ngay lập tức (cả class và style trực tiếp)
+      const appLayout = document.getElementById('app-main-layout');
+      if (appLayout) {
+        appLayout.classList.remove('hidden');
+        appLayout.style.display = 'flex';
+      }
+
+      // 2. Ẩn modal cổng đăng nhập ngay lập tức (cả class và style trực tiếp)
       const modal = document.getElementById('modal-login-portal');
       if (modal) {
         modal.classList.add('hidden');
         modal.classList.remove('flex');
+        modal.style.display = 'none';
       }
-      const appLayout = document.getElementById('app-main-layout');
-      if (appLayout) {
-        appLayout.classList.remove('hidden');
-      }
+
+      // 3. Hiện nút đóng cho modal khi chuyển vai trò sau này
       const btnClose = document.getElementById('btn-close-login-modal');
       if (btnClose) {
         btnClose.classList.remove('hidden');
       }
-      updateRoleUI();
-      showSeatingToast(`Chào mừng ${role.personName || role.name} đăng nhập thành công!`);
+
+      // 4. Xóa các ô nhập mật khẩu
+      clearAllLoginInputs();
+
+      // 5. Cập nhật giao diện an toàn
+      try {
+        updateRoleUI();
+      } catch(uiErr) {
+        console.warn('[Auth] updateRoleUI notice:', uiErr);
+      }
+
+      // 6. Thông báo đăng nhập thành công
+      try {
+        showSeatingToast(`Chào mừng ${role ? (role.personName || role.name) : 'Người dùng'} đăng nhập thành công!`);
+      } catch(toastErr) {}
     }
 
     function openLoginModal(tab = 'gvcn', specificRoleId = null) {
@@ -2416,6 +2437,7 @@
       if (!modal) return;
       modal.classList.remove('hidden');
       modal.classList.add('flex');
+      modal.style.display = 'flex';
 
       // Nút đóng chỉ xuất hiện khi người dùng đã đăng nhập thành công trước đó
       const btnClose = document.getElementById('btn-close-login-modal');
@@ -2453,6 +2475,7 @@
       if (modal) {
         modal.classList.add('hidden');
         modal.classList.remove('flex');
+        modal.style.display = 'none';
       }
     }
 
@@ -2469,7 +2492,10 @@
         const btn = document.getElementById(`login-tab-btn-${t}`);
         const panel = document.getElementById(`login-panel-${t}`);
         const passInp = document.getElementById(`input-login-pass-${t}`);
-        if (passInp) passInp.value = '';
+        if (passInp) {
+          passInp.value = '';
+          passInp.classList.remove('border-rose-500');
+        }
 
         if (btn) {
           if (t === tab) {
@@ -2499,68 +2525,116 @@
     function clearAllLoginInputs() {
       ['gvcn', 'lop_truong', 'lop_pho', 'to_truong'].forEach(t => {
         const inp = document.getElementById(`input-login-pass-${t}`);
-        if (inp) inp.value = '';
+        if (inp) {
+          inp.value = '';
+          inp.classList.remove('border-rose-500');
+        }
       });
     }
 
     function executeLoginAction(roleId) {
-      let pass = '';
-      let inp = null;
-      if (roleId === 'gvcn') {
-        inp = document.getElementById('input-login-pass-gvcn');
-        pass = inp ? inp.value.trim() : '';
-      } else if (roleId === 'lop_truong') {
-        inp = document.getElementById('input-login-pass-lop_truong');
-        pass = inp ? inp.value.trim() : '';
-      } else if (roleId === 'hoc_sinh') {
-        pass = '';
-      }
-
-      const res = window.authManager.loginWithCredentials({ roleId, password: pass });
-      if (res.success) {
-        onLoginSuccess(res.role);
-      } else {
-        showLoginPortalError(res.error);
-        if (inp) {
-          inp.focus();
-          inp.select();
+      try {
+        let pass = '';
+        let inp = null;
+        if (roleId === 'gvcn') {
+          inp = document.getElementById('input-login-pass-gvcn');
+          pass = inp ? inp.value.trim() : '';
+        } else if (roleId === 'lop_truong') {
+          inp = document.getElementById('input-login-pass-lop_truong');
+          pass = inp ? inp.value.trim() : '';
+        } else if (roleId === 'hoc_sinh') {
+          pass = '';
         }
+
+        if (roleId !== 'hoc_sinh' && !pass) {
+          showLoginPortalError('Vui lòng nhập mật khẩu để đăng nhập.');
+          if (inp) {
+            inp.classList.add('border-rose-500');
+            inp.focus();
+          }
+          return;
+        }
+
+        const res = window.authManager.loginWithCredentials({ roleId, password: pass });
+        if (res && res.success) {
+          onLoginSuccess(res.role);
+        } else {
+          showLoginPortalError((res && res.error) || 'Mật khẩu không chính xác. Vui lòng thử lại.');
+          if (inp) {
+            inp.classList.add('border-rose-500');
+            inp.focus();
+            inp.select();
+          }
+        }
+      } catch(err) {
+        console.error('[Auth] executeLoginAction error:', err);
+        showLoginPortalError('Lỗi hệ thống khi đăng nhập: ' + (err.message || 'Vui lòng thử lại'));
       }
     }
 
     function executeLoginSelectedLopPho() {
-      const checked = document.querySelector('input[name="selected-lop-pho"]:checked');
-      const roleId = checked ? checked.value : 'lp_hoc_tap';
-      const inp = document.getElementById('input-login-pass-lop_pho');
-      const pass = inp ? inp.value.trim() : '';
+      try {
+        const checked = document.querySelector('input[name="selected-lop-pho"]:checked');
+        const roleId = checked ? checked.value : 'lp_hoc_tap';
+        const inp = document.getElementById('input-login-pass-lop_pho');
+        const pass = inp ? inp.value.trim() : '';
 
-      const res = window.authManager.loginWithCredentials({ roleId, password: pass });
-      if (res.success) {
-        onLoginSuccess(res.role);
-      } else {
-        showLoginPortalError(res.error);
-        if (inp) {
-          inp.focus();
-          inp.select();
+        if (!pass) {
+          showLoginPortalError('Vui lòng nhập mật khẩu Ban Cán sự để đăng nhập.');
+          if (inp) {
+            inp.classList.add('border-rose-500');
+            inp.focus();
+          }
+          return;
         }
+
+        const res = window.authManager.loginWithCredentials({ roleId, password: pass });
+        if (res && res.success) {
+          onLoginSuccess(res.role);
+        } else {
+          showLoginPortalError((res && res.error) || 'Mật khẩu không chính xác. Vui lòng thử lại.');
+          if (inp) {
+            inp.classList.add('border-rose-500');
+            inp.focus();
+            inp.select();
+          }
+        }
+      } catch(err) {
+        console.error('[Auth] executeLoginSelectedLopPho error:', err);
+        showLoginPortalError('Lỗi hệ thống khi đăng nhập: ' + (err.message || 'Vui lòng thử lại'));
       }
     }
 
     function executeLoginSelectedToTruong() {
-      const checked = document.querySelector('input[name="selected-to-truong"]:checked');
-      const roleId = checked ? checked.value : 'to_truong_1';
-      const inp = document.getElementById('input-login-pass-to_truong');
-      const pass = inp ? inp.value.trim() : '';
+      try {
+        const checked = document.querySelector('input[name="selected-to-truong"]:checked');
+        const roleId = checked ? checked.value : 'to_truong_1';
+        const inp = document.getElementById('input-login-pass-to_truong');
+        const pass = inp ? inp.value.trim() : '';
 
-      const res = window.authManager.loginWithCredentials({ roleId, password: pass });
-      if (res.success) {
-        onLoginSuccess(res.role);
-      } else {
-        showLoginPortalError(res.error);
-        if (inp) {
-          inp.focus();
-          inp.select();
+        if (!pass) {
+          showLoginPortalError('Vui lòng nhập mật khẩu Tổ trưởng để đăng nhập.');
+          if (inp) {
+            inp.classList.add('border-rose-500');
+            inp.focus();
+          }
+          return;
         }
+
+        const res = window.authManager.loginWithCredentials({ roleId, password: pass });
+        if (res && res.success) {
+          onLoginSuccess(res.role);
+        } else {
+          showLoginPortalError((res && res.error) || 'Mật khẩu không chính xác. Vui lòng thử lại.');
+          if (inp) {
+            inp.classList.add('border-rose-500');
+            inp.focus();
+            inp.select();
+          }
+        }
+      } catch(err) {
+        console.error('[Auth] executeLoginSelectedToTruong error:', err);
+        showLoginPortalError('Lỗi hệ thống khi đăng nhập: ' + (err.message || 'Vui lòng thử lại'));
       }
     }
 
@@ -2570,6 +2644,7 @@
       if (err) {
         if (msgEl) msgEl.innerText = msg || 'Mật khẩu không chính xác. Vui lòng thử lại.';
         err.classList.remove('hidden');
+        err.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
     }
 
@@ -2577,7 +2652,10 @@
       if (confirm('Bạn có muốn đăng xuất khỏi tài khoản hiện tại và quay lại màn hình đăng nhập?')) {
         window.authManager.logout();
         const appLayout = document.getElementById('app-main-layout');
-        if (appLayout) appLayout.classList.add('hidden');
+        if (appLayout) {
+          appLayout.classList.add('hidden');
+          appLayout.style.display = 'none';
+        }
         const btnClose = document.getElementById('btn-close-login-modal');
         if (btnClose) btnClose.classList.add('hidden');
         clearAllLoginInputs();
@@ -7860,7 +7938,7 @@ function handleExportEmulationExcelClick() {
       }
 
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js?v=6.3.3', { updateViaCache: 'none' })
+        navigator.serviceWorker.register('./sw.js?v=6.4.5', { updateViaCache: 'none' })
           .then(reg => {
             console.log('PWA Service Worker registered:', reg.scope);
             reg.update().catch(() => {});
