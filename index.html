@@ -76,13 +76,30 @@
       <!-- Quick Actions & Role Switcher -->
       <div class="flex items-center gap-2 sm:gap-4 shrink-0">
         
-        <!-- Role Selector Dropdown -->
-        <div class="relative flex items-center">
-          <div class="hidden md:flex items-center text-xs text-slate-700 dark:text-slate-300 mr-2 font-medium">
-            <i data-lucide="shield" class="w-3.5 h-3.5 mr-1 text-phuochung-600"></i> Vai trò:
-          </div>
-          <select id="role-select" onchange="handleRoleChange(this.value)" 
-                  class="bg-white dark:bg-slate-800 text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 focus:ring-2 focus:ring-phuochung-500 shadow-sm cursor-pointer outline-none max-w-[130px] sm:max-w-none">
+        <!-- Role & User Profile Widget (Mở Cổng Đăng Nhập Riêng) -->
+        <div class="flex items-center gap-1 sm:gap-2">
+          <button onclick="openLoginModal()" class="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950/60 dark:to-indigo-950/60 hover:from-purple-100 hover:to-indigo-100 dark:hover:bg-slate-800 border border-purple-200 dark:border-purple-800/80 text-slate-800 dark:text-slate-200 transition shadow-2xs group cursor-pointer" title="Cổng đăng nhập riêng cho GVCN, Lớp trưởng, các Lớp phó, các Tổ trưởng">
+            <div id="header-user-avatar" class="w-6 h-6 rounded-lg bg-blue-600 text-white flex items-center justify-center text-xs shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
+              <i id="header-user-icon" data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+            </div>
+            <div class="text-left leading-tight hidden xs:block">
+              <span id="header-user-role" class="block text-[11px] font-black text-purple-950 dark:text-purple-200">GVCN (Admin)</span>
+              <span id="header-user-name" class="block text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[90px] sm:max-w-[130px]">Thầy/Cô Chủ Nhiệm</span>
+            </div>
+            <span class="text-[10px] px-1.5 sm:px-2 py-0.5 rounded-md bg-purple-600 text-white font-extrabold flex items-center gap-1 ml-0.5 shadow-2xs">
+              <i data-lucide="key-round" class="w-3 h-3"></i>
+              <span class="hidden sm:inline">Đổi Vai Trò</span>
+            </span>
+          </button>
+
+          <!-- Nút Đăng Xuất -->
+          <button onclick="handleUserLogout()" class="p-1.5 sm:px-2 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 dark:bg-slate-800 dark:hover:bg-rose-950/50 text-slate-600 dark:text-slate-300 transition text-xs font-bold border border-slate-200 dark:border-slate-700 flex items-center gap-1 cursor-pointer" title="Đăng xuất khỏi phiên làm việc">
+            <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+            <span class="hidden md:inline text-[10px]">Thoát</span>
+          </button>
+
+          <!-- Dropdown ẩn để tương thích các script cũ -->
+          <select id="role-select" onchange="handleRoleChange(this.value)" class="hidden">
             <option value="gvcn">👨‍🏫 Giáo viên Chủ nhiệm (Admin)</option>
             <option value="lop_truong">👑 Lớp trưởng (Trình Minh Thiện)</option>
             <option value="lp_hoc_tap">📖 Lớp phó Học tập (Đỗ Thị Thùy Linh)</option>
@@ -1257,66 +1274,259 @@
     </div>
   </div>
 
-  <!-- ============================================== -->
-  <!-- MODAL: ĐĂNG NHẬP QUẢN TRỊ VIÊN (GVCN)         -->
-  <!-- ============================================== -->
-  <div id="modal-2fa" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-md hidden items-center justify-center p-4">
-    <div class="glass-panel w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-6 sm:p-7 space-y-5 text-center relative bg-white dark:bg-slate-900">
+  <!-- ============================================================== -->
+  <!-- MODAL: CỔNG ĐĂNG NHẬP RIÊNG BIỆT (GVCN, LỚP TRƯỞNG, LỚP PHÓ, TỔ TRƯỞNG) -->
+  <!-- ============================================================== -->
+  <div id="modal-login-portal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-3 sm:p-4 overflow-y-auto">
+    <div class="glass-panel w-full max-w-2xl rounded-3xl shadow-2xl border-2 border-indigo-200 dark:border-indigo-900 bg-white dark:bg-slate-900 overflow-hidden relative my-auto animate-in fade-in zoom-in duration-200">
       
-      <!-- Close button on top-right -->
-      <button onclick="cancelGVCNLogin()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1 rounded-lg" title="Đóng cửa sổ">
-        <i data-lucide="x" class="w-5 h-5"></i>
-      </button>
-
-      <!-- Badge Icon -->
-      <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-phuochung-600 via-indigo-600 to-blue-500 text-white flex items-center justify-center shadow-lg shadow-blue-500/25">
-        <i data-lucide="shield-check" class="w-9 h-9"></i>
-      </div>
-
-      <!-- Header Titles -->
-      <div>
-        <h3 class="font-black text-xl sm:text-2xl text-slate-900 dark:text-white tracking-tight">Đăng Nhập Quản Trị Viên</h3>
-        <p class="text-xs text-phuochung-600 dark:text-phuochung-400 font-bold uppercase tracking-wider mt-0.5">Giáo Viên Chủ Nhiệm (Admin)</p>
-        <p class="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
-          Vui lòng nhập mật khẩu quản trị để truy cập toàn quyền điều hành hệ thống lớp 9A1.
-        </p>
-      </div>
-
-      <!-- Password Input Form -->
-      <div class="space-y-2 text-left">
-        <label for="input-gvcn-password" class="block text-xs font-bold text-slate-700 dark:text-slate-300">
-          Mật khẩu Quản trị
-        </label>
-        <div class="relative flex items-center">
-          <div class="absolute left-3.5 text-slate-400 dark:text-slate-500 pointer-events-none flex items-center">
-            <i data-lucide="lock" class="w-5 h-5"></i>
+      <!-- Top Decorative Banner -->
+      <div class="bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-700 p-5 sm:p-6 text-white relative">
+        <button onclick="closeLoginModal()" class="absolute top-4 right-4 text-white/80 hover:text-white p-1.5 rounded-full hover:bg-white/10 transition" title="Đóng">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+        <div class="flex items-center gap-3.5">
+          <div class="w-12 h-12 rounded-2xl bg-white/15 backdrop-blur border border-white/25 flex items-center justify-center text-white shrink-0 shadow-md">
+            <i data-lucide="shield-check" class="w-7 h-7 text-cyan-300"></i>
           </div>
-          <input type="password" id="input-gvcn-password" maxlength="20" placeholder="••••••••" autocomplete="current-password"
-                 onkeydown="if(event.key==='Enter') handleConfirmGVCNLogin()"
-                 class="w-full pl-11 pr-11 py-3 text-base font-semibold bg-slate-50 dark:bg-slate-800/90 border-2 border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:border-phuochung-500 focus:ring-2 focus:ring-phuochung-500/20 text-slate-900 dark:text-white placeholder-slate-400 transition-all">
-          <button type="button" onclick="toggleGVCNPasswordVisibility()" class="absolute right-3.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors p-1" title="Ẩn/Hiện mật khẩu">
-            <i id="icon-toggle-password" data-lucide="eye" class="w-5 h-5"></i>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-cyan-400 text-slate-950">Bảo mật đa lớp</span>
+              <span class="text-xs text-indigo-200 font-semibold">Năm học 2026 - 2027</span>
+            </div>
+            <h3 class="text-lg sm:text-xl font-black text-white mt-0.5">Cổng Đăng Nhập Quản Lý Lớp 9A1</h3>
+            <p class="text-xs text-indigo-100/90">Trường TH & THCS Phước Hưng • Chọn chức danh để truy cập quyền hạn</p>
+          </div>
+        </div>
+
+        <!-- 4 Role Tabs -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 mt-4 pt-4 border-t border-white/15 text-xs font-bold">
+          <button type="button" onclick="switchLoginPortalTab('gvcn')" id="login-tab-btn-gvcn" class="login-portal-tab active py-2 px-2.5 rounded-xl transition flex items-center justify-center gap-1.5 bg-white text-indigo-900 shadow-md cursor-pointer">
+            <span>👨‍🏫 GVCN</span>
+          </button>
+          <button type="button" onclick="switchLoginPortalTab('lop_truong')" id="login-tab-btn-lop_truong" class="login-portal-tab py-2 px-2.5 rounded-xl transition flex items-center justify-center gap-1.5 bg-white/15 text-white hover:bg-white/25 cursor-pointer">
+            <span>👑 Lớp Trưởng</span>
+          </button>
+          <button type="button" onclick="switchLoginPortalTab('lop_pho')" id="login-tab-btn-lop_pho" class="login-portal-tab py-2 px-2.5 rounded-xl transition flex items-center justify-center gap-1.5 bg-white/15 text-white hover:bg-white/25 cursor-pointer">
+            <span>📚 Các Lớp Phó</span>
+          </button>
+          <button type="button" onclick="switchLoginPortalTab('to_truong')" id="login-tab-btn-to_truong" class="login-portal-tab py-2 px-2.5 rounded-xl transition flex items-center justify-center gap-1.5 bg-white/15 text-white hover:bg-white/25 cursor-pointer">
+            <span>👥 Các Tổ Trưởng</span>
           </button>
         </div>
-        
-        <!-- Error Message (Hidden by default) -->
-        <p id="gvcn-login-error" class="hidden text-rose-500 text-xs font-semibold flex items-center gap-1.5 pt-1">
+      </div>
+
+      <!-- Tab Content Area -->
+      <div class="p-5 sm:p-6 space-y-4">
+
+        <!-- TAB 1: GVCN -->
+        <div id="login-panel-gvcn" class="login-panel space-y-4">
+          <div class="p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 flex items-start gap-3.5">
+            <div class="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-md">
+              <i data-lucide="shield-check" class="w-7 h-7"></i>
+            </div>
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <h4 class="font-black text-sm text-slate-900 dark:text-white">Giáo Viên Chủ Nhiệm</h4>
+                <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-600 text-white font-extrabold">Admin Tối Cao</span>
+              </div>
+              <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                Toàn quyền thêm danh sách học sinh, sắp xếp tổ, duyệt báo cáo tuần và quản lý đồng bộ Supabase Cloud.
+              </p>
+            </div>
+          </div>
+          <div class="space-y-1.5 text-left">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Mật khẩu quản trị GVCN:</label>
+            <div class="relative">
+              <i data-lucide="lock" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input type="password" id="input-login-pass-gvcn" value="123456" placeholder="Nhập mật khẩu (Mặc định: 123456)" onkeydown="if(event.key==='Enter') executeLoginAction('gvcn')" class="w-full pl-10 pr-10 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold outline-none focus:border-blue-500 text-slate-900 dark:text-white">
+              <button type="button" onclick="togglePasswordVisibility('input-login-pass-gvcn')" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
+                <i data-lucide="eye" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+          <div class="pt-1">
+            <button onclick="executeLoginAction('gvcn')" class="w-full py-3 bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white font-black rounded-xl text-xs sm:text-sm shadow-md shadow-blue-600/30 transition flex items-center justify-center gap-2 cursor-pointer">
+              <i data-lucide="log-in" class="w-4 h-4"></i>
+              <span>ĐĂNG NHẬP GIÁO VIÊN CHỦ NHIỆM</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- TAB 2: LỚP TRƯỞNG -->
+        <div id="login-panel-lop_truong" class="login-panel hidden space-y-4">
+          <div class="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900 flex items-start gap-3.5">
+            <div class="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-md">
+              <i data-lucide="crown" class="w-7 h-7"></i>
+            </div>
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <h4 class="font-black text-sm text-slate-900 dark:text-white">Trình Minh Thiện</h4>
+                <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500 text-white font-extrabold">Lớp Trưởng Lớp 9A1</span>
+              </div>
+              <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                Quyền hạn chỉ huy tập thể lớp, theo dõi thi đua 4 tổ, tiếp nhận và điều chỉnh nhận xét của các Tổ trưởng, tổng hợp báo cáo tuần gửi GVCN.
+              </p>
+            </div>
+          </div>
+          <div class="space-y-1.5 text-left">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Mật khẩu Lớp trưởng:</label>
+            <div class="relative">
+              <i data-lucide="lock" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input type="password" id="input-login-pass-lop_truong" value="123456" placeholder="Nhập mật khẩu (Mặc định: 123456)" onkeydown="if(event.key==='Enter') executeLoginAction('lop_truong')" class="w-full pl-10 pr-10 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold outline-none focus:border-amber-500 text-slate-900 dark:text-white">
+              <button type="button" onclick="togglePasswordVisibility('input-login-pass-lop_truong')" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
+                <i data-lucide="eye" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+          <div class="pt-1">
+            <button onclick="executeLoginAction('lop_truong')" class="w-full py-3 bg-amber-500 hover:bg-amber-600 active:scale-[0.99] text-white font-black rounded-xl text-xs sm:text-sm shadow-md shadow-amber-500/30 transition flex items-center justify-center gap-2 cursor-pointer">
+              <i data-lucide="log-in" class="w-4 h-4"></i>
+              <span>ĐĂNG NHẬP LỚP TRƯỞNG (TRÌNH MINH THIỆN)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- TAB 3: CÁC LỚP PHÓ -->
+        <div id="login-panel-lop_pho" class="login-panel hidden space-y-4">
+          <div class="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">CHỌN CHỨC DANH LỚP PHÓ / THỦ QUỸ:</div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            
+            <!-- LP Học tập -->
+            <label class="p-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-emerald-500 cursor-pointer transition flex items-center gap-3 bg-slate-50/50 dark:bg-slate-800/50 has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50/50 dark:has-[:checked]:bg-emerald-950/30">
+              <input type="radio" name="selected-lop-pho" value="lp_hoc_tap" checked class="text-emerald-600 focus:ring-emerald-500">
+              <div>
+                <span class="font-extrabold text-xs text-slate-900 dark:text-white block">Đỗ Thị Thùy Linh</span>
+                <span class="text-[11px] text-emerald-600 font-bold">📖 Lớp phó Học tập</span>
+              </div>
+            </label>
+
+            <!-- LP Trật tự -->
+            <label class="p-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-rose-500 cursor-pointer transition flex items-center gap-3 bg-slate-50/50 dark:bg-slate-800/50 has-[:checked]:border-rose-500 has-[:checked]:bg-rose-50/50 dark:has-[:checked]:bg-rose-950/30">
+              <input type="radio" name="selected-lop-pho" value="lp_trat_tu" class="text-rose-600 focus:ring-rose-500">
+              <div>
+                <span class="font-extrabold text-xs text-slate-900 dark:text-white block">Đỗ Duy Bảo</span>
+                <span class="text-[11px] text-rose-600 font-bold">⚖️ Lớp phó Trật tự</span>
+              </div>
+            </label>
+
+            <!-- LP Lao động -->
+            <label class="p-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-cyan-500 cursor-pointer transition flex items-center gap-3 bg-slate-50/50 dark:bg-slate-800/50 has-[:checked]:border-cyan-500 has-[:checked]:bg-cyan-50/50 dark:has-[:checked]:bg-cyan-950/30">
+              <input type="radio" name="selected-lop-pho" value="lp_lao_dong" class="text-cyan-600 focus:ring-cyan-500">
+              <div>
+                <span class="font-extrabold text-xs text-slate-900 dark:text-white block">Nguyễn Thanh Nhân</span>
+                <span class="text-[11px] text-cyan-600 font-bold">🧹 Lớp phó Lao động</span>
+              </div>
+            </label>
+
+            <!-- Thủ quỹ -->
+            <label class="p-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-indigo-500 cursor-pointer transition flex items-center gap-3 bg-slate-50/50 dark:bg-slate-800/50 has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50/50 dark:has-[:checked]:bg-indigo-950/30">
+              <input type="radio" name="selected-lop-pho" value="thu_quy" class="text-indigo-600 focus:ring-indigo-500">
+              <div>
+                <span class="font-extrabold text-xs text-slate-900 dark:text-white block">Trịnh Lan Phương</span>
+                <span class="text-[11px] text-indigo-600 font-bold">💰 Thủ quỹ Lớp</span>
+              </div>
+            </label>
+
+          </div>
+
+          <div class="space-y-1.5 text-left">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Mật khẩu Ban Cán Sự:</label>
+            <div class="relative">
+              <i data-lucide="lock" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input type="password" id="input-login-pass-lop_pho" value="123456" placeholder="Nhập mật khẩu (Mặc định: 123456)" onkeydown="if(event.key==='Enter') executeLoginSelectedLopPho()" class="w-full pl-10 pr-10 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold outline-none focus:border-indigo-500 text-slate-900 dark:text-white">
+              <button type="button" onclick="togglePasswordVisibility('input-login-pass-lop_pho')" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
+                <i data-lucide="eye" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+          <div class="pt-1">
+            <button onclick="executeLoginSelectedLopPho()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white font-black rounded-xl text-xs sm:text-sm shadow-md shadow-indigo-600/30 transition flex items-center justify-center gap-2 cursor-pointer">
+              <i data-lucide="log-in" class="w-4 h-4"></i>
+              <span>ĐĂNG NHẬP BAN CÁN SỰ LỚP</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- TAB 4: CÁC TỔ TRƯỞNG -->
+        <div id="login-panel-to_truong" class="login-panel hidden space-y-4">
+          <div class="text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">CHỌN TỔ TRƯỞNG TRỰC THUỘC (TỔ 1 ➔ 4):</div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            
+            <!-- Tổ 1 -->
+            <label class="p-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-purple-500 cursor-pointer transition flex items-center gap-3 bg-slate-50/50 dark:bg-slate-800/50 has-[:checked]:border-purple-500 has-[:checked]:bg-purple-50/50 dark:has-[:checked]:bg-purple-950/30">
+              <input type="radio" name="selected-to-truong" value="to_truong_1" class="text-purple-600 focus:ring-purple-500">
+              <div>
+                <span class="font-extrabold text-xs text-slate-900 dark:text-white block">Nguyễn Thị Ngọc Thảo</span>
+                <span class="text-[11px] text-purple-600 font-bold">👥 Tổ trưởng Tổ 1 (11 HS)</span>
+              </div>
+            </label>
+
+            <!-- Tổ 2 -->
+            <label class="p-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-purple-500 cursor-pointer transition flex items-center gap-3 bg-slate-50/50 dark:bg-slate-800/50 has-[:checked]:border-purple-500 has-[:checked]:bg-purple-50/50 dark:has-[:checked]:bg-purple-950/30">
+              <input type="radio" name="selected-to-truong" value="to_truong_2" class="text-purple-600 focus:ring-purple-500">
+              <div>
+                <span class="font-extrabold text-xs text-slate-900 dark:text-white block">Hồ Thị Kim Cương</span>
+                <span class="text-[11px] text-purple-600 font-bold">👥 Tổ trưởng Tổ 2 (11 HS)</span>
+              </div>
+            </label>
+
+            <!-- Tổ 3: Huỳnh Quốc Long -->
+            <label class="p-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-purple-500 cursor-pointer transition flex items-center gap-3 bg-slate-50/50 dark:bg-slate-800/50 has-[:checked]:border-purple-500 has-[:checked]:bg-purple-50/50 dark:has-[:checked]:bg-purple-950/30">
+              <input type="radio" name="selected-to-truong" value="to_truong_3" checked class="text-purple-600 focus:ring-purple-500">
+              <div>
+                <span class="font-extrabold text-xs text-slate-900 dark:text-white block">Huỳnh Quốc Long</span>
+                <span class="text-[11px] text-purple-600 font-bold">👥 Tổ trưởng Tổ 3 (11 HS)</span>
+              </div>
+            </label>
+
+            <!-- Tổ 4 -->
+            <label class="p-3 rounded-xl border-2 border-slate-200 dark:border-slate-700 hover:border-purple-500 cursor-pointer transition flex items-center gap-3 bg-slate-50/50 dark:bg-slate-800/50 has-[:checked]:border-purple-500 has-[:checked]:bg-purple-50/50 dark:has-[:checked]:bg-purple-950/30">
+              <input type="radio" name="selected-to-truong" value="to_truong_4" class="text-purple-600 focus:ring-purple-500">
+              <div>
+                <span class="font-extrabold text-xs text-slate-900 dark:text-white block">Nguyễn Gia Thịnh</span>
+                <span class="text-[11px] text-purple-600 font-bold">👥 Tổ trưởng Tổ 4 (10 HS)</span>
+              </div>
+            </label>
+
+          </div>
+
+          <div class="space-y-1.5 text-left">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">Mật khẩu Tổ trưởng:</label>
+            <div class="relative">
+              <i data-lucide="lock" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input type="password" id="input-login-pass-to_truong" value="123456" placeholder="Nhập mật khẩu (Mặc định: 123456)" onkeydown="if(event.key==='Enter') executeLoginSelectedToTruong()" class="w-full pl-10 pr-10 py-2.5 bg-slate-50 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-xl text-sm font-semibold outline-none focus:border-purple-500 text-slate-900 dark:text-white">
+              <button type="button" onclick="togglePasswordVisibility('input-login-pass-to_truong')" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer">
+                <i data-lucide="eye" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+          <div class="pt-1">
+            <button onclick="executeLoginSelectedToTruong()" class="w-full py-3 bg-purple-600 hover:bg-purple-700 active:scale-[0.99] text-white font-black rounded-xl text-xs sm:text-sm shadow-md shadow-purple-600/30 transition flex items-center justify-center gap-2 cursor-pointer">
+              <i data-lucide="log-in" class="w-4 h-4"></i>
+              <span>ĐĂNG NHẬP TỔ TRƯỞNG</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Thông báo lỗi (nếu có) -->
+        <div id="login-portal-error" class="hidden p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 text-xs font-bold flex items-center gap-2">
           <i data-lucide="alert-circle" class="w-4 h-4 shrink-0"></i>
-          <span>Mật khẩu quản trị không chính xác. Vui lòng thử lại!</span>
-        </p>
-      </div>
+          <span id="login-portal-error-msg">Mật khẩu không chính xác.</span>
+        </div>
 
-      <!-- Action Buttons -->
-      <div class="flex items-center gap-3 pt-2">
-        <button type="button" onclick="cancelGVCNLogin()" class="w-1/2 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold rounded-xl text-xs sm:text-sm transition-colors">
-          Hủy bỏ
-        </button>
-        <button type="button" onclick="handleConfirmGVCNLogin()" class="w-1/2 py-3 bg-phuochung-600 hover:bg-phuochung-700 active:scale-[0.98] text-white font-bold rounded-xl text-xs sm:text-sm shadow-md shadow-phuochung-600/30 transition-all flex items-center justify-center gap-1.5">
-          <i data-lucide="log-in" class="w-4 h-4"></i>
-          <span>Đăng nhập</span>
-        </button>
-      </div>
+        <!-- Footer: Học sinh & Phụ huynh Quick Access -->
+        <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+          <button type="button" onclick="executeLoginAction('hoc_sinh')" class="text-slate-500 dark:text-slate-400 hover:text-phuochung-600 font-semibold flex items-center gap-1.5 transition cursor-pointer">
+            <i data-lucide="user" class="w-4 h-4"></i>
+            <span>Vào chế độ xem Học sinh & Phụ huynh (Không cần mật khẩu)</span>
+          </button>
+          <div class="text-[11px] text-slate-400">
+            Mật khẩu mặc định: <code class="font-mono font-bold text-slate-600 dark:text-slate-300">123456</code>
+          </div>
+        </div>
 
+      </div>
     </div>
   </div>
 
@@ -2170,7 +2380,7 @@
       }
     }
 
-    // Role Switcher & GVCN Login Authentication
+    // ================= CỔNG ĐĂNG NHẬP RIÊNG BIỆT (GVCN, LỚP TRƯỞNG, LỚP PHÓ, TỔ TRƯỞNG) =================
     let previousActiveRoleId = 'gvcn';
 
     function handleRoleChange(roleId) {
@@ -2179,84 +2389,154 @@
       updateRoleUI();
     }
 
-    function openGVCNLoginModal() {
-      const modal = document.getElementById('modal-2fa');
-      if (modal) {
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        const inp = document.getElementById('input-gvcn-password');
-        if (inp) {
-          inp.value = '';
-          inp.type = 'password';
-          setTimeout(() => inp.focus(), 150);
+    function openLoginModal(tab = 'gvcn', specificRoleId = null) {
+      const modal = document.getElementById('modal-login-portal');
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      switchLoginPortalTab(tab);
+
+      if (specificRoleId) {
+        if (tab === 'lop_pho') {
+          const radio = document.querySelector(`input[name="selected-lop-pho"][value="${specificRoleId}"]`);
+          if (radio) radio.checked = true;
+        } else if (tab === 'to_truong') {
+          const radio = document.querySelector(`input[name="selected-to-truong"][value="${specificRoleId}"]`);
+          if (radio) radio.checked = true;
         }
-        const err = document.getElementById('gvcn-login-error');
-        if (err) err.classList.add('hidden');
-        const eyeIcon = document.getElementById('icon-toggle-password');
-        if (eyeIcon) eyeIcon.setAttribute('data-lucide', 'eye');
-        if (window.lucide) lucide.createIcons();
       }
+
+      const err = document.getElementById('login-portal-error');
+      if (err) err.classList.add('hidden');
+      if (window.lucide) lucide.createIcons();
     }
 
-    function cancelGVCNLogin() {
-      const modal = document.getElementById('modal-2fa');
+    function closeLoginModal() {
+      const modal = document.getElementById('modal-login-portal');
       if (modal) {
         modal.classList.add('hidden');
         modal.classList.remove('flex');
       }
-      const cur = window.authManager.getCurrentRole();
-      const select = document.getElementById('role-select');
-      if (select) select.value = cur.id;
-      const inp = document.getElementById('input-gvcn-password');
-      if (inp) inp.value = '';
-      const err = document.getElementById('gvcn-login-error');
-      if (err) err.classList.add('hidden');
     }
 
-    function toggleGVCNPasswordVisibility() {
-      const inp = document.getElementById('input-gvcn-password');
-      const icon = document.getElementById('icon-toggle-password');
-      if (!inp) return;
-      if (inp.type === 'password') {
-        inp.type = 'text';
-        if (icon) icon.setAttribute('data-lucide', 'eye-off');
-      } else {
-        inp.type = 'password';
-        if (icon) icon.setAttribute('data-lucide', 'eye');
-      }
+    function switchLoginPortalTab(tab) {
+      const tabs = ['gvcn', 'lop_truong', 'lop_pho', 'to_truong'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`login-tab-btn-${t}`);
+        const panel = document.getElementById(`login-panel-${t}`);
+        if (btn) {
+          if (t === tab) {
+            btn.className = 'login-portal-tab active py-2 px-2.5 rounded-xl transition flex items-center justify-center gap-1.5 bg-white text-indigo-900 shadow-md font-black cursor-pointer';
+          } else {
+            btn.className = 'login-portal-tab py-2 px-2.5 rounded-xl transition flex items-center justify-center gap-1.5 bg-white/15 text-white hover:bg-white/25 font-bold cursor-pointer';
+          }
+        }
+        if (panel) {
+          if (t === tab) {
+            panel.classList.remove('hidden');
+          } else {
+            panel.classList.add('hidden');
+          }
+        }
+      });
+      const err = document.getElementById('login-portal-error');
+      if (err) err.classList.add('hidden');
       if (window.lucide) lucide.createIcons();
     }
 
-    function handleConfirmGVCNLogin() {
-      const inp = document.getElementById('input-gvcn-password');
-      const err = document.getElementById('gvcn-login-error');
+    function executeLoginAction(roleId) {
+      let pass = '';
+      if (roleId === 'gvcn') {
+        const inp = document.getElementById('input-login-pass-gvcn');
+        pass = inp ? inp.value.trim() : '';
+      } else if (roleId === 'lop_truong') {
+        const inp = document.getElementById('input-login-pass-lop_truong');
+        pass = inp ? inp.value.trim() : '';
+      } else if (roleId === 'hoc_sinh') {
+        pass = '';
+      }
+
+      const res = window.authManager.loginWithCredentials({ roleId, password: pass });
+      if (res.success) {
+        closeLoginModal();
+        updateRoleUI();
+        showSeatingToast(`Chào mừng ${res.role.personName || res.role.name} đăng nhập thành công!`);
+      } else {
+        showLoginPortalError(res.error);
+      }
+    }
+
+    function executeLoginSelectedLopPho() {
+      const checked = document.querySelector('input[name="selected-lop-pho"]:checked');
+      const roleId = checked ? checked.value : 'lp_hoc_tap';
+      const inp = document.getElementById('input-login-pass-lop_pho');
       const pass = inp ? inp.value.trim() : '';
 
-      if (pass === '123456' || pass === '') {
-        if (err) err.classList.add('hidden');
-        if (inp) inp.value = '';
-        window.authManager.is2FAVerified = true;
-        window.authManager.currentRole = ROLES.GVCN;
-        previousActiveRoleId = 'gvcn';
-        const modal = document.getElementById('modal-2fa');
-        if (modal) {
-          modal.classList.add('hidden');
-          modal.classList.remove('flex');
-        }
+      const res = window.authManager.loginWithCredentials({ roleId, password: pass });
+      if (res.success) {
+        closeLoginModal();
         updateRoleUI();
+        showSeatingToast(`Chào mừng ${res.role.personName || res.role.name} đăng nhập thành công!`);
       } else {
-        if (err) {
-          err.classList.remove('hidden');
-        }
-        if (inp) {
-          inp.classList.add('border-rose-500', 'ring-2', 'ring-rose-400');
-          inp.focus();
-          inp.select();
-          setTimeout(() => {
-            inp.classList.remove('border-rose-500', 'ring-2', 'ring-rose-400');
-          }, 2000);
-        }
+        showLoginPortalError(res.error);
       }
+    }
+
+    function executeLoginSelectedToTruong() {
+      const checked = document.querySelector('input[name="selected-to-truong"]:checked');
+      const roleId = checked ? checked.value : 'to_truong_1';
+      const inp = document.getElementById('input-login-pass-to_truong');
+      const pass = inp ? inp.value.trim() : '';
+
+      const res = window.authManager.loginWithCredentials({ roleId, password: pass });
+      if (res.success) {
+        closeLoginModal();
+        updateRoleUI();
+        showSeatingToast(`Chào mừng ${res.role.personName || res.role.name} đăng nhập thành công!`);
+      } else {
+        showLoginPortalError(res.error);
+      }
+    }
+
+    function showLoginPortalError(msg) {
+      const err = document.getElementById('login-portal-error');
+      const msgEl = document.getElementById('login-portal-error-msg');
+      if (err) {
+        if (msgEl) msgEl.innerText = msg || 'Mật khẩu không chính xác.';
+        err.classList.remove('hidden');
+      }
+    }
+
+    function handleUserLogout() {
+      if (confirm('Bạn có muốn đăng xuất khỏi tài khoản hiện tại và chuyển về chế độ xem công khai?')) {
+        window.authManager.logout();
+        updateRoleUI();
+        showSeatingToast('Đã đăng xuất thành công.');
+      }
+    }
+
+    function togglePasswordVisibility(inputId) {
+      const inp = document.getElementById(inputId);
+      if (!inp) return;
+      inp.type = inp.type === 'password' ? 'text' : 'password';
+    }
+
+    // Tương thích ngược với các hàm cũ
+    function openGVCNLoginModal() {
+      openLoginModal('gvcn');
+    }
+
+    function cancelGVCNLogin() {
+      closeLoginModal();
+    }
+
+    function toggleGVCNPasswordVisibility() {
+      togglePasswordVisibility('input-login-pass-gvcn');
+    }
+
+    function handleConfirmGVCNLogin() {
+      executeLoginAction('gvcn');
     }
 
     // Hỗ trợ tương thích ngược
@@ -2549,6 +2829,16 @@
       if (wsName) wsName.innerText = `Không Gian Làm Việc Số: ${cur.name}`;
       const wsDesc = document.getElementById('ws-role-desc');
       if (wsDesc) wsDesc.innerText = cur.description;
+
+      // Cập nhật User Profile Widget trên Header
+      const roleText = document.getElementById('header-user-role');
+      const nameText = document.getElementById('header-user-name');
+      const avatarBox = document.getElementById('header-user-avatar');
+      const avatarIcon = document.getElementById('header-user-icon');
+      if (roleText) roleText.innerText = cur.shortTitle || cur.name;
+      if (nameText) nameText.innerText = cur.personName || cur.name;
+      if (avatarBox) avatarBox.className = `w-6 h-6 rounded-lg ${cur.bgColor || 'bg-blue-600'} text-white flex items-center justify-center text-xs shrink-0 shadow-2xs group-hover:scale-105 transition-transform`;
+      if (avatarIcon) avatarIcon.setAttribute('data-lucide', cur.icon || 'shield-check');
 
       // Ẩn/Hiện nút quản trị học sinh nếu là GVCN
       const btnAdd = document.getElementById('btn-admin-add-student');
