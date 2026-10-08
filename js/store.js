@@ -402,6 +402,18 @@ class AppStore {
           if (!parsed.seatingPlan || !Array.isArray(parsed.seatingPlan) || parsed.seatingPlan.length !== 4) {
             parsed.seatingPlan = JSON.parse(JSON.stringify(DEFAULT_SEATING_PLAN));
           }
+
+          // Tự động tính toán lại điểm rèn luyện của học sinh theo quy tắc tính mới cho tuần hiện tại
+          const curWk = parsed.currentWeek || 2;
+          if (parsed.weeklyCriteriaScores && parsed.weeklyCriteriaScores[curWk]) {
+            parsed.students.forEach(s => {
+              const crit = (parsed.weeklyCriteriaScores[curWk] && parsed.weeklyCriteriaScores[curWk][s.id]) || {};
+              const scInfo = this.calculateWeekScore(crit);
+              s.conductScore = scInfo.totalScore;
+              s.conduct = scInfo.rank;
+            });
+          }
+
           return parsed;
         }
       }
@@ -467,7 +479,7 @@ class AppStore {
 
     // Dữ liệu mẫu thực tế cho Tuần 1 và Tuần 2
     if (scores[1] && scores[1]['HS01']) {
-      scores[1]['HS01'].gioTay = 2; scores[1]['HS01'].phatBieu = 2; scores[1]['HS01'].kttx810 = 1; scores[1]['HS01'].veSinh = 1;
+      scores[1]['HS01'].gioTay = 2; scores[1]['HS01'].phatBieu = 2; scores[1]['HS01'].kttx810 = 1; scores[1]['HS01'].veSinh = 0;
     }
     if (scores[1] && scores[1]['HS04']) {
       scores[1]['HS04'].gioTay = 3; scores[1]['HS04'].phatBieu = 2;
@@ -480,7 +492,7 @@ class AppStore {
     }
 
     if (scores[2] && scores[2]['HS01']) {
-      scores[2]['HS01'].gioTay = 3; scores[2]['HS01'].phatBieu = 2; scores[2]['HS01'].kttx810 = 1; scores[2]['HS01'].veSinh = 1;
+      scores[2]['HS01'].gioTay = 3; scores[2]['HS01'].phatBieu = 2; scores[2]['HS01'].kttx810 = 1; scores[2]['HS01'].veSinh = 0;
     }
     if (scores[2] && scores[2]['HS02']) {
       scores[2]['HS02'].gioTay = 2; scores[2]['HS02'].phatBieu = 2; scores[2]['HS02'].kttx810 = 1;
@@ -1364,12 +1376,26 @@ class AppStore {
     const veSinh = Math.max(0, parseInt(crit.veSinh) || 0);
     const viPham = Math.max(0, parseInt(crit.viPham) || 0);
 
-    // Điểm trừ theo quy chế thực tế
-    const minus = (vangP * 2) + (vangK * 5) + (truyBai * 2) + (diTre * 2) + (dongPhuc * 2) + (mtt * 2) + (kttx04 * 3) + (viPham * 2);
-    // Điểm cộng (Hoa điểm 10 +5đ, phát biểu +2đ, giơ tay +1đ, trực nhật tốt +3đ)
-    const plus = (kttx810 * 5) + (gioTay * 1) + (phatBieu * 2) + (veSinh * 3);
+    // Điểm trừ theo quy chế thi đua chuẩn 14 tiêu chí:
+    // 1. Vắng có phép mỗi lượt trừ 2
+    // 2. Vắng không phép mỗi lượt trừ 5
+    // 3. Truy bài mỗi lượt trừ 5
+    // 4. Đi trễ mỗi lượt trừ 5
+    // 5. Đồng phục mỗi lượt trừ 5
+    // 6. MTT mỗi lượt trừ 5
+    // 7. KTTX 0-4 mỗi lượt trừ 5
+    // 13. Vệ sinh mỗi lượt trừ 5
+    // 14. Vi phạm mỗi lượt trừ 5
+    const minus = (vangP * 2) + (vangK * 5) + (truyBai * 5) + (diTre * 5) + (dongPhuc * 5) + (mtt * 5) + (kttx04 * 5) + (veSinh * 5) + (viPham * 5);
 
-    // Điểm chuẩn 100đ ban đầu
+    // Điểm cộng theo quy chế thi đua:
+    // 8. KTTX 5-7 mỗi lượt cộng 1
+    // 9. KTTX 8-10 mỗi lượt cộng 5
+    // 10. Giơ tay mỗi lượt cộng 1
+    // 12. Phát biểu mỗi lượt cộng 2
+    const plus = (kttx57 * 1) + (kttx810 * 5) + (gioTay * 1) + (phatBieu * 2);
+
+    // Điểm chuẩn 100đ ban đầu (tối đa 120đ, tối thiểu 0đ)
     const totalScore = Math.max(0, Math.min(120, 100 - minus + plus));
     let rank = 'Tốt';
     if (totalScore < 60) rank = 'Chưa đạt';
@@ -1383,6 +1409,17 @@ class AppStore {
       rank,
       criteria: { vangP, vangK, truyBai, diTre, dongPhuc, mtt, kttx04, kttx57, kttx810, gioTay, phatBieu, veSinh, viPham }
     };
+  }
+
+  recalculateAllStudentsConduct(weekNumber = null) {
+    const w = parseInt(weekNumber) || (this.state && this.state.currentWeek) || 2;
+    if (!this.state || !this.state.students || !Array.isArray(this.state.students)) return;
+    this.state.students.forEach(s => {
+      const crit = this.getStudentWeekCriteria(w, s.id);
+      const scoreInfo = this.calculateWeekScore(crit);
+      s.conductScore = scoreInfo.totalScore;
+      s.conduct = scoreInfo.rank;
+    });
   }
 
   updateStudentWeekCriteria(weekNumber, studentId, field, delta, actor = 'Ban cán sự', note = '') {

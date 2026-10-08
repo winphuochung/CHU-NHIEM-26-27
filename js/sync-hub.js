@@ -294,7 +294,7 @@ class SyncHubManager {
 
     // 3. BẢNG 2: DANH SÁCH CHI TIẾT 43 HỌC SINH THEO CHUẨN THÔNG TƯ 22
     csv += `--- BẢNG 2: BẢNG ĐIỂM CHI TIẾT 43 HỌC SINH (TUẦN ${w}) ---\n`;
-    csv += 'STT,Mã HS,Họ và tên,Tổ,Chức vụ,Vắng P (-2đ),Vắng K (-5đ),Truy bài (-2đ),Đi trễ (-2đ),Đồng phục (-2đ),Mất trật tự (-2đ),KTTX 0-4 (-3đ),KTTX 5-7 (Đạt),KTTX 8-10 (+5đ),Giơ tay (+1đ),Phát biểu (+2đ),Vệ sinh (+3đ),Vi phạm khác (-2đ),Tổng điểm tuần,Xếp loại rèn luyện,Nhận xét từ Ban cán sự lớp & Tổ trưởng\n';
+    csv += 'STT,Mã HS,Họ và tên,Tổ,Chức vụ,Vắng P (-2đ),Vắng K (-5đ),Truy bài (-5đ),Đi trễ (-5đ),Đồng phục (-5đ),Mất trật tự (-5đ),KTTX 0-4 (-5đ),KTTX 5-7 (+1đ),KTTX 8-10 (+5đ),Giơ tay (+1đ),Phát biểu (+2đ),Vệ sinh (-5đ),Vi phạm khác (-5đ),Tổng điểm tuần,Xếp loại rèn luyện,Nhận xét từ Ban cán sự lớp & Tổ trưởng\n';
 
     students.forEach(s => {
       const crit = store.getStudentWeekCriteria(w, s.id);

@@ -786,7 +786,7 @@
         <div class="p-3 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 text-xs">
           <div class="flex items-center gap-2">
             <span class="font-bold text-slate-700 dark:text-slate-300">📊 Quy tắc tính:</span>
-            <span class="text-[11px] text-slate-500">Điểm khởi điểm 100đ • Trừ: P(-2), K(-5), Tr.bài(-2), Trễ(-2), Đ.phục(-2), MTT(-2), KTTX 0-4(-3), V.phạm(-2) • Cộng: KTTX 8-10(+5), G.tay(+1), P.biểu(+2), V.sinh(+3)</span>
+            <span class="text-[11px] text-slate-500">Điểm khởi điểm 100đ • Trừ: P(-2), K(-5), Tr.bài(-5), Trễ(-5), Đ.phục(-5), MTT(-5), KTTX 0-4(-5), V.sinh(-5), V.phạm(-5) • Cộng: KTTX 5-7(+1), KTTX 8-10(+5), G.tay(+1), P.biểu(+2)</span>
           </div>
           <div class="flex items-center gap-2">
             <button onclick="window.print()" class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold transition flex items-center gap-1">
@@ -802,15 +802,15 @@
                 <th rowspan="2" class="p-2 border-r border-slate-200 dark:border-slate-700 w-10">TT</th>
                 <th rowspan="2" class="p-2 border-r border-slate-200 dark:border-slate-700 text-left min-w-[160px]">HỌ VÀ TÊN HS</th>
                 <th colspan="2" class="p-1 border-r border-slate-200 dark:border-slate-700 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300">Vắng</th>
-                <th rowspan="2" class="p-2 border-r border-slate-200 dark:border-slate-700 w-16" title="Vi phạm 15 phút đầu giờ (-2đ)">Truy bài</th>
-                <th rowspan="2" class="p-2 border-r border-slate-200 dark:border-slate-700 w-16" title="Số lần đi trễ (-2đ)">Đi trễ</th>
-                <th rowspan="2" class="p-2 border-r border-slate-200 dark:border-slate-700 w-16" title="Không khăn quàng/sai áo (-2đ)">Đồng phục</th>
-                <th rowspan="2" class="p-2 border-r border-slate-200 dark:border-slate-700 w-16" title="Mất trật tự trong giờ (-2đ)">MTT</th>
+                <th rowspan="2" class="p-2 border-r border-slate-200 dark:border-slate-700 w-16" title="Vi phạm 15 phút đầu giờ (-5đ)">Truy bài</th>
+                <th rowspan="2" class="p-2 border-r border-slate-200 dark:border-slate-700 w-16" title="Số lần đi trễ (-5đ)">Đi trễ</th>
+                <th rowspan="2" class="p-2 border-r border-slate-200 dark:border-slate-700 w-16" title="Không khăn quàng/sai áo (-5đ)">Đồng phục</th>
+                <th rowspan="2" class="p-2 border-r border-slate-200 dark:border-slate-700 w-16" title="Mất trật tự trong giờ (-5đ)">MTT</th>
                 <th colspan="3" class="p-1 border-r border-slate-200 dark:border-slate-700 bg-blue-50 dark:bg-blue-950/40 text-blue-900 dark:text-blue-300">Điểm KTTX</th>
                 <th rowspan="2" class="p-2 border-r border-slate-200 dark:border-slate-700 w-16" title="Giơ tay xây dựng bài (+1đ)">Giơ tay</th>
                 <th rowspan="2" class="p-2 border-r border-slate-200 dark:border-slate-700 w-16" title="Phát biểu tốt (+2đ)">Phát biểu</th>
-                <th rowspan="2" class="p-2 border-r border-slate-200 dark:border-slate-700 w-16" title="Trực nhật / vệ sinh tốt (+3đ)">Vệ sinh</th>
-                <th rowspan="2" class="p-2 border-r border-slate-200 dark:border-slate-700 w-16" title="Vi phạm khác (-2đ)">Vi phạm</th>
+                <th rowspan="2" class="p-2 border-r border-slate-200 dark:border-slate-700 w-16" title="Vi phạm vệ sinh / trực nhật (-5đ)">Vệ sinh</th>
+                <th rowspan="2" class="p-2 border-r border-slate-200 dark:border-slate-700 w-16" title="Vi phạm khác (-5đ)">Vi phạm</th>
                 <th rowspan="2" class="p-2 border-r border-slate-200 dark:border-slate-700 w-20 bg-purple-50/80 dark:bg-purple-950/40 text-purple-900 dark:text-purple-300 font-black">Tổng điểm</th>
                 <th rowspan="2" class="p-2 border-r border-slate-200 dark:border-slate-700 w-20">Xếp loại</th>
                 <th rowspan="2" class="p-2 min-w-[90px] text-center">Thao tác</th>
@@ -818,8 +818,8 @@
               <tr class="bg-slate-50 dark:bg-slate-800/90 text-slate-600 dark:text-slate-400 font-bold border-b border-slate-200 dark:border-slate-700 text-[10px] text-center">
                 <th class="p-1.5 border-r border-slate-200 dark:border-slate-700 w-14 bg-amber-50/60 dark:bg-amber-950/30 text-amber-800 dark:text-amber-400" title="Vắng có phép (-2đ)">P</th>
                 <th class="p-1.5 border-r border-slate-200 dark:border-slate-700 w-14 bg-amber-50/60 dark:bg-amber-950/30 text-rose-700 dark:text-rose-400" title="Vắng không phép (-5đ)">K</th>
-                <th class="p-1.5 border-r border-slate-200 dark:border-slate-700 w-14 bg-blue-50/60 dark:bg-blue-950/30 text-rose-600" title="Kiểm tra 0-4 điểm (-3đ)">0➔4</th>
-                <th class="p-1.5 border-r border-slate-200 dark:border-slate-700 w-14 bg-blue-50/60 dark:bg-blue-950/30 text-slate-600" title="Kiểm tra 5-7 điểm (Đạt)">5➔7</th>
+                <th class="p-1.5 border-r border-slate-200 dark:border-slate-700 w-14 bg-blue-50/60 dark:bg-blue-950/30 text-rose-600 font-bold" title="Kiểm tra 0-4 điểm (-5đ)">0➔4</th>
+                <th class="p-1.5 border-r border-slate-200 dark:border-slate-700 w-14 bg-blue-50/60 dark:bg-blue-950/30 text-emerald-600 font-bold" title="Kiểm tra 5-7 điểm (+1đ)">5➔7</th>
                 <th class="p-1.5 border-r border-slate-200 dark:border-slate-700 w-14 bg-blue-50/60 dark:bg-blue-950/30 text-emerald-600 font-extrabold" title="Kiểm tra 8-10 điểm (+5đ)">8➔10</th>
               </tr>
             </thead>
@@ -1960,7 +1960,7 @@
         </div>
         <!-- Truy bài -->
         <div class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 space-y-1">
-          <label class="font-bold text-slate-700 dark:text-slate-300 block">Truy bài 15p <span class="text-rose-500 text-[10px]">(-2đ)</span></label>
+          <label class="font-bold text-slate-700 dark:text-slate-300 block">Truy bài 15p <span class="text-rose-500 text-[10px]">(-5đ)</span></label>
           <div class="flex items-center gap-2">
             <button type="button" onclick="adjustScInput('sc-truyBai', -1)" class="w-7 h-7 bg-slate-200 dark:bg-slate-700 rounded-lg font-bold">-</button>
             <input type="number" id="sc-truyBai" min="0" value="0" oninput="updateScPreview()" class="w-full text-center font-black bg-white dark:bg-slate-800 border rounded-lg py-1">
@@ -1969,7 +1969,7 @@
         </div>
         <!-- Đi trễ -->
         <div class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 space-y-1">
-          <label class="font-bold text-slate-700 dark:text-slate-300 block">Đi trễ <span class="text-rose-500 text-[10px]">(-2đ)</span></label>
+          <label class="font-bold text-slate-700 dark:text-slate-300 block">Đi trễ <span class="text-rose-500 text-[10px]">(-5đ)</span></label>
           <div class="flex items-center gap-2">
             <button type="button" onclick="adjustScInput('sc-diTre', -1)" class="w-7 h-7 bg-slate-200 dark:bg-slate-700 rounded-lg font-bold">-</button>
             <input type="number" id="sc-diTre" min="0" value="0" oninput="updateScPreview()" class="w-full text-center font-black bg-white dark:bg-slate-800 border rounded-lg py-1">
@@ -1978,7 +1978,7 @@
         </div>
         <!-- Đồng phục -->
         <div class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 space-y-1">
-          <label class="font-bold text-slate-700 dark:text-slate-300 block">Đồng phục <span class="text-rose-500 text-[10px]">(-2đ)</span></label>
+          <label class="font-bold text-slate-700 dark:text-slate-300 block">Đồng phục <span class="text-rose-500 text-[10px]">(-5đ)</span></label>
           <div class="flex items-center gap-2">
             <button type="button" onclick="adjustScInput('sc-dongPhuc', -1)" class="w-7 h-7 bg-slate-200 dark:bg-slate-700 rounded-lg font-bold">-</button>
             <input type="number" id="sc-dongPhuc" min="0" value="0" oninput="updateScPreview()" class="w-full text-center font-black bg-white dark:bg-slate-800 border rounded-lg py-1">
@@ -1987,7 +1987,7 @@
         </div>
         <!-- MTT -->
         <div class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 space-y-1">
-          <label class="font-bold text-slate-700 dark:text-slate-300 block">Mất trật tự (MTT) <span class="text-rose-500 text-[10px]">(-2đ)</span></label>
+          <label class="font-bold text-slate-700 dark:text-slate-300 block">Mất trật tự (MTT) <span class="text-rose-500 text-[10px]">(-5đ)</span></label>
           <div class="flex items-center gap-2">
             <button type="button" onclick="adjustScInput('sc-mtt', -1)" class="w-7 h-7 bg-slate-200 dark:bg-slate-700 rounded-lg font-bold">-</button>
             <input type="number" id="sc-mtt" min="0" value="0" oninput="updateScPreview()" class="w-full text-center font-black bg-white dark:bg-slate-800 border rounded-lg py-1">
@@ -1996,7 +1996,7 @@
         </div>
         <!-- KTTX 0-4 -->
         <div class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 space-y-1">
-          <label class="font-bold text-slate-700 dark:text-slate-300 block">KTTX 0➔4 <span class="text-rose-500 text-[10px]">(-3đ)</span></label>
+          <label class="font-bold text-slate-700 dark:text-slate-300 block">KTTX 0➔4 <span class="text-rose-500 text-[10px]">(-5đ)</span></label>
           <div class="flex items-center gap-2">
             <button type="button" onclick="adjustScInput('sc-kttx04', -1)" class="w-7 h-7 bg-slate-200 dark:bg-slate-700 rounded-lg font-bold">-</button>
             <input type="number" id="sc-kttx04" min="0" value="0" oninput="updateScPreview()" class="w-full text-center font-black bg-white dark:bg-slate-800 border rounded-lg py-1">
@@ -2004,8 +2004,8 @@
           </div>
         </div>
         <!-- KTTX 5-7 -->
-        <div class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 space-y-1">
-          <label class="font-bold text-slate-700 dark:text-slate-300 block">KTTX 5➔7 <span class="text-slate-500 text-[10px]">(Đạt)</span></label>
+        <div class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-emerald-50/50 dark:bg-emerald-950/20 space-y-1">
+          <label class="font-bold text-emerald-800 dark:text-emerald-300 block">KTTX 5➔7 <span class="text-emerald-600 text-[10px]">(+1đ)</span></label>
           <div class="flex items-center gap-2">
             <button type="button" onclick="adjustScInput('sc-kttx57', -1)" class="w-7 h-7 bg-slate-200 dark:bg-slate-700 rounded-lg font-bold">-</button>
             <input type="number" id="sc-kttx57" min="0" value="0" oninput="updateScPreview()" class="w-full text-center font-black bg-white dark:bg-slate-800 border rounded-lg py-1">
@@ -2040,8 +2040,8 @@
           </div>
         </div>
         <!-- Vệ sinh -->
-        <div class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-emerald-50/50 dark:bg-emerald-950/20 space-y-1">
-          <label class="font-bold text-emerald-800 dark:text-emerald-300 block">Vệ sinh / Trực nhật <span class="text-emerald-600 text-[10px]">(+3đ)</span></label>
+        <div class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 space-y-1">
+          <label class="font-bold text-slate-700 dark:text-slate-300 block">Vệ sinh / Trực nhật <span class="text-rose-500 text-[10px]">(-5đ)</span></label>
           <div class="flex items-center gap-2">
             <button type="button" onclick="adjustScInput('sc-veSinh', -1)" class="w-7 h-7 bg-slate-200 dark:bg-slate-700 rounded-lg font-bold">-</button>
             <input type="number" id="sc-veSinh" min="0" value="0" oninput="updateScPreview()" class="w-full text-center font-black bg-white dark:bg-slate-800 border rounded-lg py-1">
@@ -2050,7 +2050,7 @@
         </div>
         <!-- Vi phạm khác -->
         <div class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 space-y-1">
-          <label class="font-bold text-slate-700 dark:text-slate-300 block">Vi phạm khác <span class="text-rose-500 text-[10px]">(-2đ)</span></label>
+          <label class="font-bold text-slate-700 dark:text-slate-300 block">Vi phạm khác <span class="text-rose-500 text-[10px]">(-5đ)</span></label>
           <div class="flex items-center gap-2">
             <button type="button" onclick="adjustScInput('sc-viPham', -1)" class="w-7 h-7 bg-slate-200 dark:bg-slate-700 rounded-lg font-bold">-</button>
             <input type="number" id="sc-viPham" min="0" value="0" oninput="updateScPreview()" class="w-full text-center font-black bg-white dark:bg-slate-800 border rounded-lg py-1">
@@ -2284,16 +2284,16 @@
   </div> <!-- END #app-main-layout -->
 
   <!-- Scripts Core -->
-  <script src="js/store.js?v=6.4.6"></script>
-  <script src="js/security.js?v=6.4.6"></script>
-  <script src="js/auth.js?v=6.4.6"></script>
-  <script src="js/ai-analytics.js?v=6.4.6"></script>
-  <script src="js/workspaces.js?v=6.4.6"></script>
-  <script src="js/exam-hub.js?v=6.4.6"></script>
-  <script src="js/gamification.js?v=6.4.6"></script>
-  <script src="js/sync-hub.js?v=6.4.6"></script>
-  <script src="js/supabase-client.js?v=6.4.6"></script>
-  <script src="js/voice-assistant.js?v=6.4.6"></script>
+  <script src="js/store.js?v=6.4.7"></script>
+  <script src="js/security.js?v=6.4.7"></script>
+  <script src="js/auth.js?v=6.4.7"></script>
+  <script src="js/ai-analytics.js?v=6.4.7"></script>
+  <script src="js/workspaces.js?v=6.4.7"></script>
+  <script src="js/exam-hub.js?v=6.4.7"></script>
+  <script src="js/gamification.js?v=6.4.7"></script>
+  <script src="js/sync-hub.js?v=6.4.7"></script>
+  <script src="js/supabase-client.js?v=6.4.7"></script>
+  <script src="js/voice-assistant.js?v=6.4.7"></script>
   
   <!-- Main Application Orchestration Script -->
   <script>
@@ -3880,6 +3880,9 @@ function handleExportEmulationExcelClick() {
 
     function renderEmulationTable() {
       const w = selectedEmulationWeek;
+      if (window.store && typeof window.store.recalculateAllStudentsConduct === 'function') {
+        window.store.recalculateAllStudentsConduct(w);
+      }
       const weekData = window.store.getWeekTheme(w) || {
         week: w,
         theme: `Thi đua tuần ${w}`,
@@ -4208,7 +4211,7 @@ function handleExportEmulationExcelClick() {
               ${makeCriteriaCell(w, s.id, 'kttx810', crit.kttx810, false)}
               ${makeCriteriaCell(w, s.id, 'gioTay', crit.gioTay, false)}
               ${makeCriteriaCell(w, s.id, 'phatBieu', crit.phatBieu, false)}
-              ${makeCriteriaCell(w, s.id, 'veSinh', crit.veSinh, false)}
+              ${makeCriteriaCell(w, s.id, 'veSinh', crit.veSinh, true)}
               ${makeCriteriaCell(w, s.id, 'viPham', crit.viPham, true)}
               <td class="p-2 text-center border-r border-slate-200 dark:border-slate-800 bg-purple-50/40 dark:bg-purple-950/20">
                 <span class="font-black text-xs ${scoreBadgeColor}" title="Chuẩn 100đ - Trừ ${scoreInfo.minus}đ + Cộng ${scoreInfo.plus}đ">
@@ -8224,7 +8227,7 @@ function handleExportEmulationExcelClick() {
       }
 
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js?v=6.4.6', { updateViaCache: 'none' })
+        navigator.serviceWorker.register('./sw.js?v=6.4.7', { updateViaCache: 'none' })
           .then(reg => {
             console.log('PWA Service Worker registered:', reg.scope);
             reg.update().catch(() => {});
