@@ -877,10 +877,37 @@
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 class="text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-            <i data-lucide="trophy" class="w-6 h-6 text-amber-500"></i> Gamification & 35 Mini-Games Ôn Tập Lớp 9
+            <a href="https://tro-choi-duoi-nuoc.vercel.app/games/index.html" 
+               target="_blank" 
+               rel="noopener noreferrer" 
+               class="hover:text-amber-600 dark:hover:text-amber-400 transition flex items-center gap-2 group cursor-pointer" 
+               title="Mở Cổng Trò Chơi Trực Tuyến: https://tro-choi-duoi-nuoc.vercel.app/games/index.html">
+              <i data-lucide="trophy" class="w-6 h-6 text-amber-500 group-hover:scale-110 transition-transform"></i>
+              <span>Gamification & 35 Mini-Games Ôn Tập Lớp 9</span>
+              <i data-lucide="external-link" class="w-4 h-4 text-amber-500 opacity-70 group-hover:opacity-100 transition"></i>
+            </a>
           </h2>
-          <p class="text-xs text-slate-700 dark:text-slate-300 mt-0.5">Chơi mà học - Tích lũy điểm rèn luyện, săn huy hiệu ảo và đổi đặc quyền lớp học</p>
+          <p class="text-xs text-slate-700 dark:text-slate-300 mt-0.5 flex flex-wrap items-center gap-1.5">
+            <span>Chơi mà học - Tích lũy điểm rèn luyện, săn huy hiệu ảo và đổi đặc quyền lớp học</span>
+            <span class="text-slate-400">•</span>
+            <a href="https://tro-choi-duoi-nuoc.vercel.app/games/index.html" 
+               target="_blank" 
+               rel="noopener noreferrer" 
+               class="inline-flex items-center gap-1 font-bold text-amber-600 dark:text-amber-400 hover:underline">
+              <span>tro-choi-duoi-nuoc.vercel.app/games</span>
+              <i data-lucide="external-link" class="w-3 h-3"></i>
+            </a>
+          </p>
         </div>
+        <a href="https://tro-choi-duoi-nuoc.vercel.app/games/index.html" 
+           target="_blank" 
+           rel="noopener noreferrer" 
+           class="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-xl text-xs font-black shadow-md hover:shadow-lg transition flex items-center gap-2 shrink-0 group cursor-pointer" 
+           title="Mở cổng Trò Chơi An Toàn Dưới Nước & Mini-Games trực tuyến">
+          <i data-lucide="gamepad-2" class="w-4 h-4 group-hover:rotate-12 transition-transform"></i>
+          <span>Mở Cổng Trò Chơi Trực Tuyến</span>
+          <i data-lucide="external-link" class="w-3.5 h-3.5 opacity-80"></i>
+        </a>
       </div>
 
       <!-- Perks Shop & Badges Overview -->
@@ -921,6 +948,13 @@
             <p class="text-xs text-slate-700 dark:text-slate-300">Bám sát chương trình GDPT 2018 và kỹ năng học đường</p>
           </div>
           <div class="flex items-center gap-2">
+            <a href="https://tro-choi-duoi-nuoc.vercel.app/games/index.html" 
+               target="_blank" 
+               rel="noopener noreferrer" 
+               class="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold hover:bg-emerald-100 dark:hover:bg-emerald-900 transition inline-flex items-center gap-1.5"
+               title="Mở thư viện trò chơi giáo dục an toàn dưới nước trên Vercel">
+              <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Chơi tại Web Game Vercel
+            </a>
             <span class="text-xs text-slate-700 dark:text-slate-300 font-medium">Chọn tuần:</span>
             <select id="minigame-week-select" onchange="renderCurrentMiniGame(this.value)" class="text-xs bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 outline-none font-bold text-phuochung-600">
               <!-- Render 35 tuần -->
@@ -2284,16 +2318,16 @@
   </div> <!-- END #app-main-layout -->
 
   <!-- Scripts Core -->
-  <script src="js/store.js?v=6.4.8"></script>
-  <script src="js/security.js?v=6.4.8"></script>
-  <script src="js/auth.js?v=6.4.8"></script>
-  <script src="js/ai-analytics.js?v=6.4.8"></script>
-  <script src="js/workspaces.js?v=6.4.8"></script>
-  <script src="js/exam-hub.js?v=6.4.8"></script>
-  <script src="js/gamification.js?v=6.4.8"></script>
-  <script src="js/sync-hub.js?v=6.4.8"></script>
-  <script src="js/supabase-client.js?v=6.4.8"></script>
-  <script src="js/voice-assistant.js?v=6.4.8"></script>
+  <script src="js/store.js?v=6.4.9"></script>
+  <script src="js/security.js?v=6.4.9"></script>
+  <script src="js/auth.js?v=6.4.9"></script>
+  <script src="js/ai-analytics.js?v=6.4.9"></script>
+  <script src="js/workspaces.js?v=6.4.9"></script>
+  <script src="js/exam-hub.js?v=6.4.9"></script>
+  <script src="js/gamification.js?v=6.4.9"></script>
+  <script src="js/sync-hub.js?v=6.4.9"></script>
+  <script src="js/supabase-client.js?v=6.4.9"></script>
+  <script src="js/voice-assistant.js?v=6.4.9"></script>
   
   <!-- Main Application Orchestration Script -->
   <script>
@@ -8110,6 +8144,7 @@ function handleExportEmulationExcelClick() {
       `).join('');
 
       renderCurrentMiniGame(window.store.state.currentWeek || 2);
+      if (window.lucide) lucide.createIcons();
     }
 
     function renderCurrentMiniGame(weekNum) {
@@ -8227,7 +8262,7 @@ function handleExportEmulationExcelClick() {
       }
 
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js?v=6.4.8', { updateViaCache: 'none' })
+        navigator.serviceWorker.register('./sw.js?v=6.4.9', { updateViaCache: 'none' })
           .then(reg => {
             console.log('PWA Service Worker registered:', reg.scope);
             reg.update().catch(() => {});
