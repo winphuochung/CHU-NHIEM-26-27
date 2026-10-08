@@ -2284,16 +2284,16 @@
   </div> <!-- END #app-main-layout -->
 
   <!-- Scripts Core -->
-  <script src="js/store.js?v=6.4.7"></script>
-  <script src="js/security.js?v=6.4.7"></script>
-  <script src="js/auth.js?v=6.4.7"></script>
-  <script src="js/ai-analytics.js?v=6.4.7"></script>
-  <script src="js/workspaces.js?v=6.4.7"></script>
-  <script src="js/exam-hub.js?v=6.4.7"></script>
-  <script src="js/gamification.js?v=6.4.7"></script>
-  <script src="js/sync-hub.js?v=6.4.7"></script>
-  <script src="js/supabase-client.js?v=6.4.7"></script>
-  <script src="js/voice-assistant.js?v=6.4.7"></script>
+  <script src="js/store.js?v=6.4.8"></script>
+  <script src="js/security.js?v=6.4.8"></script>
+  <script src="js/auth.js?v=6.4.8"></script>
+  <script src="js/ai-analytics.js?v=6.4.8"></script>
+  <script src="js/workspaces.js?v=6.4.8"></script>
+  <script src="js/exam-hub.js?v=6.4.8"></script>
+  <script src="js/gamification.js?v=6.4.8"></script>
+  <script src="js/sync-hub.js?v=6.4.8"></script>
+  <script src="js/supabase-client.js?v=6.4.8"></script>
+  <script src="js/voice-assistant.js?v=6.4.8"></script>
   
   <!-- Main Application Orchestration Script -->
   <script>
@@ -8227,7 +8227,7 @@ function handleExportEmulationExcelClick() {
       }
 
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js?v=6.4.7', { updateViaCache: 'none' })
+        navigator.serviceWorker.register('./sw.js?v=6.4.8', { updateViaCache: 'none' })
           .then(reg => {
             console.log('PWA Service Worker registered:', reg.scope);
             reg.update().catch(() => {});

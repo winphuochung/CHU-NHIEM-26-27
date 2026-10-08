@@ -492,13 +492,16 @@ class AppStore {
     }
 
     if (scores[2] && scores[2]['HS01']) {
-      scores[2]['HS01'].gioTay = 3; scores[2]['HS01'].phatBieu = 2; scores[2]['HS01'].kttx810 = 1; scores[2]['HS01'].veSinh = 0;
+      scores[2]['HS01'].mtt = 3; scores[2]['HS01'].kttx810 = 1; scores[2]['HS01'].gioTay = 4; scores[2]['HS01'].veSinh = 1;
     }
     if (scores[2] && scores[2]['HS02']) {
-      scores[2]['HS02'].gioTay = 2; scores[2]['HS02'].phatBieu = 2; scores[2]['HS02'].kttx810 = 1;
+      scores[2]['HS02'].kttx810 = 1; scores[2]['HS02'].gioTay = 1; scores[2]['HS02'].phatBieu = 1; scores[2]['HS02'].veSinh = 1;
+    }
+    if (scores[2] && scores[2]['HS03']) {
+      scores[2]['HS03'].vangP = 2; scores[2]['HS03'].kttx810 = 1; scores[2]['HS03'].gioTay = 4; scores[2]['HS03'].phatBieu = 3; scores[2]['HS03'].veSinh = 1;
     }
     if (scores[2] && scores[2]['HS04']) {
-      scores[2]['HS04'].phatBieu = 3; scores[2]['HS04'].kttx810 = 1;
+      scores[2]['HS04'].mtt = 1; scores[2]['HS04'].kttx810 = 1; scores[2]['HS04'].gioTay = 18; scores[2]['HS04'].phatBieu = 8; scores[2]['HS04'].veSinh = 1;
     }
     if (scores[2] && scores[2]['HS05']) {
       scores[2]['HS05'].truyBai = 1; scores[2]['HS05'].diTre = 1;
@@ -1395,8 +1398,8 @@ class AppStore {
     // 12. Phát biểu mỗi lượt cộng 2
     const plus = (kttx57 * 1) + (kttx810 * 5) + (gioTay * 1) + (phatBieu * 2);
 
-    // Điểm chuẩn 100đ ban đầu (tối đa 120đ, tối thiểu 0đ)
-    const totalScore = Math.max(0, Math.min(120, 100 - minus + plus));
+    // Điểm chuẩn 100đ ban đầu (tính chính xác theo thực tế thi đua: 100 - trừ + cộng, tối thiểu 0đ, không áp trần)
+    const totalScore = Math.max(0, 100 - minus + plus);
     let rank = 'Tốt';
     if (totalScore < 60) rank = 'Chưa đạt';
     else if (totalScore < 75) rank = 'Đạt';
@@ -1696,7 +1699,7 @@ class AppStore {
         time: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
       });
       // Cộng vào điểm tổng thể của học sinh
-      s.conductScore = Math.min(100, s.conductScore + numPoints);
+      s.conductScore = s.conductScore + numPoints;
     } else {
       rec.minus.push({
         id: 'M_' + Date.now(),
