@@ -694,6 +694,9 @@
           <button onclick="handleExportEmulationWordClick()" class="px-3 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0">
             <i data-lucide="file-text" class="w-4 h-4"></i> Xuất Word (NĐ 30)
           </button>
+          <button onclick="openParentReportModal()" <button onclick="openManageStudentsModal()" id="btn-admin-manage-students" class="px-3 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm shrink-0" title="Quản lý & Cập nhật danh sách học sinh, phụ huynh, SĐT, ngày sinh, nơi ở (Chỉ GVCN)">
+            <i data-lucide="user-cog" class="w-4 h-4"></i> Cập nhật DS Học sinh
+          </button>
           <button onclick="openParentReportModal()" id="btn-admin-parent-report" class="px-3 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm shrink-0" title="Tổng hợp tình hình học sinh báo cáo phụ huynh (Chỉ GVCN)">
             <i data-lucide="contact" class="w-4 h-4 text-purple-200"></i>
             <span>Báo Cáo Phụ Huynh</span>
@@ -1525,11 +1528,19 @@
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
           <div>
+            <span class="text-slate-500">Tên Phụ huynh:</span>
+            <p class="font-bold text-slate-800 dark:text-slate-200" id="modal-student-parent-name">••••••••••</p>
+          </div>
+          <div>
             <span class="text-slate-500">SĐT Phụ huynh:</span>
             <p class="font-mono font-bold text-slate-800 dark:text-slate-200" id="modal-student-parent-phone">••••••••••</p>
           </div>
           <div>
-            <span class="text-slate-500">Địa chỉ cư trú:</span>
+            <span class="text-slate-500">Ngày sinh học sinh:</span>
+            <p class="font-bold text-slate-800 dark:text-slate-200" id="modal-student-dob">••••••••••</p>
+          </div>
+          <div>
+            <span class="text-slate-500">Nơi ở hiện nay:</span>
             <p class="font-mono font-bold text-slate-800 dark:text-slate-200" id="modal-student-address">••••••••••••••••••••</p>
           </div>
         </div>
@@ -1583,6 +1594,10 @@
       <!-- GVCN Action: Báo cáo Phụ huynh -->
       <div id="modal-student-gvcn-actions" class="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2">
         <span class="text-[11px] text-slate-500 italic">Dành riêng cho Giáo viên Chủ nhiệm</span>
+        <button onclick="openEditStudentModal(activeModalStudent ? activeModalStudent.id : null)" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+          <i data-lucide="user-pen" class="w-4 h-4 text-emerald-200"></i>
+          <span>Cập Nhật Thông Tin Học Sinh</span>
+        </button>
         <button onclick="openParentReportForStudent(activeModalStudent ? activeModalStudent.id : null)" class="px-3.5 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
           <i data-lucide="contact" class="w-4 h-4 text-purple-200"></i>
           <span>Tổng Hợp Báo Cáo Phụ Huynh</span>
@@ -1594,6 +1609,274 @@
 
   </div>
 
+
+  <!-- ==================================================
+       MODAL: QUẢN LÝ & CẬP NHẬT DANH SÁCH HỌC SINH (GVCN ONLY)
+       ================================================== -->
+  <div id="modal-manage-students" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-2 sm:p-4 animate-fade-in">
+    <div class="glass-panel w-full max-w-6xl max-h-[94vh] rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 flex flex-col overflow-hidden">
+      
+      <!-- Header -->
+      <div class="px-5 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0 bg-slate-50/70 dark:bg-slate-900/70">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-600 text-white flex items-center justify-center shadow-md">
+            <i data-lucide="user-cog" class="w-5 h-5"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="font-black text-base md:text-lg text-slate-900 dark:text-white">Cập Nhật Danh Sách Học Sinh & Phụ Huynh Lớp 9A1</h3>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-200 border border-emerald-300/50">GVCN Quản Trị</span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Cập nhật chính xác: Tên phụ huynh, SĐT phụ huynh, Ngày sinh học sinh, Nơi ở hiện nay</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="exportStudentRosterExcel()" class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-900 text-xs font-bold hover:bg-teal-100 transition shadow-sm" title="Tải file danh sách đầy đủ thông tin ra Excel">
+            <i data-lucide="download" class="w-4 h-4"></i> Xuất Excel DS
+          </button>
+          <button onclick="closeManageStudentsModal()" class="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Thanh Tìm kiếm, Lọc Tổ & Thống kê -->
+      <div class="p-4 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col md:flex-row md:items-center justify-between gap-3 shrink-0">
+        <div class="flex flex-wrap items-center gap-2">
+          <div class="relative min-w-[240px]">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-2.5 text-slate-400"></i>
+            <input type="text" id="manage-students-search" oninput="filterManageStudentsTable()" placeholder="Tìm tên HS, mã HS, tên PH, SĐT, địa chỉ..." class="w-full pl-9 pr-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-emerald-500 transition">
+          </div>
+          
+          <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl" id="manage-students-team-filters">
+            <button onclick="setManageStudentsTeamFilter('all')" class="px-2.5 py-1 rounded-lg text-xs font-bold transition bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs" data-to="all">Tất cả (43)</button>
+            <button onclick="setManageStudentsTeamFilter('1')" class="px-2.5 py-1 rounded-lg text-xs font-bold transition text-slate-600 dark:text-slate-400 hover:text-slate-900" data-to="1">Tổ 1</button>
+            <button onclick="setManageStudentsTeamFilter('2')" class="px-2.5 py-1 rounded-lg text-xs font-bold transition text-slate-600 dark:text-slate-400 hover:text-slate-900" data-to="2">Tổ 2</button>
+            <button onclick="setManageStudentsTeamFilter('3')" class="px-2.5 py-1 rounded-lg text-xs font-bold transition text-slate-600 dark:text-slate-400 hover:text-slate-900" data-to="3">Tổ 3</button>
+            <button onclick="setManageStudentsTeamFilter('4')" class="px-2.5 py-1 rounded-lg text-xs font-bold transition text-slate-600 dark:text-slate-400 hover:text-slate-900" data-to="4">Tổ 4</button>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="openAddStudentModal()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm shrink-0">
+            <i data-lucide="user-plus" class="w-4 h-4"></i> Thêm Học Sinh
+          </button>
+        </div>
+      </div>
+
+      <!-- Bảng danh sách học sinh -->
+      <div class="flex-1 overflow-auto p-4">
+        <div class="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-xs">
+          <table class="w-full text-xs text-left border-collapse">
+            <thead class="bg-slate-100/90 dark:bg-slate-800/90 text-slate-600 dark:text-slate-300 uppercase tracking-wider font-extrabold sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800">
+              <tr>
+                <th class="p-2.5 text-center w-10">STT</th>
+                <th class="p-2.5 w-16">Mã HS</th>
+                <th class="p-2.5 min-w-[150px]">Họ và Tên Học Sinh</th>
+                <th class="p-2.5 w-16 text-center">Tổ</th>
+                <th class="p-2.5 w-24">Ngày Sinh</th>
+                <th class="p-2.5 min-w-[140px] text-emerald-800 dark:text-emerald-300 bg-emerald-50/50 dark:bg-emerald-950/20">Họ Tên Phụ Huynh</th>
+                <th class="p-2.5 min-w-[110px] text-purple-800 dark:text-purple-300 bg-purple-50/50 dark:bg-purple-950/20">SĐT Phụ Huynh</th>
+                <th class="p-2.5 min-w-[180px]">Nơi Ở Hiện Nay</th>
+                <th class="p-2.5 text-center w-28">Thao Tác</th>
+              </tr>
+            </thead>
+            <tbody id="manage-students-tbody" class="divide-y divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-900">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Footer Info -->
+      <div class="px-5 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 flex items-center justify-between text-xs text-slate-500">
+        <span id="manage-students-summary-count">Hiển thị 43 học sinh</span>
+        <div class="flex items-center gap-3">
+          <span class="inline-flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Đã có thông tin phụ huynh</span>
+          <button onclick="closeManageStudentsModal()" class="px-3.5 py-1.5 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-300 transition">Đóng</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================================================
+       MODAL: FORM CHỈNH SỬA CHI TIẾT THÔNG TIN HỌC SINH & PHỤ HUYNH
+       ================================================== -->
+  <div id="modal-edit-student" class="fixed inset-0 z-55 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4 animate-fade-in">
+    <div class="glass-panel w-full max-w-2xl max-h-[92vh] rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col overflow-hidden">
+      
+      <!-- Form Header with Switcher -->
+      <div class="px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50/80 dark:bg-slate-900/80 shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-sm">
+            <i data-lucide="user-pen" class="w-4 h-4"></i>
+          </div>
+          <div>
+            <h3 class="font-black text-sm sm:text-base text-slate-900 dark:text-white" id="edit-hs-modal-title">Cập Nhật Thông Tin Học Sinh</h3>
+            <p class="text-[11px] text-slate-500">Lưu trực tiếp vào danh sách hồ sơ lớp 9A1</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1.5">
+          <button onclick="navigateEditStudent(-1)" class="p-1.5 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition" title="Học sinh trước">
+            <i data-lucide="chevron-left" class="w-4 h-4"></i>
+          </button>
+          <select id="edit-hs-quick-select" onchange="loadStudentToEditForm(this.value)" class="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-2 py-1 text-xs font-bold text-slate-800 dark:text-slate-200 max-w-[150px] sm:max-w-[180px] truncate outline-none">
+            <!-- Populated via JS -->
+          </select>
+          <button onclick="navigateEditStudent(1)" class="p-1.5 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition" title="Học sinh tiếp theo">
+            <i data-lucide="chevron-right" class="w-4 h-4"></i>
+          </button>
+          <button onclick="closeEditStudentModal()" class="ml-1 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Form Body -->
+      <div class="flex-1 overflow-y-auto p-5 space-y-4 text-xs">
+        
+        <!-- Khối 1: Thông tin học sinh -->
+        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 space-y-3">
+          <span class="font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block text-[11px] flex items-center gap-1.5">
+            <i data-lucide="user" class="w-3.5 h-3.5 text-blue-600"></i> I. Thông Tin Cá Nhân Học Sinh
+          </span>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block font-bold text-slate-600 dark:text-slate-400 mb-1">Mã Học Sinh:</label>
+              <input type="text" id="edit-hs-id" disabled class="w-full bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 font-mono font-black text-slate-500 cursor-not-allowed">
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Họ và Tên Học Sinh (*):</label>
+              <input type="text" id="edit-hs-name" placeholder="Nguyễn Văn A" class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Ngày sinh (dd/mm/yyyy):</label>
+              <input type="text" id="edit-hs-dob" placeholder="15/03/2011" class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 font-bold text-slate-800 dark:text-slate-200 outline-none focus:border-emerald-500 transition">
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Giới tính:</label>
+              <select id="edit-hs-gender" class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 font-bold text-slate-800 dark:text-slate-200 outline-none">
+                <option value="Nam">Nam</option>
+                <option value="Nữ">Nữ</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Phân Tổ (*):</label>
+              <select id="edit-hs-to" class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 font-black text-emerald-600 outline-none">
+                <option value="1">Tổ 1</option>
+                <option value="2">Tổ 2</option>
+                <option value="3">Tổ 3</option>
+                <option value="4">Tổ 4</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Chức vụ trong lớp:</label>
+              <select id="edit-hs-role" class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 font-bold text-slate-800 dark:text-slate-200 outline-none">
+                <option value="Học sinh">Học sinh</option>
+                <option value="Tổ trưởng">Tổ trưởng</option>
+                <option value="Lớp phó Học tập">Lớp phó Học tập</option>
+                <option value="Lớp phó Trật tự">Lớp phó Trật tự</option>
+                <option value="Lớp phó Lao động">Lớp phó Lao động</option>
+                <option value="Thủ quỹ">Thủ quỹ</option>
+                <option value="Lớp trưởng">Lớp trưởng</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">SĐT Học Sinh (nếu có):</label>
+              <input type="text" id="edit-hs-phone" placeholder="0912.xxx.xxx" class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 font-mono text-slate-800 dark:text-slate-200 outline-none">
+            </div>
+          </div>
+        </div>
+
+        <!-- Khối 2: Thông tin Phụ Huynh & Nơi Ở Hiện Nay (Trọng tâm yêu cầu) -->
+        <div class="p-3.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/50 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="font-extrabold text-emerald-900 dark:text-emerald-300 uppercase tracking-wider block text-[11px] flex items-center gap-1.5">
+              <i data-lucide="contact" class="w-3.5 h-3.5 text-emerald-600"></i> II. Thông Tin Phụ Huynh & Nơi Ở Hiện Nay
+            </span>
+            <span class="text-[10px] text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-100 dark:bg-emerald-900/60 px-2 py-0.5 rounded-full">Trọng tâm liên lạc GVCN</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-emerald-950 dark:text-emerald-200 mb-1">
+                Tên Phụ Huynh Học Sinh (*):
+              </label>
+              <input type="text" id="edit-hs-parent-name" placeholder="VD: Nguyễn Văn Thành / Lê Thị Mai" class="w-full bg-white dark:bg-slate-800 border border-emerald-300 dark:border-emerald-700 rounded-xl px-3 py-2 font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition">
+              <span class="text-[10px] text-slate-500 mt-0.5 block">Họ tên Bố/Mẹ hoặc người giám hộ trực tiếp</span>
+            </div>
+
+            <div>
+              <label class="block font-bold text-emerald-950 dark:text-emerald-200 mb-1">
+                Số Điện Thoại Phụ Huynh (*):
+              </label>
+              <div class="relative">
+                <input type="text" id="edit-hs-parent-phone" placeholder="0903.xxx.xxx" class="w-full bg-white dark:bg-slate-800 border border-emerald-300 dark:border-emerald-700 rounded-xl pl-3 pr-9 py-2 font-mono font-bold text-slate-900 dark:text-white outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition">
+                <a id="btn-call-parent-phone" href="#" class="absolute right-2 top-2 p-1 text-emerald-600 hover:text-emerald-700" title="Bấm gọi thử">
+                  <i data-lucide="phone" class="w-4 h-4"></i>
+                </a>
+              </div>
+              <span class="text-[10px] text-slate-500 mt-0.5 block">Dùng để kết nối Zalo, gọi điện, gửi tin nhắn thi đua</span>
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-bold text-emerald-950 dark:text-emerald-200 mb-1">
+              Nơi Ở Hiện Nay Của Học Sinh (*):
+            </label>
+            <input type="text" id="edit-hs-address" placeholder="VD: Số 12, Ấp Phước Hưng, Xã Phước Hưng, Huyện Long Thành, Đồng Nai" class="w-full bg-white dark:bg-slate-800 border border-emerald-300 dark:border-emerald-700 rounded-xl px-3 py-2 font-medium text-slate-900 dark:text-white outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 transition">
+            <span class="text-[10px] text-slate-500 mt-0.5 block">Địa chỉ thường trú hoặc tạm trú hiện tại để quản lý địa bàn</span>
+          </div>
+        </div>
+
+        <!-- Khối 3: Nguyện vọng & Ghi chú -->
+        <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 space-y-3">
+          <span class="font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-wider block text-[11px] flex items-center gap-1.5">
+            <i data-lucide="compass" class="w-3.5 h-3.5 text-indigo-600"></i> III. Nguyện Vọng Lớp 10 & Ghi Chú Của GVCN
+          </span>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Mục tiêu NV1:</label>
+              <input type="text" id="edit-hs-nv1" placeholder="THPT Phước Hưng" class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-200 outline-none">
+            </div>
+            <div class="sm:col-span-2">
+              <label class="block font-bold text-slate-700 dark:text-slate-300 mb-1">Ghi chú của GVCN:</label>
+              <input type="text" id="edit-hs-notes" placeholder="Đặc điểm học sinh, hoàn cảnh gia đình..." class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 text-slate-800 dark:text-slate-200 outline-none">
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="px-5 py-3.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80 flex flex-wrap items-center justify-between gap-2 shrink-0">
+        <button onclick="closeEditStudentModal()" class="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-300 transition">
+          Hủy Bỏ
+        </button>
+
+        <div class="flex items-center gap-2">
+          <button onclick="handleSaveEditStudent(true)" class="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition flex items-center gap-1.5 shadow-xs" title="Lưu học sinh này và mở ngay học sinh tiếp theo">
+            <i data-lucide="arrow-right-circle" class="w-4 h-4 text-emerald-600"></i>
+            <span>Lưu & Sang HS Tiếp Theo</span>
+          </button>
+          <button onclick="handleSaveEditStudent(false)" class="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black transition flex items-center gap-1.5 shadow-md">
+            <i data-lucide="check" class="w-4 h-4"></i>
+            <span>Lưu Thông Tin</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
 
   <!-- ============================================================== -->
   <!-- MODAL: TỔNG HỢP TÌNH HÌNH HỌC SINH BÁO CÁO PHỤ HUYNH (GVCN)     -->
@@ -3251,16 +3534,19 @@
       } else {
         if (btnOpenAddKudos) btnOpenAddKudos.classList.remove('hidden');
         const btnParentReport = document.getElementById('btn-admin-parent-report');
+        const btnManageStudents = document.getElementById('btn-admin-manage-students');
         if (cur.id === 'gvcn') {
           if (btnAdd) btnAdd.classList.remove('hidden');
           if (btnTeams) btnTeams.classList.remove('hidden');
           if (btnImportExcel) btnImportExcel.classList.remove('hidden');
           if (btnParentReport) btnParentReport.classList.remove('hidden');
+          if (btnManageStudents) btnManageStudents.classList.remove('hidden');
         } else {
           if (btnAdd) btnAdd.classList.add('hidden');
           if (btnTeams) btnTeams.classList.add('hidden');
           if (btnImportExcel) btnImportExcel.classList.add('hidden');
           if (btnParentReport) btnParentReport.classList.add('hidden');
+          if (btnManageStudents) btnManageStudents.classList.add('hidden');
         }
       }
 
@@ -6703,6 +6989,353 @@ function handleExportEmulationExcelClick() {
       }
     }
 
+    // ================= QUẢN LÝ & CẬP NHẬT DANH SÁCH HỌC SINH (GVCN ONLY) =================
+    let currentManageStudentsTeamFilter = 'all';
+    let activeEditingStudentId = null;
+
+    // Mở Modal Quản Lý & Cập Nhật Danh Sách Học Sinh (Chỉ GVCN)
+    function openManageStudentsModal() {
+      if (!isCurrentUserGVCN()) {
+        showToast('Chỉ Giáo viên chủ nhiệm mới có quyền cập nhật danh sách học sinh!', 'error');
+        return;
+      }
+      renderManageStudentsTable();
+      const modal = document.getElementById('modal-manage-students');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        if (window.lucide) lucide.createIcons();
+      }
+    }
+
+    function closeManageStudentsModal() {
+      const modal = document.getElementById('modal-manage-students');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    function setManageStudentsTeamFilter(team) {
+      currentManageStudentsTeamFilter = team;
+      const buttons = document.querySelectorAll('#manage-students-team-filters button');
+      buttons.forEach(b => {
+        const isMatch = b.getAttribute('data-to') === team;
+        b.classList.toggle('bg-white', isMatch);
+        b.classList.toggle('dark:bg-slate-700', isMatch);
+        b.classList.toggle('text-slate-900', isMatch);
+        b.classList.toggle('dark:text-white', isMatch);
+        b.classList.toggle('shadow-xs', isMatch);
+        b.classList.toggle('text-slate-600', !isMatch);
+        b.classList.toggle('dark:text-slate-400', !isMatch);
+      });
+      renderManageStudentsTable();
+    }
+
+    function filterManageStudentsTable() {
+      renderManageStudentsTable();
+    }
+
+    function renderManageStudentsTable() {
+      if (!window.store) return;
+      const allStudents = window.store.getStudents() || [];
+      const tbody = document.getElementById('manage-students-tbody');
+      if (!tbody) return;
+
+      const searchKeyword = (document.getElementById('manage-students-search')?.value || '').toLowerCase().trim();
+
+      const filtered = allStudents.filter(s => {
+        // Team filter
+        if (currentManageStudentsTeamFilter !== 'all' && String(s.to) !== currentManageStudentsTeamFilter) {
+          return false;
+        }
+        // Search filter
+        if (searchKeyword) {
+          const matchName = (s.name || '').toLowerCase().includes(searchKeyword);
+          const matchId = (s.id || '').toLowerCase().includes(searchKeyword);
+          const matchParent = (s.parentName || '').toLowerCase().includes(searchKeyword);
+          const matchPhone = (s.parentPhone || '').replace(/[^0-9]/g, '').includes(searchKeyword.replace(/[^0-9]/g, ''));
+          const matchAddress = (s.address || '').toLowerCase().includes(searchKeyword);
+          return matchName || matchId || matchParent || matchPhone || matchAddress;
+        }
+        return true;
+      });
+
+      const countEl = document.getElementById('manage-students-summary-count');
+      if (countEl) {
+        countEl.innerText = `Hiển thị ${filtered.length} / ${allStudents.length} học sinh`;
+      }
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" class="p-8 text-center text-slate-400 dark:text-slate-500">
+              <i data-lucide="search-x" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+              Không tìm thấy học sinh nào khớp với điều kiện tìm kiếm.
+            </td>
+          </tr>
+        `;
+        if (window.lucide) lucide.createIcons();
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(s => {
+        const cleanPhone = (s.parentPhone || '').replace(/[^0-9]/g, '');
+        return `
+          <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+            <td class="p-2.5 text-center font-bold text-slate-400">${s.stt}</td>
+            <td class="p-2.5 font-mono font-bold text-slate-600 dark:text-slate-400">${s.id}</td>
+            <td class="p-2.5">
+              <div class="flex items-center gap-2">
+                <span class="font-black text-slate-900 dark:text-white">${s.name}</span>
+                <span class="px-1.5 py-0.2 rounded text-[10px] ${s.gender === 'Nữ' ? 'bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300' : 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'} font-bold">${s.gender || 'Nam'}</span>
+              </div>
+              <span class="text-[10px] text-slate-400 block">${s.role || 'Học sinh'}</span>
+            </td>
+            <td class="p-2.5 text-center">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-phuochung-100 dark:bg-phuochung-950 text-phuochung-700 dark:text-phuochung-300">Tổ ${s.to}</span>
+            </td>
+            <td class="p-2.5 font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">
+              ${s.dob || '<span class="text-slate-300 italic">Chưa có</span>'}
+            </td>
+            <td class="p-2.5 bg-emerald-50/30 dark:bg-emerald-950/10">
+              <span class="font-extrabold text-emerald-900 dark:text-emerald-200 block">${s.parentName || '<span class="text-amber-500 italic font-normal">Chưa cập nhật</span>'}</span>
+            </td>
+            <td class="p-2.5 bg-purple-50/30 dark:bg-purple-950/10">
+              <div class="flex items-center gap-1.5">
+                <span class="font-mono font-bold text-purple-900 dark:text-purple-200">${s.parentPhone || '<span class="text-slate-400 font-normal italic">Chưa có</span>'}</span>
+                ${cleanPhone ? `
+                  <a href="tel:${cleanPhone}" class="p-1 rounded text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950" title="Bấm gọi ngay">
+                    <i data-lucide="phone" class="w-3.5 h-3.5"></i>
+                  </a>
+                ` : ''}
+              </div>
+            </td>
+            <td class="p-2.5 text-slate-600 dark:text-slate-300 max-w-[220px] truncate" title="${s.address || ''}">
+              ${s.address || '<span class="text-slate-400 italic">Chưa có</span>'}
+            </td>
+            <td class="p-2.5 text-center whitespace-nowrap">
+              <div class="flex items-center justify-center gap-1">
+                <button onclick="openEditStudentModal('${s.id}')" class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50 dark:text-emerald-300 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-xs" title="Chỉnh sửa thông tin học sinh & Phụ huynh">
+                  <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Sửa
+                </button>
+                <button onclick="openParentReportForStudent('${s.id}')" class="px-2 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:hover:bg-purple-900/50 dark:text-purple-300 rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-xs" title="Xem báo cáo tổng hợp phụ huynh">
+                  <i data-lucide="clipboard-list" class="w-3.5 h-3.5"></i> Báo PH
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    // Mở Form chỉnh sửa chi tiết một học sinh
+    function openEditStudentModal(studentId = null) {
+      if (!isCurrentUserGVCN()) {
+        showToast('Chỉ Giáo viên chủ nhiệm mới có quyền chỉnh sửa thông tin học sinh!', 'error');
+        return;
+      }
+      if (!window.store) return;
+      const students = window.store.getStudents() || [];
+      if (students.length === 0) return;
+
+      const targetId = studentId || (students[0] ? students[0].id : 'HS01');
+      activeEditingStudentId = targetId;
+
+      // Populate quick select dropdown
+      const quickSelect = document.getElementById('edit-hs-quick-select');
+      if (quickSelect) {
+        quickSelect.innerHTML = students.map(s => `
+          <option value="${s.id}" ${s.id === targetId ? 'selected' : ''}>${s.id} - ${s.name}</option>
+        `).join('');
+      }
+
+      loadStudentToEditForm(targetId);
+
+      const modal = document.getElementById('modal-edit-student');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        if (window.lucide) lucide.createIcons();
+      }
+    }
+
+    function closeEditStudentModal() {
+      const modal = document.getElementById('modal-edit-student');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    function navigateEditStudent(offset) {
+      if (!window.store) return;
+      const students = window.store.getStudents() || [];
+      const currentIndex = students.findIndex(s => s.id === activeEditingStudentId);
+      if (currentIndex === -1) return;
+
+      let nextIndex = currentIndex + offset;
+      if (nextIndex < 0) nextIndex = students.length - 1;
+      if (nextIndex >= students.length) nextIndex = 0;
+
+      const nextStudent = students[nextIndex];
+      if (nextStudent) {
+        activeEditingStudentId = nextStudent.id;
+        const quickSelect = document.getElementById('edit-hs-quick-select');
+        if (quickSelect) quickSelect.value = nextStudent.id;
+        loadStudentToEditForm(nextStudent.id);
+      }
+    }
+
+    function loadStudentToEditForm(studentId) {
+      if (!window.store) return;
+      const s = window.store.getStudentById(studentId);
+      if (!s) return;
+      activeEditingStudentId = s.id;
+
+      document.getElementById('edit-hs-modal-title').innerText = `Cập Nhật Thông Tin: ${s.name} (${s.id})`;
+      document.getElementById('edit-hs-id').value = s.id;
+      document.getElementById('edit-hs-name').value = s.name || '';
+      document.getElementById('edit-hs-dob').value = s.dob || '';
+      document.getElementById('edit-hs-gender').value = s.gender || 'Nam';
+      document.getElementById('edit-hs-to').value = String(s.to || 1);
+      document.getElementById('edit-hs-role').value = s.role || 'Học sinh';
+      document.getElementById('edit-hs-phone').value = s.phone || '';
+
+      // Required fields from User
+      document.getElementById('edit-hs-parent-name').value = s.parentName || '';
+      document.getElementById('edit-hs-parent-phone').value = s.parentPhone || '';
+      document.getElementById('edit-hs-address').value = s.address || '';
+
+      // NV1 & Notes
+      document.getElementById('edit-hs-nv1').value = s.targetHighSchool?.nv1 || '';
+      document.getElementById('edit-hs-notes').value = s.notes || '';
+
+      // Call button
+      const callBtn = document.getElementById('btn-call-parent-phone');
+      if (callBtn) {
+        const clean = (s.parentPhone || '').replace(/[^0-9]/g, '');
+        callBtn.href = clean ? `tel:${clean}` : '#';
+      }
+    }
+
+    function handleSaveEditStudent(saveAndNext = false) {
+      if (!isCurrentUserGVCN()) {
+        showToast('Chỉ Giáo viên chủ nhiệm mới có quyền lưu thông tin học sinh!', 'error');
+        return;
+      }
+      if (!window.store || !activeEditingStudentId) return;
+
+      const name = document.getElementById('edit-hs-name').value.trim();
+      if (!name) {
+        showToast('Vui lòng không để trống Họ và Tên học sinh!', 'error');
+        document.getElementById('edit-hs-name').focus();
+        return;
+      }
+
+      const dob = document.getElementById('edit-hs-dob').value.trim();
+      const gender = document.getElementById('edit-hs-gender').value;
+      const to = parseInt(document.getElementById('edit-hs-to').value) || 1;
+      const role = document.getElementById('edit-hs-role').value;
+      const phone = document.getElementById('edit-hs-phone').value.trim();
+
+      const parentName = document.getElementById('edit-hs-parent-name').value.trim();
+      const parentPhone = document.getElementById('edit-hs-parent-phone').value.trim();
+      const address = document.getElementById('edit-hs-address').value.trim();
+
+      const nv1 = document.getElementById('edit-hs-nv1').value.trim();
+      const notes = document.getElementById('edit-hs-notes').value.trim();
+
+      const updated = window.store.updateStudent(activeEditingStudentId, {
+        name,
+        dob,
+        gender,
+        to,
+        role,
+        phone,
+        parentName,
+        parentPhone,
+        address,
+        nv1,
+        notes
+      });
+
+      if (!updated) {
+        showToast('Có lỗi xảy ra khi lưu thông tin học sinh!', 'error');
+        return;
+      }
+
+      showToast(`Đã cập nhật thành công hồ sơ em ${name}!`, 'success');
+
+      // Refresh background tables
+      renderManageStudentsTable();
+      if (typeof renderEmulationTable === 'function') renderEmulationTable();
+      if (typeof renderDashboard === 'function') renderDashboard();
+      if (typeof renderClassroomGrid === 'function') renderClassroomGrid();
+
+      // If active modal student is this student, refresh it
+      if (window.activeModalStudent && window.activeModalStudent.id === activeEditingStudentId) {
+        openStudentModal(activeEditingStudentId);
+      }
+
+      // If parent report modal is open, refresh it
+      if (window.activeParentReportStudentId === activeEditingStudentId && typeof renderParentReportCard === 'function') {
+        renderParentReportCard();
+      }
+
+      if (saveAndNext) {
+        navigateEditStudent(1);
+      } else {
+        closeEditStudentModal();
+      }
+    }
+
+    // Xuất Danh Sách Học Sinh Kèm Phụ Huynh Đầy Đủ Ra Excel (CSV UTF-8)
+    function exportStudentRosterExcel() {
+      if (!window.store) return;
+      const students = window.store.getStudents() || [];
+
+      let csv = '\uFEFF'; // BOM UTF-8
+      csv += 'STT,Mã Học Sinh,Họ và Tên,Giới Tính,Ngày Sinh,Tổ,Chức Vụ,Tên Phụ Huynh,SĐT Phụ Huynh,Nơi Ở Hiện Nay,SĐT Học Sinh,Nguyện Vọng 1,Ghi Chú\n';
+
+      const esc = val => {
+        if (val === null || val === undefined) return '""';
+        return '"' + String(val).replace(/"/g, '""').trim() + '"';
+      };
+
+      students.forEach((s, idx) => {
+        const row = [
+          idx + 1,
+          esc(s.id),
+          esc(s.name),
+          esc(s.gender),
+          esc(s.dob),
+          s.to,
+          esc(s.role),
+          esc(s.parentName || ''),
+          esc(s.parentPhone || ''),
+          esc(s.address || ''),
+          esc(s.phone || ''),
+          esc(s.targetHighSchool?.nv1 || ''),
+          esc(s.notes || '')
+        ];
+        csv += row.join(',') + '\n';
+      });
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `Danh_Sach_Hoc_Sinh_Lop_9A1_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      showToast('Đã xuất danh sách hồ sơ học sinh ra file Excel thành công!', 'success');
+    }
+
     // ================= MODAL GVCN QUẢN TRỊ HỌC SINH & PHÂN TỔ =================
 
     function openAddStudentModal() {
@@ -9014,7 +9647,7 @@ Trân trọng cảm ơn Quý Phụ huynh đã luôn đồng hành, quan tâm và
       }
 
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js?v=6.5.1', { updateViaCache: 'none' })
+        navigator.serviceWorker.register('./sw.js?v=6.5.2', { updateViaCache: 'none' })
           .then(reg => {
             console.log('PWA Service Worker registered:', reg.scope);
             reg.update().catch(() => {});
