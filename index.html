@@ -694,6 +694,10 @@
           <button onclick="handleExportEmulationWordClick()" class="px-3 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0">
             <i data-lucide="file-text" class="w-4 h-4"></i> Xuất Word (NĐ 30)
           </button>
+          <button onclick="openParentReportModal()" id="btn-admin-parent-report" class="px-3 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm shrink-0" title="Tổng hợp tình hình học sinh báo cáo phụ huynh (Chỉ GVCN)">
+            <i data-lucide="contact" class="w-4 h-4 text-purple-200"></i>
+            <span>Báo Cáo Phụ Huynh</span>
+          </button>
         </div>
       </div>
 
@@ -1576,10 +1580,103 @@
         </div>
       </div>
 
+      <!-- GVCN Action: Báo cáo Phụ huynh -->
+      <div id="modal-student-gvcn-actions" class="pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2">
+        <span class="text-[11px] text-slate-500 italic">Dành riêng cho Giáo viên Chủ nhiệm</span>
+        <button onclick="openParentReportForStudent(activeModalStudent ? activeModalStudent.id : null)" class="px-3.5 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+          <i data-lucide="contact" class="w-4 h-4 text-purple-200"></i>
+          <span>Tổng Hợp Báo Cáo Phụ Huynh</span>
+        </button>
+      </div>
+
     </div>
   </div>
 
   </div>
+
+
+  <!-- ============================================================== -->
+  <!-- MODAL: TỔNG HỢP TÌNH HÌNH HỌC SINH BÁO CÁO PHỤ HUYNH (GVCN)     -->
+  <!-- ============================================================== -->
+  <div id="modal-parent-report" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4">
+    <div class="glass-panel w-full max-w-4xl rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[92vh] overflow-hidden animate-in fade-in zoom-in duration-200">
+      
+      <!-- Modal Header -->
+      <div class="px-5 py-3.5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-gradient-to-r from-purple-900/90 via-indigo-900/90 to-phuochung-900/90 text-white">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-purple-500/30 border border-purple-400/40 text-purple-200 flex items-center justify-center shrink-0">
+            <i data-lucide="contact" class="w-5 h-5 text-amber-300"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-sm sm:text-base flex items-center gap-2">
+              <span>Tổng Hợp Tình Hình Học Sinh Báo Cáo Phụ Huynh</span>
+              <span class="px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 font-black text-[10px] tracking-wide uppercase">GVCN Only</span>
+            </h3>
+            <p class="text-[11px] text-purple-200/90 mt-0.5">Lớp 9A1 • Niên khóa 2026 - 2027 • Tự động tổng hợp dữ liệu từ Tuần 1 đến hiện tại</p>
+          </div>
+        </div>
+        <button onclick="closeParentReportModal()" class="text-white/70 hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Controls Bar: Bộ chọn học sinh & Lọc theo tổ & Chọn tuần lũy kế -->
+      <div class="px-5 py-3 bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex flex-wrap items-center gap-2 flex-1 min-w-[260px]">
+          <span class="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+            <i data-lucide="user" class="w-3.5 h-3.5 text-phuochung-600"></i> Chọn học sinh:
+          </span>
+          <select id="parent-report-student-select" onchange="renderParentReportCard(this.value)" class="flex-1 max-w-xs bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-1.5 font-bold text-slate-900 dark:text-white outline-none">
+            <!-- Render 43 HS by JS -->
+          </select>
+          <div class="flex items-center gap-1 text-[11px]">
+            <button onclick="filterParentReportStudents('all')" class="parent-report-to-pill px-2 py-1 rounded-lg font-bold bg-phuochung-600 text-white transition" data-to="all">Tất cả (43)</button>
+            <button onclick="filterParentReportStudents(1)" class="parent-report-to-pill px-2 py-1 rounded-lg font-bold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 transition" data-to="1">Tổ 1</button>
+            <button onclick="filterParentReportStudents(2)" class="parent-report-to-pill px-2 py-1 rounded-lg font-bold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 transition" data-to="2">Tổ 2</button>
+            <button onclick="filterParentReportStudents(3)" class="parent-report-to-pill px-2 py-1 rounded-lg font-bold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 transition" data-to="3">Tổ 3</button>
+            <button onclick="filterParentReportStudents(4)" class="parent-report-to-pill px-2 py-1 rounded-lg font-bold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 transition" data-to="4">Tổ 4</button>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+            <i data-lucide="calendar" class="w-3.5 h-3.5 text-purple-600"></i> Lũy kế đến:
+          </span>
+          <select id="parent-report-week-select" onchange="renderParentReportCard()" class="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-2.5 py-1.5 font-extrabold text-purple-700 dark:text-purple-300 outline-none">
+            <!-- Render 35 weeks by JS -->
+          </select>
+        </div>
+      </div>
+
+      <!-- Modal Body (Dynamic Report Content) -->
+      <div class="p-5 overflow-y-auto space-y-4 text-xs" id="parent-report-content">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- Modal Footer Toolbar -->
+      <div class="px-5 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex flex-wrap items-center justify-between gap-2.5">
+        <div class="text-[11px] text-slate-500 italic flex items-center gap-1">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-500"></i>
+          <span>Bảo mật: Chỉ GVCN được cấp quyền xem dữ liệu tổng hợp này</span>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="copyParentZaloMessage()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-sm transition active:scale-95" title="Sao chép nội dung văn bản để dán gửi Zalo/SMS cho phụ huynh">
+            <i data-lucide="copy" class="w-4 h-4"></i>
+            <span>Sao Chép Tin Nhắn Zalo</span>
+          </button>
+          <button onclick="printParentReport()" class="px-3.5 py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-sm transition active:scale-95" title="In phiếu thông báo kết quả rèn luyện gửi phụ huynh">
+            <i data-lucide="printer" class="w-4 h-4"></i>
+            <span>In Phiếu Báo Cáo</span>
+          </button>
+          <button onclick="closeParentReportModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl font-semibold text-xs transition">
+            Đóng
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
 
   <!-- ============================================== -->
   <!-- MODAL: GỬI LỜI NHẮN KUDOS                       -->
@@ -2322,16 +2419,16 @@
   </div> <!-- END #app-main-layout -->
 
   <!-- Scripts Core -->
-  <script src="js/store.js?v=6.5.0"></script>
-  <script src="js/security.js?v=6.5.0"></script>
-  <script src="js/auth.js?v=6.5.0"></script>
-  <script src="js/ai-analytics.js?v=6.5.0"></script>
-  <script src="js/workspaces.js?v=6.5.0"></script>
-  <script src="js/exam-hub.js?v=6.5.0"></script>
-  <script src="js/gamification.js?v=6.5.0"></script>
-  <script src="js/sync-hub.js?v=6.5.0"></script>
-  <script src="js/supabase-client.js?v=6.5.0"></script>
-  <script src="js/voice-assistant.js?v=6.5.0"></script>
+  <script src="js/store.js?v=6.5.1"></script>
+  <script src="js/security.js?v=6.5.1"></script>
+  <script src="js/auth.js?v=6.5.1"></script>
+  <script src="js/ai-analytics.js?v=6.5.1"></script>
+  <script src="js/workspaces.js?v=6.5.1"></script>
+  <script src="js/exam-hub.js?v=6.5.1"></script>
+  <script src="js/gamification.js?v=6.5.1"></script>
+  <script src="js/sync-hub.js?v=6.5.1"></script>
+  <script src="js/supabase-client.js?v=6.5.1"></script>
+  <script src="js/voice-assistant.js?v=6.5.1"></script>
   
   <!-- Main Application Orchestration Script -->
   <script>
@@ -3153,14 +3250,17 @@
         if (btnOpenAddKudos) btnOpenAddKudos.classList.add('hidden');
       } else {
         if (btnOpenAddKudos) btnOpenAddKudos.classList.remove('hidden');
+        const btnParentReport = document.getElementById('btn-admin-parent-report');
         if (cur.id === 'gvcn') {
           if (btnAdd) btnAdd.classList.remove('hidden');
           if (btnTeams) btnTeams.classList.remove('hidden');
           if (btnImportExcel) btnImportExcel.classList.remove('hidden');
+          if (btnParentReport) btnParentReport.classList.remove('hidden');
         } else {
           if (btnAdd) btnAdd.classList.add('hidden');
           if (btnTeams) btnTeams.classList.add('hidden');
           if (btnImportExcel) btnImportExcel.classList.add('hidden');
+          if (btnParentReport) btnParentReport.classList.add('hidden');
         }
       }
 
@@ -4352,6 +4452,11 @@ function handleExportEmulationExcelClick() {
                     <button onclick="openStudentCriteriaModal('${s.id}')" class="px-2 py-1 bg-phuochung-100 hover:bg-phuochung-200 text-phuochung-800 rounded font-bold text-[10px]" title="Mở phiếu chấm điểm chi tiết">
                       Chấm
                     </button>
+                    ${isCurrentUserGVCN() ? `
+                      <button onclick="openParentReportForStudent('${s.id}')" class="px-2 py-1 bg-purple-100 hover:bg-purple-200 dark:bg-purple-950/70 text-purple-700 dark:text-purple-300 rounded font-bold text-[10px] flex items-center gap-1 transition" title="Tổng hợp báo cáo phụ huynh (${s.name})">
+                        <i data-lucide="contact" class="w-3 h-3 text-purple-600"></i> Báo PH
+                      </button>
+                    ` : ''}
                     <button onclick="handleResetStudentWeekCriteria(${w}, '${s.id}')" class="p-1 text-slate-400 hover:text-rose-500 rounded" title="Đặt lại về 0">
                       <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
                     </button>
@@ -6785,6 +6890,17 @@ function handleExportEmulationExcelClick() {
         }
       }
 
+      const gvcnModalActions = document.getElementById('modal-student-gvcn-actions');
+      if (gvcnModalActions) {
+        if (isCurrentUserGVCN()) {
+          gvcnModalActions.classList.remove('hidden');
+          gvcnModalActions.classList.add('flex');
+        } else {
+          gvcnModalActions.classList.add('hidden');
+          gvcnModalActions.classList.remove('flex');
+        }
+      }
+
       // Cập nhật Sổ tay nhận xét cán sự trong Hồ sơ học sinh (Tuần 1 -> 35)
       const revWeekSel = document.getElementById('modal-student-review-week-select');
       if (revWeekSel) {
@@ -6804,6 +6920,549 @@ function handleExportEmulationExcelClick() {
       document.getElementById('modal-student-detail').classList.add('hidden');
       document.getElementById('modal-student-detail').classList.remove('flex');
     }
+
+    // ==============================================================
+    // CHỨC NĂNG TỔNG HỢP TÌNH HÌNH HỌC SINH BÁO CÁO PHỤ HUYNH (GVCN)
+    // ==============================================================
+    let activeParentReportStudentId = null;
+    let parentReportFilterTo = 'all';
+
+    function openParentReportModal(defaultStudentId = null) {
+      if (!isCurrentUserGVCN()) {
+        try {
+          showSeatingToast('⚠️ Quyền hạn từ chối: Chức năng Tổng hợp Báo cáo Phụ huynh chỉ dành riêng cho Giáo viên Chủ nhiệm!');
+        } catch(e) {
+          alert('⚠️ Quyền hạn từ chối: Chức năng Tổng hợp Báo cáo Phụ huynh chỉ dành riêng cho Giáo viên Chủ nhiệm!');
+        }
+        return;
+      }
+
+      const curWk = (window.store && typeof window.store.getCurrentWeek === 'function') 
+        ? window.store.getCurrentWeek() 
+        : 1;
+
+      // Cập nhật bộ chọn tuần lũy kế
+      const weekSel = document.getElementById('parent-report-week-select');
+      if (weekSel) {
+        weekSel.innerHTML = Array.from({ length: 35 }, (_, i) => i + 1).map(w => `
+          <option value="${w}" ${w === curWk ? 'selected' : ''}>Tuần 1 ➔ Tuần ${w}${w === curWk ? ' (Hiện tại)' : ''}</option>
+        `).join('');
+      }
+
+      // Cập nhật danh sách học sinh
+      parentReportFilterTo = 'all';
+      updateParentReportToPills();
+      renderParentReportStudentList();
+
+      if (defaultStudentId) {
+        activeParentReportStudentId = defaultStudentId;
+        const studentSel = document.getElementById('parent-report-student-select');
+        if (studentSel) studentSel.value = defaultStudentId;
+      } else if (!activeParentReportStudentId) {
+        const students = window.store ? window.store.getStudents() : [];
+        activeParentReportStudentId = students[0] ? students[0].id : 'HS01';
+      }
+
+      renderParentReportCard(activeParentReportStudentId);
+
+      const modal = document.getElementById('modal-parent-report');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function openParentReportForStudent(studentId) {
+      closeStudentModal();
+      openParentReportModal(studentId);
+    }
+
+    function closeParentReportModal() {
+      const modal = document.getElementById('modal-parent-report');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    }
+
+    function filterParentReportStudents(toId) {
+      parentReportFilterTo = toId;
+      updateParentReportToPills();
+      renderParentReportStudentList();
+      const studentSel = document.getElementById('parent-report-student-select');
+      if (studentSel && studentSel.value) {
+        renderParentReportCard(studentSel.value);
+      }
+    }
+
+    function updateParentReportToPills() {
+      document.querySelectorAll('.parent-report-to-pill').forEach(btn => {
+        const to = btn.getAttribute('data-to');
+        if (to === String(parentReportFilterTo)) {
+          btn.className = 'parent-report-to-pill px-2 py-1 rounded-lg font-bold bg-phuochung-600 text-white transition';
+        } else {
+          btn.className = 'parent-report-to-pill px-2 py-1 rounded-lg font-bold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 transition';
+        }
+      });
+    }
+
+    function renderParentReportStudentList() {
+      const studentSel = document.getElementById('parent-report-student-select');
+      if (!studentSel || !window.store) return;
+
+      let students = window.store.getStudents();
+      if (parentReportFilterTo !== 'all') {
+        students = students.filter(s => s.to === parseInt(parentReportFilterTo));
+      }
+
+      studentSel.innerHTML = students.map(s => `
+        <option value="${s.id}" ${s.id === activeParentReportStudentId ? 'selected' : ''}>
+          ${String(s.stt).padStart(2, '0')}. ${s.name} (Tổ ${s.to} - ${s.role})
+        </option>
+      `).join('');
+
+      if (!students.some(s => s.id === activeParentReportStudentId) && students.length > 0) {
+        activeParentReportStudentId = students[0].id;
+        studentSel.value = activeParentReportStudentId;
+      }
+    }
+
+    function renderParentReportCard(studentId = null) {
+      if (!window.store) return;
+      if (studentId) activeParentReportStudentId = studentId;
+
+      const weekSel = document.getElementById('parent-report-week-select');
+      const upToWeek = weekSel ? parseInt(weekSel.value) : window.store.getCurrentWeek();
+
+      const summary = window.store.getStudentParentSummary(activeParentReportStudentId, upToWeek);
+      const container = document.getElementById('parent-report-content');
+      if (!summary || !container) return;
+
+      const s = summary.student;
+      const t = summary.totals;
+
+      let conductColor = 'text-emerald-600';
+      if (summary.overallConductRank === 'Khá') conductColor = 'text-blue-600';
+      else if (summary.overallConductRank === 'Đạt') conductColor = 'text-amber-600';
+      else if (summary.overallConductRank === 'Chưa đạt') conductColor = 'text-rose-600';
+
+      container.innerHTML = `
+        <!-- Thẻ Header Nhân Thân & Liên Hệ -->
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div class="flex items-center gap-3.5">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 text-white font-black text-base flex items-center justify-center shrink-0 shadow-md">
+              ${s.name.split(' ').pop().substring(0, 2).toUpperCase()}
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h4 class="font-black text-base text-slate-900 dark:text-white">${s.name}</h4>
+                <span class="px-2 py-0.5 rounded-full bg-phuochung-100 dark:bg-phuochung-950 text-phuochung-700 dark:text-phuochung-300 font-extrabold text-[10px]">Tổ ${s.to}</span>
+                <span class="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-bold text-[10px]">${s.role}</span>
+              </div>
+              <p class="text-[11px] text-slate-500 mt-0.5 font-medium">
+                Mã: <span class="font-mono font-bold text-slate-700 dark:text-slate-300">${s.id}</span> • 
+                Ngày sinh: ${s.dob || 'N/A'} • 
+                Giới tính: ${s.gender || 'N/A'} • 
+                Địa chỉ: ${s.address || 'Huyện Long Thành'}
+              </p>
+            </div>
+          </div>
+
+          <!-- Hotline Liên hệ Phụ huynh -->
+          <div class="flex items-center gap-2 bg-purple-50 dark:bg-purple-950/40 p-2.5 rounded-xl border border-purple-200 dark:border-purple-900/50 shrink-0">
+            <div>
+              <span class="text-[10px] text-purple-700 dark:text-purple-300 font-bold block">SĐT Phụ Huynh:</span>
+              <span class="font-mono font-black text-xs text-purple-950 dark:text-purple-200">${s.parentPhone || 'Chưa cập nhật'}</span>
+            </div>
+            ${s.parentPhone ? `
+              <a href="tel:${s.parentPhone.replace(/[^0-9]/g, '')}" class="p-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition" title="Bấm gọi ngay cho Phụ huynh">
+                <i data-lucide="phone-call" class="w-3.5 h-3.5"></i>
+              </a>
+              <button onclick="copyToClipboard('${s.parentPhone}', 'Đã sao chép SĐT Phụ huynh: ${s.parentPhone}')" class="p-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition" title="Sao chép số điện thoại">
+                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+              </button>
+            ` : ''}
+          </div>
+        </div>
+
+        <!-- 4 Khối Chỉ Số Tổng Kết Lũy Kế Đến Tuần ${summary.upToWeek} -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div class="p-3.5 rounded-xl bg-purple-50/70 dark:bg-slate-900 border border-purple-200 dark:border-slate-800">
+            <span class="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Điểm Thi Đua TB (${summary.upToWeek} tuần)</span>
+            <div class="flex items-baseline gap-1.5 mt-1">
+              <span class="text-xl font-black ${conductColor}">${summary.avgConductScore}đ</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-200">${summary.overallConductRank}</span>
+            </div>
+            <p class="text-[10px] text-slate-400 mt-1">Cộng ${summary.totalPlus}đ • Trừ ${summary.totalMinus}đ</p>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-blue-50/70 dark:bg-slate-900 border border-blue-200 dark:border-slate-800">
+            <span class="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Học Tập & Bài Tập</span>
+            <div class="flex items-baseline gap-1.5 mt-1">
+              <span class="text-xl font-black text-blue-600">${s.scoreAvg}</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-200">${s.academic || 'Tốt'}</span>
+            </div>
+            <p class="text-[10px] text-slate-500 mt-1 flex items-center gap-1">
+              Bài tập về nhà: <strong class="${s.homeworkStatus ? 'text-emerald-600' : 'text-rose-600'}">${s.homeworkStatus ? '✓ Đã hoàn thành' : '⚠️ Chưa hoàn thành'}</strong>
+            </p>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-amber-50/70 dark:bg-slate-900 border border-amber-200 dark:border-slate-800">
+            <span class="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Chuyên Cần Lũy Kế</span>
+            <div class="flex items-center gap-3 mt-1">
+              <div>
+                <span class="text-[10px] text-slate-400 block">Vắng (P/K)</span>
+                <span class="text-base font-black text-amber-700 dark:text-amber-400">${t.vangP} / ${t.vangK}</span>
+              </div>
+              <div class="border-l border-amber-200 dark:border-amber-800 pl-3">
+                <span class="text-[10px] text-slate-400 block">Đi trễ</span>
+                <span class="text-base font-black text-amber-700 dark:text-amber-400">${t.diTre} lượt</span>
+              </div>
+            </div>
+            <p class="text-[10px] text-slate-400 mt-1">15p truy bài: ${t.truyBai} • Đồng phục: ${t.dongPhuc}</p>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-emerald-50/70 dark:bg-slate-900 border border-emerald-200 dark:border-slate-800">
+            <span class="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Tích Cực Xây Dựng Bài</span>
+            <div class="flex items-center gap-3 mt-1">
+              <div>
+                <span class="text-[10px] text-slate-400 block">Giơ tay / PB</span>
+                <span class="text-base font-black text-emerald-600">${t.gioTay} / ${t.phatBieu}</span>
+              </div>
+              <div class="border-l border-emerald-200 dark:border-emerald-800 pl-3">
+                <span class="text-[10px] text-slate-400 block">Hoa điểm 10</span>
+                <span class="text-base font-black text-emerald-600">${t.kttx810} lượt</span>
+              </div>
+            </div>
+            <p class="text-[10px] text-slate-400 mt-1">MTT: ${t.mtt} • Vệ sinh: ${t.veSinh}</p>
+          </div>
+        </div>
+
+        <!-- Hai Cột: Ưu Điểm Nổi Bật & Điểm Cần Phối Hợp Nhắc Nhở -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+          <!-- Cột Ưu Điểm -->
+          <div class="p-4 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50 space-y-2">
+            <h4 class="font-extrabold text-xs text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5 uppercase">
+              <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i>
+              <span>Ưu Điểm & Điểm Mạnh Của Con</span>
+            </h4>
+            <ul class="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
+              ${summary.strengths.map(st => `
+                <li class="flex items-start gap-2">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0"></span>
+                  <span>${st}</span>
+                </li>
+              `).join('')}
+            </ul>
+          </div>
+
+          <!-- Cột Điểm Cần Lưu Ý -->
+          <div class="p-4 rounded-2xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 space-y-2">
+            <h4 class="font-extrabold text-xs text-amber-900 dark:text-amber-300 flex items-center gap-1.5 uppercase">
+              <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600"></i>
+              <span>Điểm Cần Gia Đình Cùng Phối Hợp Nhắc Nhở</span>
+            </h4>
+            <ul class="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
+              ${summary.improvements.map(im => `
+                <li class="flex items-start gap-2">
+                  <span class="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 shrink-0"></span>
+                  <span>${im}</span>
+                </li>
+              `).join('')}
+            </ul>
+          </div>
+        </div>
+
+        <!-- Lời Nhận Xét & Dặn Dò Của Giáo Viên Chủ Nhiệm (Cho phép soạn thảo / sửa trực tiếp trước khi gửi) -->
+        <div class="p-4 rounded-2xl bg-purple-50/60 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-900/50 space-y-2">
+          <div class="flex items-center justify-between">
+            <h4 class="font-extrabold text-xs text-purple-950 dark:text-purple-200 flex items-center gap-1.5 uppercase">
+              <i data-lucide="message-square-quote" class="w-4 h-4 text-purple-600"></i>
+              <span>Lời Dặn Dò & Đánh Giá Của Giáo Viên Chủ Nhiệm Gửi Phụ Huynh</span>
+            </h4>
+            <button onclick="regenerateAITeacherAdvice()" class="text-[11px] font-bold text-purple-700 dark:text-purple-300 hover:underline flex items-center gap-1">
+              <i data-lucide="sparkles" class="w-3 h-3 text-amber-500"></i> AI gợi ý lại
+            </button>
+          </div>
+          <textarea id="parent-report-teacher-advice" rows="3" class="w-full p-2.5 rounded-xl border border-purple-200 dark:border-purple-800 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-200 leading-relaxed outline-none focus:ring-2 focus:ring-purple-400">${summary.teacherAdvice}</textarea>
+          <div class="flex flex-wrap items-center justify-between text-[11px] text-slate-500 pt-1">
+            <span>Định hướng lớp 10: <strong>NV1: ${s.targetHighSchool?.nv1 || 'Chưa đăng ký'}</strong> • NV2: ${s.targetHighSchool?.nv2 || 'N/A'}</span>
+            <span class="text-purple-600 dark:text-purple-400 font-medium">💡 Thầy/Cô có thể chỉnh sửa trực tiếp nội dung trên trước khi sao chép gửi Zalo hoặc in phiếu</span>
+          </div>
+        </div>
+
+        <!-- Bảng Chi Tiết Tiến Trình Qua Từng Tuần (Tuần 1 ➔ Tuần ${summary.upToWeek}) -->
+        <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
+          <h4 class="font-extrabold text-xs text-slate-900 dark:text-white uppercase flex items-center gap-1.5">
+            <i data-lucide="history" class="w-4 h-4 text-phuochung-600"></i>
+            <span>Chi Tiết Điểm Rèn Luyện & Nhận Xét Từng Tuần (Tuần 1 ➔ ${summary.upToWeek})</span>
+          </h4>
+          <div class="overflow-x-auto max-h-52 overflow-y-auto">
+            <table class="w-full text-left border-collapse text-[11px]">
+              <thead>
+                <tr class="bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 font-bold sticky top-0">
+                  <th class="p-2 border-b border-slate-200 dark:border-slate-700 text-center w-14">Tuần</th>
+                  <th class="p-2 border-b border-slate-200 dark:border-slate-700 text-center w-20">Điểm Tuần</th>
+                  <th class="p-2 border-b border-slate-200 dark:border-slate-700 text-center w-20">Xếp Loại</th>
+                  <th class="p-2 border-b border-slate-200 dark:border-slate-700 text-center w-24">Cộng / Trừ</th>
+                  <th class="p-2 border-b border-slate-200 dark:border-slate-700">Nhận Xét Cán Sự & Ghi Chú</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+                ${summary.weeklyBreakdown.map(wb => `
+                  <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                    <td class="p-2 font-bold text-center text-slate-500">T${wb.week}</td>
+                    <td class="p-2 font-black text-center text-phuochung-600">${wb.scoreInfo.totalScore}đ</td>
+                    <td class="p-2 text-center">
+                      <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${wb.scoreInfo.rank === 'Tốt' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-slate-100 text-slate-700'}">${wb.scoreInfo.rank}</span>
+                    </td>
+                    <td class="p-2 text-center text-[10px]">
+                      <span class="text-emerald-600 font-bold">+${wb.scoreInfo.plus}đ</span> / <span class="text-rose-600 font-bold">-${wb.scoreInfo.minus}đ</span>
+                    </td>
+                    <td class="p-2 text-slate-600 dark:text-slate-400">
+                      ${wb.notes.length > 0 ? wb.notes.join(' • ') : '<span class="text-slate-400 italic">Chưa có vi phạm hay nhận xét đặc biệt</span>'}
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function regenerateAITeacherAdvice() {
+      if (!window.store || !activeParentReportStudentId) return;
+      const weekSel = document.getElementById('parent-report-week-select');
+      const upToWeek = weekSel ? parseInt(weekSel.value) : window.store.getCurrentWeek();
+      const summary = window.store.getStudentParentSummary(activeParentReportStudentId, upToWeek);
+      const adviceArea = document.getElementById('parent-report-teacher-advice');
+      if (summary && adviceArea) {
+        adviceArea.value = summary.teacherAdvice;
+        try {
+          showSeatingToast('✨ Đã cập nhật lại gợi ý nhận xét sư phạm!');
+        } catch(e) {}
+      }
+    }
+
+    function copyParentZaloMessage() {
+      if (!window.store || !activeParentReportStudentId) return;
+      const weekSel = document.getElementById('parent-report-week-select');
+      const upToWeek = weekSel ? parseInt(weekSel.value) : window.store.getCurrentWeek();
+      const summary = window.store.getStudentParentSummary(activeParentReportStudentId, upToWeek);
+      if (!summary) return;
+
+      const s = summary.student;
+      const t = summary.totals;
+      const customAdvice = document.getElementById('parent-report-teacher-advice')?.value || summary.teacherAdvice;
+
+      const msg = `Kính gửi Quý Phụ huynh em ${s.name} (Lớp 9A1 - Trường TH & THCS Phước Hưng),
+
+Thầy/Cô Giáo viên Chủ nhiệm xin gửi thông tin tổng hợp tình hình rèn luyện và học tập của em từ đầu năm học đến hết Tuần ${summary.upToWeek} (Năm học 2026 - 2027) như sau:
+
+1. THÔNG TIN CHUNG:
+- Họ và tên: ${s.name} (Mã HS: ${s.id})
+- Tổ: Tổ ${s.to} • Chức vụ: ${s.role}
+- Điểm thi đua trung bình lũy kế: ${summary.avgConductScore} điểm (Xếp loại rèn luyện: ${summary.overallConductRank})
+- Điểm trung bình học tập: ${s.scoreAvg} (Xếp loại học lực: ${s.academic || 'Tốt'})
+- Trạng thái bài tập về nhà: ${s.homeworkStatus ? 'Đã hoàn thành đầy đủ' : 'Cần bổ sung/hoàn thiện thêm'}
+
+2. TÌNH HÌNH NỀ NẾP & CHUYÊN CẦN (LŨY KẾ ĐẾN TUẦN ${summary.upToWeek}):
+- Chuyên cần: ${t.vangK > 0 ? `Vắng không phép: ${t.vangK} buổi; ` : 'Không vắng không phép; '}${t.vangP > 0 ? `Vắng có phép: ${t.vangP} buổi; ` : ''}${t.diTre > 0 ? `Đi học trễ: ${t.diTre} lần` : 'Đi học đúng giờ 100%'}
+- Kỷ luật lớp học: ${t.mtt > 0 ? `Mất trật tự: ${t.mtt} lần; ` : 'Giữ trật tự tốt; '}${t.truyBai > 0 ? `Vi phạm 15p đầu giờ: ${t.truyBai} lần; ` : 'Truy bài nghiêm túc; '}${t.dongPhuc > 0 ? `Vi phạm đồng phục: ${t.dongPhuc} lần` : 'Đồng phục nghiêm trang'}
+- Tích cực thi đua: ${t.gioTay} lượt giơ tay, ${t.phatBieu} lượt phát biểu xây dựng bài, ${t.kttx810} hoa điểm 8-10
+
+3. ƯU ĐIỂM NỔI BẬT CỦA CON:
+${summary.strengths.map(st => '- ' + st).join('\n')}
+
+4. ĐIỂM GIA ĐÌNH CÙNG PHỐI HỢP NHẮC NHỞ:
+${summary.improvements.map(im => '- ' + im).join('\n')}
+
+5. LỜI DẶN DÒ CỦA GIÁO VIÊN CHỦ NHIỆM:
+${customAdvice}
+- Mục tiêu tuyển sinh vào Lớp 10: NV1: ${s.targetHighSchool?.nv1 || 'THPT Phước Hưng'} • NV2: ${s.targetHighSchool?.nv2 || 'N/A'}
+
+Trân trọng cảm ơn Quý Phụ huynh đã luôn đồng hành, quan tâm và phối hợp cùng nhà trường!
+(GVCN Lớp 9A1 • Trường TH & THCS Phước Hưng)`;
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(msg).then(() => {
+          try {
+            showSeatingToast(`📋 Đã sao chép tin nhắn Zalo gửi Phụ huynh em ${s.name}! Thầy/Cô có thể dán gửi ngay.`);
+          } catch(e) {
+            alert(`Đã sao chép tin nhắn báo cáo Phụ huynh em ${s.name} thành công!`);
+          }
+        }).catch(() => fallbackCopyText(msg));
+      } else {
+        fallbackCopyText(msg);
+      }
+    }
+
+    function fallbackCopyText(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      try {
+        document.execCommand('copy');
+        alert('Đã sao chép tin nhắn báo cáo phụ huynh thành công!');
+      } catch(e) {
+        prompt('Vui lòng sao chép tin nhắn thủ công bên dưới:', text);
+      }
+      document.body.removeChild(ta);
+    }
+
+    function printParentReport() {
+      if (!window.store || !activeParentReportStudentId) return;
+      const weekSel = document.getElementById('parent-report-week-select');
+      const upToWeek = weekSel ? parseInt(weekSel.value) : window.store.getCurrentWeek();
+      const summary = window.store.getStudentParentSummary(activeParentReportStudentId, upToWeek);
+      if (!summary) return;
+
+      const s = summary.student;
+      const t = summary.totals;
+      const customAdvice = document.getElementById('parent-report-teacher-advice')?.value || summary.teacherAdvice;
+
+      const printWin = window.open('', '_blank');
+      if (!printWin) {
+        alert('Trình duyệt đã chặn cửa sổ in pop-up. Vui lòng cho phép mở pop-up để in phiếu.');
+        return;
+      }
+
+      printWin.document.write(`
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Phiếu Báo Cáo Phụ Huynh - ${s.name}</title>
+  <style>
+    body { font-family: 'Times New Roman', serif; margin: 30px 40px; color: #111; line-height: 1.5; font-size: 13pt; }
+    .header-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    .header-table td { vertical-align: top; }
+    .text-center { text-align: center; }
+    .title { font-size: 15pt; font-weight: bold; text-align: center; margin: 15px 0 5px; text-transform: uppercase; }
+    .subtitle { font-size: 12pt; text-align: center; font-style: italic; margin-bottom: 20px; }
+    .info-box { border: 1px solid #333; padding: 12px 16px; margin-bottom: 18px; border-radius: 6px; }
+    .section-title { font-weight: bold; font-size: 13pt; margin-top: 14px; margin-bottom: 6px; text-transform: uppercase; color: #1e3a8a; }
+    ul { margin: 6px 0 10px 20px; padding: 0; }
+    li { margin-bottom: 4px; }
+    .table-stats { width: 100%; border-collapse: collapse; margin: 10px 0; }
+    .table-stats th, .table-stats td { border: 1px solid #333; padding: 6px 8px; font-size: 11pt; text-align: center; }
+    .table-stats th { background-color: #f3f4f6; }
+    .signature-table { width: 100%; border-collapse: collapse; margin-top: 35px; }
+    .signature-table td { text-align: center; vertical-align: top; width: 50%; font-size: 12pt; }
+    @media print {
+      body { margin: 15mm 20mm; }
+      @page { size: A4 portrait; margin: 15mm 20mm; }
+    }
+  </style>
+</head>
+<body>
+  <table class="header-table">
+    <tr>
+      <td style="width: 45%;">
+        UBND HUYỆN LONG THÀNH<br>
+        <b>TRƯỜNG TH & THCS PHƯỚC HƯNG</b><br>
+        <i>Lớp: 9A1 — Năm học 2026 - 2027</i>
+      </td>
+      <td style="text-align: right; width: 55%;">
+        <b>CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</b><br>
+        <b>Độc lập - Tự do - Hạnh phúc</b><br>
+        <i>Phước Hưng, ngày ${new Date().getDate()} tháng ${new Date().getMonth() + 1} năm ${new Date().getFullYear()}</i>
+      </td>
+    </tr>
+  </table>
+
+  <div class="title">PHIẾU THÔNG BÁO TÌNH HÌNH RÈN LUYỆN & HỌC TẬP</div>
+  <div class="subtitle">(Tổng hợp lũy kế từ Tuần 1 đến Tuần ${summary.upToWeek})</div>
+
+  <div class="info-box">
+    <b>Họ và tên học sinh:</b> ${s.name} &nbsp;&nbsp;&nbsp;&nbsp; <b>Mã HS:</b> ${s.id} &nbsp;&nbsp;&nbsp;&nbsp; <b>Tổ:</b> ${s.to} &nbsp;&nbsp;&nbsp;&nbsp; <b>Chức vụ:</b> ${s.role}<br>
+    <b>Ngày sinh:</b> ${s.dob || '15/03/2011'} &nbsp;&nbsp;&nbsp;&nbsp; <b>SĐT Phụ huynh:</b> ${s.parentPhone || 'Chưa cập nhật'}<br>
+    <b>Địa chỉ:</b> ${s.address || 'Ấp Phước Hưng, Huyện Long Thành, Tỉnh Đồng Nai'}
+  </div>
+
+  <div class="section-title">1. Kết quả tổng hợp thi đua & học tập:</div>
+  <table class="table-stats">
+    <tr>
+      <th>Điểm Rèn Luyện TB</th>
+      <th>Xếp Loại Nề Nếp (TT22)</th>
+      <th>Điểm TB Học Tập</th>
+      <th>Xếp Loại Học Lực</th>
+      <th>Bài Tập Về Nhà</th>
+    </tr>
+    <tr>
+      <td><b>${summary.avgConductScore} / 100đ</b></td>
+      <td><b>${summary.overallConductRank}</b></td>
+      <td><b>${s.scoreAvg}</b></td>
+      <td><b>${s.academic || 'Tốt'}</b></td>
+      <td>${s.homeworkStatus ? 'Đã hoàn thành' : 'Chưa nộp đủ'}</td>
+    </tr>
+  </table>
+
+  <table class="table-stats">
+    <tr>
+      <th>Vắng có phép</th>
+      <th>Vắng không phép</th>
+      <th>Đi học trễ</th>
+      <th>Vi phạm 15p</th>
+      <th>Đồng phục</th>
+      <th>Giơ tay / Phát biểu</th>
+      <th>Hoa điểm 8-10</th>
+    </tr>
+    <tr>
+      <td>${t.vangP} buổi</td>
+      <td>${t.vangK} buổi</td>
+      <td>${t.diTre} lần</td>
+      <td>${t.truyBai} lần</td>
+      <td>${t.dongPhuc} lần</td>
+      <td>${t.gioTay} / ${t.phatBieu} lượt</td>
+      <td>${t.kttx810} lượt</td>
+    </tr>
+  </table>
+
+  <div class="section-title">2. Ưu điểm nổi bật:</div>
+  <ul>
+    ${summary.strengths.map(st => '<li>' + st + '</li>').join('')}
+  </ul>
+
+  <div class="section-title">3. Điểm cần gia đình phối hợp nhắc nhở:</div>
+  <ul>
+    ${summary.improvements.map(im => '<li>' + im + '</li>').join('')}
+  </ul>
+
+  <div class="section-title">4. Nhận xét & Đề xuất của Giáo viên Chủ nhiệm:</div>
+  <p style="text-indent: 20pt; margin: 4px 0 8px;">${customAdvice}</p>
+  <p style="font-style: italic; font-size: 11pt; margin-top: 4px;">* Mục tiêu thi tuyển sinh Lớp 10 của học sinh: <b>NV1: ${s.targetHighSchool?.nv1 || 'THPT Phước Hưng'}</b>; NV2: ${s.targetHighSchool?.nv2 || 'THPT Long Thành'}; NV3: ${s.targetHighSchool?.nv3 || 'THPT Bình Sơn'}.</p>
+
+  <table class="signature-table">
+    <tr>
+      <td>
+        <b>Ý KIẾN / CHỮ KÝ PHỤ HUYNH</b><br>
+        <i>(Ký và ghi rõ họ tên)</i>
+        <div style="height: 70px;"></div>
+      </td>
+      <td>
+        <b>GIÁO VIÊN CHỦ NHIỆM</b><br>
+        <i>(Ký và ghi rõ họ tên)</i>
+        <div style="height: 70px;"></div>
+        <b>Thầy/Cô Chủ nhiệm Lớp 9A1</b>
+      </td>
+    </tr>
+  </table>
+
+  <script>window.onload = function() { setTimeout(function() { window.print(); }, 300); };<\/script>
+</body>
+</html>`);
+      printWin.document.close();
+    }
+
 
     async function toggleDecryptStudentData() {
       if (!activeModalStudent) return;
@@ -8355,7 +9014,7 @@ function handleExportEmulationExcelClick() {
       }
 
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js?v=6.5.0', { updateViaCache: 'none' })
+        navigator.serviceWorker.register('./sw.js?v=6.5.1', { updateViaCache: 'none' })
           .then(reg => {
             console.log('PWA Service Worker registered:', reg.scope);
             reg.update().catch(() => {});
