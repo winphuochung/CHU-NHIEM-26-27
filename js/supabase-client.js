@@ -131,7 +131,7 @@ class SupabaseClientManager {
 
       const state = window.store.state;
       const students = window.store.getStudents();
-      const currentWeek = state.currentWeek || 2;
+      const currentWeek = (window.store && typeof window.store.getCurrentWeek === 'function') ? window.store.getCurrentWeek() : (state.currentWeek || 1);
 
       // Metadata thông tin lớp
       const meta = {

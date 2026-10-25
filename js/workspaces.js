@@ -8,7 +8,7 @@ class WorkspaceManager {
   // 1. WORKSPACE: LỚP TRƯỞNG
   generateWeeklySummaryReport() {
     const students = window.store.getStudents();
-    const currentWeek = window.store.state.currentWeek || 2;
+    const currentWeek = (window.store && typeof window.store.getCurrentWeek === 'function') ? window.store.getCurrentWeek() : 1;
 
     // Tính điểm trung bình thi đua từng tổ
     const toStats = [1, 2, 3, 4].map(toId => {

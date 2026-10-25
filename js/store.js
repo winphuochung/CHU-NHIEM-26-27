@@ -356,6 +356,49 @@ class AppStore {
     this.storageKey = 'PHUOC_HUNG_9A1_DATABASE_V8';
     this.state = this.loadState();
   }
+  // Tự động tính toán tuần học thực tế theo lịch học năm học 2026-2027 (Khai giảng 05/09/2026, Tuần 1 từ 07/09/2026)
+  calculateRealCalendarWeek(date = new Date()) {
+    const startOfYear = new Date(2026, 8, 7, 0, 0, 0); // Tháng 9 (index 8) ngày 7 năm 2026 (Thứ Hai Tuần 1)
+    const curTime = (date instanceof Date ? date : new Date(date)).getTime();
+    const diffMs = curTime - startOfYear.getTime();
+    if (diffMs < 0) return 1;
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const weekNum = Math.floor(diffDays / 7) + 1;
+    return Math.max(1, Math.min(35, weekNum));
+  }
+
+  // Lấy tuần hiện tại của lớp: Ưu tiên tuần thực tế theo lịch, hoặc tuần do GVCN đặt thủ công
+  getCurrentWeek() {
+    if (this.state && this.state.isManualCurrentWeek && typeof this.state.currentWeek === 'number' && this.state.currentWeek >= 1 && this.state.currentWeek <= 35) {
+      return this.state.currentWeek;
+    }
+    const autoWeek = this.calculateRealCalendarWeek();
+    if (this.state) {
+      this.state.currentWeek = autoWeek;
+    }
+    return autoWeek;
+  }
+
+  // GVCN thiết lập tuần hiện tại thủ công (hoặc khóa tuần)
+  setCurrentWeek(weekNum, isManual = true) {
+    const w = Math.max(1, Math.min(35, parseInt(weekNum) || 1));
+    if (this.state) {
+      this.state.currentWeek = w;
+      this.state.isManualCurrentWeek = !!isManual;
+      this.saveState();
+    }
+    return w;
+  }
+
+  // Khôi phục tự động tính tuần hiện tại theo lịch thực tế
+  resetCurrentWeekToAuto() {
+    if (this.state) {
+      this.state.isManualCurrentWeek = false;
+      this.state.currentWeek = this.calculateRealCalendarWeek();
+      this.saveState();
+    }
+    return this.getCurrentWeek();
+  }
 
   loadState() {
     try {
@@ -403,8 +446,14 @@ class AppStore {
             parsed.seatingPlan = JSON.parse(JSON.stringify(DEFAULT_SEATING_PLAN));
           }
 
+          // Tự động xác định tuần hiện tại chuẩn xác theo thời gian thực tế
+          const autoWeek = this.calculateRealCalendarWeek();
+          const curWk = (parsed.isManualCurrentWeek && typeof parsed.currentWeek === 'number' && parsed.currentWeek >= 1 && parsed.currentWeek <= 35) 
+            ? parsed.currentWeek 
+            : autoWeek;
+          parsed.currentWeek = curWk;
+
           // Tự động tính toán lại điểm rèn luyện của học sinh theo quy tắc tính mới cho tuần hiện tại
-          const curWk = parsed.currentWeek || 2;
           if (parsed.weeklyCriteriaScores && parsed.weeklyCriteriaScores[curWk]) {
             parsed.students.forEach(s => {
               const crit = (parsed.weeklyCriteriaScores[curWk] && parsed.weeklyCriteriaScores[curWk][s.id]) || {};
@@ -439,7 +488,8 @@ class AppStore {
       kudos: INITIAL_KUDOS,
       examBank: EXAM_BANK,
       dutyRotationWeekOffset: 0,
-      currentWeek: 2,
+      currentWeek: this.calculateRealCalendarWeek(),
+      isManualCurrentWeek: false,
       reportsHistory: [],
       weeksThemes: WEEKS_THEMES,
       weeklyCriteriaScores: this.generateInitialWeeklyCriteriaScores(),
@@ -1415,7 +1465,7 @@ class AppStore {
   }
 
   recalculateAllStudentsConduct(weekNumber = null) {
-    const w = parseInt(weekNumber) || (this.state && this.state.currentWeek) || 2;
+    const w = parseInt(weekNumber) || this.getCurrentWeek() || 1;
     if (!this.state || !this.state.students || !Array.isArray(this.state.students)) return;
     this.state.students.forEach(s => {
       const crit = this.getStudentWeekCriteria(w, s.id);
@@ -1736,7 +1786,7 @@ class AppStore {
   // Chấm điểm thi đua chung & Ghi Audit Log
   recordEmulationPoint({ actor, studentId, pointDelta, reason, proofImg = '' }) {
     return this.recordWeeklyPoint({
-      week: this.state.currentWeek || 2,
+      week: this.getCurrentWeek(),
       studentId,
       type: pointDelta >= 0 ? 'plus' : 'minus',
       points: Math.abs(pointDelta),
@@ -1792,14 +1842,15 @@ class AppStore {
     return 0;
   }
 
-  getDutySchedule(weekNumber = this.state.currentWeek) {
+  getDutySchedule(weekNumber = null) {
+    const w = parseInt(weekNumber) || this.getCurrentWeek() || 1;
     const baseRotation = [
-      { day: 'Thứ Hai', to: ((weekNumber - 1 + 0) % 4) + 1, tasks: 'Quét phòng học, lau bảng, đổ rác đầu tuần' },
-      { day: 'Thứ Ba', to: ((weekNumber - 1 + 1) % 4) + 1, tasks: 'Quét phòng học, chăm sóc chậu hoa cây cảnh' },
-      { day: 'Thứ Tư', to: ((weekNumber - 1 + 2) % 4) + 1, tasks: 'Quét lớp, lau cửa sổ, kiểm tra bàn ghế' },
-      { day: 'Thứ Năm', to: ((weekNumber - 1 + 3) % 4) + 1, tasks: 'Quét phòng học, lau bảng, đổ rác hành lang' },
-      { day: 'Thứ Sáu', to: ((weekNumber - 1 + 0) % 4) + 1, tasks: 'Quét phòng học, vệ sinh góc học tập' },
-      { day: 'Thứ Bảy', to: ((weekNumber - 1 + 1) % 4) + 1, tasks: 'Tổng vệ sinh cuối tuần, kiểm tra tắt điện quạt' }
+      { day: 'Thứ Hai', to: ((w - 1 + 0) % 4) + 1, tasks: 'Quét phòng học, lau bảng, đổ rác đầu tuần' },
+      { day: 'Thứ Ba', to: ((w - 1 + 1) % 4) + 1, tasks: 'Quét phòng học, chăm sóc chậu hoa cây cảnh' },
+      { day: 'Thứ Tư', to: ((w - 1 + 2) % 4) + 1, tasks: 'Quét lớp, lau cửa sổ, kiểm tra bàn ghế' },
+      { day: 'Thứ Năm', to: ((w - 1 + 3) % 4) + 1, tasks: 'Quét phòng học, lau bảng, đổ rác hành lang' },
+      { day: 'Thứ Sáu', to: ((w - 1 + 0) % 4) + 1, tasks: 'Quét phòng học, vệ sinh góc học tập' },
+      { day: 'Thứ Bảy', to: ((w - 1 + 1) % 4) + 1, tasks: 'Tổng vệ sinh cuối tuần, kiểm tra tắt điện quạt' }
     ];
     return baseRotation;
   }

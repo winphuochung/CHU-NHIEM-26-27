@@ -704,6 +704,10 @@
             <i data-lucide="calendar" class="w-4 h-4 text-phuochung-600"></i> Chọn tuần học (Tuần 1 ➔ Tuần 35):
           </span>
           <div class="flex items-center gap-1.5">
+            <button onclick="jumpToCurrentWeek()" class="px-2.5 py-1 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-bold transition flex items-center gap-1 shadow-sm" title="Quay về tuần học hiện tại">
+              <i data-lucide="zap" class="w-3.5 h-3.5 text-yellow-300"></i>
+              <span class="hidden sm:inline">Tuần hiện tại</span>
+            </button>
             <button onclick="navigateWeek(-1)" class="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 text-xs font-bold transition" title="Tuần trước">
               <i data-lucide="chevron-left" class="w-4 h-4"></i>
             </button>
@@ -2318,16 +2322,16 @@
   </div> <!-- END #app-main-layout -->
 
   <!-- Scripts Core -->
-  <script src="js/store.js?v=6.4.9"></script>
-  <script src="js/security.js?v=6.4.9"></script>
-  <script src="js/auth.js?v=6.4.9"></script>
-  <script src="js/ai-analytics.js?v=6.4.9"></script>
-  <script src="js/workspaces.js?v=6.4.9"></script>
-  <script src="js/exam-hub.js?v=6.4.9"></script>
-  <script src="js/gamification.js?v=6.4.9"></script>
-  <script src="js/sync-hub.js?v=6.4.9"></script>
-  <script src="js/supabase-client.js?v=6.4.9"></script>
-  <script src="js/voice-assistant.js?v=6.4.9"></script>
+  <script src="js/store.js?v=6.5.0"></script>
+  <script src="js/security.js?v=6.5.0"></script>
+  <script src="js/auth.js?v=6.5.0"></script>
+  <script src="js/ai-analytics.js?v=6.5.0"></script>
+  <script src="js/workspaces.js?v=6.5.0"></script>
+  <script src="js/exam-hub.js?v=6.5.0"></script>
+  <script src="js/gamification.js?v=6.5.0"></script>
+  <script src="js/sync-hub.js?v=6.5.0"></script>
+  <script src="js/supabase-client.js?v=6.5.0"></script>
+  <script src="js/voice-assistant.js?v=6.5.0"></script>
   
   <!-- Main Application Orchestration Script -->
   <script>
@@ -2400,12 +2404,66 @@
       }
     }
 
-    // State Quản lý Tuần thi đua
-    let selectedEmulationWeek = 2; // Mặc định Tuần 2
+    // State Quản lý Tuần thi đua: Tự động khởi tạo theo Tuần học hiện tại của hệ thống
+    let selectedEmulationWeek = (window.store && typeof window.store.getCurrentWeek === 'function') ? window.store.getCurrentWeek() : 1;
     let selectedTeamFilter = 'all'; // 'all', 1, 2, 3, 4
-    let selectedWorkspaceWeek = 2; // Sổ tay nhận xét cán sự (Tuần 1 đến 35)
+    let selectedWorkspaceWeek = selectedEmulationWeek; // Sổ tay nhận xét cán sự (Tuần 1 đến 35)
     let workspaceTeamFilter = 'all'; // Bộ lọc tổ cho Lớp trưởng / Lớp phó
     let workspaceSearchQuery = ''; // Tìm kiếm học sinh trong sổ tay
+
+    // Đồng bộ trạng thái về Tuần học hiện tại
+    function syncToCurrentWeek() {
+      const curWk = (window.store && typeof window.store.getCurrentWeek === 'function') 
+        ? window.store.getCurrentWeek() 
+        : 1;
+      selectedEmulationWeek = curWk;
+      selectedWorkspaceWeek = curWk;
+      window.selectedEmulationWeek = curWk;
+      window.selectedWorkspaceWeek = curWk;
+      return curWk;
+    }
+
+    // Nhảy nhanh về Tuần hiện tại
+    function jumpToCurrentWeek() {
+      const curWk = syncToCurrentWeek();
+      renderPersistentWorkflowGuide();
+      renderEmulationTable();
+      renderWorkspaceContent();
+      try {
+        showSeatingToast(`⚡ Đã chuyển ngay về Tuần ${curWk} (Tuần học hiện tại)!`);
+      } catch(e) {}
+    }
+
+    // GVCN thiết lập tuần hiện tại thủ công
+    function handleSetAsCurrentWeek(weekNum) {
+      const w = parseInt(weekNum) || selectedEmulationWeek;
+      if (window.store && typeof window.store.setCurrentWeek === 'function') {
+        window.store.setCurrentWeek(w, true);
+      }
+      syncToCurrentWeek();
+      renderPersistentWorkflowGuide();
+      renderEmulationTable();
+      renderWorkspaceContent();
+      renderDashboard();
+      try {
+        showSeatingToast(`✅ Đã thiết lập Tuần ${w} làm Tuần Hiện Tại của Lớp 9A1!`);
+      } catch(e) {}
+    }
+
+    // Khôi phục tự động tính tuần hiện tại theo lịch thực tế
+    function handleResetCurrentWeekToAuto() {
+      if (window.store && typeof window.store.resetCurrentWeekToAuto === 'function') {
+        window.store.resetCurrentWeekToAuto();
+      }
+      const curWk = syncToCurrentWeek();
+      renderPersistentWorkflowGuide();
+      renderEmulationTable();
+      renderWorkspaceContent();
+      renderDashboard();
+      try {
+        showSeatingToast(`⚡ Đã tự động cập nhật lại Tuần hiện tại theo lịch thực tế: Tuần ${curWk}!`);
+      } catch(e) {}
+    }
 
     // Tab Controller
     function switchMainTab(tabId) {
@@ -2456,6 +2514,9 @@
 
     function onLoginSuccess(role) {
       console.log('[Auth] onLoginSuccess triggered for:', role ? role.id : 'unknown');
+
+      // BẮT BUỘC: Khi đăng nhập vào app, luôn tự động xuất hiện tuần hiện tại
+      syncToCurrentWeek();
 
       // 1. Gỡ ẩn layout chính ngay lập tức (cả class và style trực tiếp)
       const appLayout = document.getElementById('app-main-layout');
@@ -3185,7 +3246,7 @@
     // ================= XỬ LÝ 35 TUẦN THI ĐUA VÀ BẢNG ĐIỂM =================
 
     function selectEmulationWeek(weekNum) {
-      selectedEmulationWeek = parseInt(weekNum) || 2;
+      selectedEmulationWeek = parseInt(weekNum) || ((window.store && typeof window.store.getCurrentWeek === 'function') ? window.store.getCurrentWeek() : 1);
       window.selectedEmulationWeek = selectedEmulationWeek;
       renderPersistentWorkflowGuide();
       renderEmulationTable();
@@ -3923,13 +3984,28 @@ function handleExportEmulationExcelClick() {
         criteria: ['Chuyên cần tốt', 'Nắm vững kiến thức', 'Trực nhật sạch sẽ']
       };
 
+      const curWk = (window.store && typeof window.store.getCurrentWeek === 'function') 
+        ? window.store.getCurrentWeek() 
+        : 1;
+
       // Cập nhật Banner Chủ điểm
       const bannerSub = document.getElementById('week-banner-sub');
       if (bannerSub) bannerSub.innerText = `NĂM HỌC 2026-2027 • LỚP 9A1 • TUẦN ${w}/35`;
       const bannerTitle = document.getElementById('week-banner-title');
       if (bannerTitle) bannerTitle.innerText = `Tuần ${w}: ${weekData.theme}`;
       const bannerStatus = document.getElementById('week-banner-status');
-      if (bannerStatus) bannerStatus.innerText = w === window.store.state.currentWeek ? '⚡ Tuần Hiện Tại' : (w < window.store.state.currentWeek ? '✓ Đã Kết Thúc' : '⏳ Sắp Diễn Ra');
+      if (bannerStatus) {
+        if (w === curWk) {
+          bannerStatus.className = 'px-3 py-1 bg-cyan-400 text-slate-900 rounded-full text-xs font-black shadow-sm flex items-center gap-1.5';
+          bannerStatus.innerHTML = '<span class="w-2 h-2 rounded-full bg-slate-900 animate-pulse"></span> ⚡ Tuần Hiện Tại';
+        } else if (w < curWk) {
+          bannerStatus.className = 'px-3 py-1 bg-white/20 backdrop-blur rounded-full text-xs font-bold text-slate-200 border border-white/20';
+          bannerStatus.innerText = '✓ Đã Kết Thúc';
+        } else {
+          bannerStatus.className = 'px-3 py-1 bg-amber-400/30 backdrop-blur rounded-full text-xs font-bold text-amber-200 border border-amber-300/30';
+          bannerStatus.innerText = '⏳ Sắp Diễn Ra';
+        }
+      }
 
       // Cập nhật tiêu chí thi đua
       const critBox = document.getElementById('week-criteria-list');
@@ -3948,20 +4024,29 @@ function handleExportEmulationExcelClick() {
       if (pillsContainer) {
         pillsContainer.innerHTML = Array.from({ length: 35 }, (_, i) => i + 1).map(weekNum => {
           const isActive = weekNum === w;
+          const isCurrent = weekNum === curWk;
           return `
-            <button onclick="selectEmulationWeek(${weekNum})" 
-                    class="px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 ${isActive ? 'bg-phuochung-600 text-white shadow-md' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'}">
-              Tuần ${weekNum}
+            <button id="pill-week-${weekNum}" onclick="selectEmulationWeek(${weekNum})" 
+                    class="px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 relative ${isActive ? 'bg-phuochung-600 text-white shadow-md ring-2 ring-phuochung-300' : (isCurrent ? 'bg-cyan-100 dark:bg-cyan-950/70 text-cyan-800 dark:text-cyan-200 border border-cyan-400 font-black hover:bg-cyan-200' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200')}">
+              ${isCurrent ? '⚡ ' : ''}Tuần ${weekNum}${isCurrent ? ' (Hiện tại)' : ''}
             </button>
           `;
         }).join('');
+
+        // Tự động cuộn đến tuần đang chọn
+        setTimeout(() => {
+          const activePill = document.getElementById(`pill-week-${w}`);
+          if (activePill && typeof activePill.scrollIntoView === 'function') {
+            activePill.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+          }
+        }, 80);
       }
 
       // Cập nhật dropdown
       const selectWeek = document.getElementById('select-quick-week');
       if (selectWeek) {
         selectWeek.innerHTML = Array.from({ length: 35 }, (_, i) => i + 1).map(weekNum => `
-          <option value="${weekNum}" ${weekNum === w ? 'selected' : ''}>Tuần ${weekNum}</option>
+          <option value="${weekNum}" ${weekNum === w ? 'selected' : ''}>Tuần ${weekNum}${weekNum === curWk ? ' (⚡ Hiện tại)' : ''}</option>
         `).join('');
       }
 
@@ -8138,12 +8223,15 @@ function handleExportEmulationExcelClick() {
         </div>
       `).join('');
 
+      const curWk = (window.store && typeof window.store.getCurrentWeek === 'function') ? window.store.getCurrentWeek() : 1;
       const weekSelect = document.getElementById('minigame-week-select');
-      weekSelect.innerHTML = Array.from({ length: 35 }, (_, i) => i + 1).map(w => `
-        <option value="${w}" ${w === window.store.state.currentWeek ? 'selected' : ''}>Tuần ${w}</option>
-      `).join('');
+      if (weekSelect) {
+        weekSelect.innerHTML = Array.from({ length: 35 }, (_, i) => i + 1).map(w => `
+          <option value="${w}" ${w === curWk ? 'selected' : ''}>Tuần ${w}${w === curWk ? ' (⚡ Hiện tại)' : ''}</option>
+        `).join('');
+      }
 
-      renderCurrentMiniGame(window.store.state.currentWeek || 2);
+      renderCurrentMiniGame(curWk);
       if (window.lucide) lucide.createIcons();
     }
 
@@ -8248,6 +8336,11 @@ function handleExportEmulationExcelClick() {
       renderEmulationTable();
       syncRoleSelectLabels();
 
+      // BẮT BUỘC: Luôn đặt tuần đang chọn là Tuần hiện tại của hệ thống khi mở app
+      if (typeof syncToCurrentWeek === 'function') {
+        syncToCurrentWeek();
+      }
+
       // KHỞI ĐẦU BẮT BUỘC: Luôn hiển thị Cổng Đăng Nhập trước tiên, chỉ vào giao diện chính sau khi đăng nhập thành công!
       if (!window.authManager || !window.authManager.isAuthenticated) {
         const appLayout = document.getElementById('app-main-layout');
@@ -8262,7 +8355,7 @@ function handleExportEmulationExcelClick() {
       }
 
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js?v=6.4.9', { updateViaCache: 'none' })
+        navigator.serviceWorker.register('./sw.js?v=6.5.0', { updateViaCache: 'none' })
           .then(reg => {
             console.log('PWA Service Worker registered:', reg.scope);
             reg.update().catch(() => {});
@@ -8370,6 +8463,9 @@ function handleExportEmulationExcelClick() {
     }
 
     window.renderApp = () => {
+      if (typeof syncToCurrentWeek === 'function') {
+        syncToCurrentWeek();
+      }
       renderPersistentWorkflowGuide();
       renderDashboard();
       renderWorkspaceContent();

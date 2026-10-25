@@ -38,7 +38,7 @@ class SyncHubManager {
         ? window.store.getStudents() 
         : [];
 
-      const currentWeek = (window.store && window.store.state.currentWeek) || 2;
+      const currentWeek = (window.store && typeof window.store.getCurrentWeek === 'function') ? window.store.getCurrentWeek() : 1;
       const emulationNotes = (window.store && typeof window.store.getWeekEmulationNotes === 'function')
         ? window.store.getWeekEmulationNotes(currentWeek) : {};
       const officerReviews = (window.store && typeof window.store.getWeeklyOfficerReviews === 'function')
@@ -195,13 +195,13 @@ class SyncHubManager {
 
   // Xuất file CSV danh sách lớp và điểm thi đua cơ bản
   exportCSV() {
-    const currentWeek = (window.store && window.store.state.currentWeek) || 2;
+    const currentWeek = (window.store && typeof window.store.getCurrentWeek === 'function') ? window.store.getCurrentWeek() : 1;
     this.exportEmulationExcelReport(currentWeek);
   }
 
   // ================= XUẤT BÁO CÁO TỔNG HỢP THI ĐUA CHUẨN EXCEL CHO GVCN =================
   exportEmulationExcelReport(weekNumber) {
-    const w = parseInt(weekNumber) || (window.store && window.store.state.currentWeek) || 2;
+    const w = parseInt(weekNumber) || ((window.store && typeof window.store.getCurrentWeek === 'function') ? window.store.getCurrentWeek() : 1);
     const store = window.store;
     if (!store) {
       alert('Không tìm thấy dữ liệu hệ thống!');
@@ -366,7 +366,7 @@ class SyncHubManager {
     if (typeof window.handleExportEmulationWordClick === 'function') {
       return window.handleExportEmulationWordClick(weekNumber);
     }
-    const w = parseInt(weekNumber) || (window.store && window.store.state.currentWeek) || 2;
+    const w = parseInt(weekNumber) || ((window.store && typeof window.store.getCurrentWeek === 'function') ? window.store.getCurrentWeek() : 1);
     const store = window.store;
     if (!store) {
       alert('Không tìm thấy dữ liệu hệ thống!');
