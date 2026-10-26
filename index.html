@@ -328,9 +328,10 @@
     <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-20 sm:h-24 flex items-center justify-between gap-2 sm:gap-4">
       
       <!-- Brand Logo & Title -->
-      <div class="flex items-center gap-2 sm:gap-4 cursor-pointer select-none py-1 min-w-0" onclick="switchMainTab('dashboard')" title="Về trang Tổng quan">
+      <div class="flex items-center gap-2 sm:gap-4 select-none py-1 min-w-0">
         <img src="logo.png" onerror="this.src='assets/logo.png'" alt="Logo Trường TH & THCS Phước Hưng - Lớp 9A1" 
-             class="h-11 w-11 sm:h-20 sm:w-20 object-cover rounded-full shadow-md ring-2 ring-phuochung-600/40 shrink-0 hover:scale-105 transition-all duration-200">
+             onclick="switchMainTab('dashboard')" title="Bấm vào logo để về trang Tổng quan"
+             class="h-11 w-11 sm:h-20 sm:w-20 object-cover rounded-full shadow-md ring-2 ring-phuochung-600/40 shrink-0 hover:scale-105 transition-all duration-200 cursor-pointer">
         <div class="min-w-0">
           <div class="flex items-center gap-1 sm:gap-2">
             <span class="font-black text-lg sm:text-2xl text-phuochung-800 dark:text-phuochung-400 tracking-tight leading-none">9A1</span>
@@ -2789,6 +2790,14 @@
     }
 
     // State Quản lý Tuần thi đua: Tự động khởi tạo theo Tuần học hiện tại của hệ thống
+        // Lấy tuần thi đua đang chọn an toàn, không bao giờ bị rơi về tuần cũ hay tuần 2
+    function getActiveEmulationWeek() {
+      if (typeof selectedEmulationWeek === 'number' && selectedEmulationWeek >= 1 && selectedEmulationWeek <= 35) {
+        return selectedEmulationWeek;
+      }
+      return (window.store && typeof window.store.getCurrentWeek === 'function') ? window.store.getCurrentWeek() : 1;
+    }
+
     let selectedEmulationWeek = (window.store && typeof window.store.getCurrentWeek === 'function') ? window.store.getCurrentWeek() : 1;
     let selectedTeamFilter = 'all'; // 'all', 1, 2, 3, 4
     let selectedWorkspaceWeek = selectedEmulationWeek; // Sổ tay nhận xét cán sự (Tuần 1 đến 35)
@@ -2850,7 +2859,12 @@
     }
 
     // Tab Controller
+    let currentActiveMainTab = 'dashboard';
+
     function switchMainTab(tabId) {
+      currentActiveMainTab = tabId;
+      try { localStorage.setItem('CURRENT_ACTIVE_MAIN_TAB', tabId); } catch(e) {}
+
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('active-tab', 'font-semibold', 'bg-phuochung-100', 'dark:bg-phuochung-900/60', 'text-phuochung-700', 'dark:text-phuochung-300');
@@ -3217,7 +3231,7 @@
 
     function executeStep1Send(toId, weekNum) {
       if (checkReadOnlyAndBlock('Gửi dữ liệu thi đua cho Ban cán sự')) return;
-      const w = parseInt(weekNum) || selectedEmulationWeek || 2;
+      const w = parseInt(weekNum) || getActiveEmulationWeek();
       const targetTo = parseInt(toId) || workflowSelectedTeamId || 1;
       const roleId = `to_truong_${targetTo}`;
       const select = document.getElementById('role-select');
@@ -3228,7 +3242,7 @@
 
     function executeStep2Send(weekNum) {
       if (checkReadOnlyAndBlock('Gửi báo cáo thi đua cho GVCN')) return;
-      const w = parseInt(weekNum) || selectedEmulationWeek || 2;
+      const w = parseInt(weekNum) || getActiveEmulationWeek();
       const select = document.getElementById('role-select');
       if (select) select.value = 'lop_truong';
       if (window.authManager) window.authManager.switchRole('lop_truong');
@@ -3237,7 +3251,7 @@
 
     function executeStep3Approve(weekNum, reopen = false) {
       if (checkReadOnlyAndBlock('Phê duyệt báo cáo thi đua')) return;
-      const w = parseInt(weekNum) || selectedEmulationWeek || 2;
+      const w = parseInt(weekNum) || getActiveEmulationWeek();
       const select = document.getElementById('role-select');
       if (select) select.value = 'gvcn';
       if (window.authManager) window.authManager.switchRole('gvcn');
@@ -3266,7 +3280,7 @@
       const container = document.getElementById('persistent-workflow-guide');
       if (!container) return;
 
-      const w = selectedEmulationWeek || 2;
+      const w = getActiveEmulationWeek();
       const curRole = (window.authManager && typeof window.authManager.getCurrentRole === 'function')
         ? window.authManager.getCurrentRole()
         : { id: 'gvcn', name: 'Giáo viên Chủ nhiệm' };
@@ -3496,7 +3510,7 @@
       const select = document.getElementById('role-select');
       if (select) select.value = roleId;
       handleRoleChange(roleId);
-      const w = parseInt(weekNum) || selectedEmulationWeek || 2;
+      const w = parseInt(weekNum) || getActiveEmulationWeek();
       selectEmulationWeek(w);
       showSeatingToast(`Đã chuyển sang vai trò ${window.authManager.getCurrentRole().name}`);
     }
@@ -3726,10 +3740,12 @@
         }
       }
 
+      const savedScrollY = window.scrollY || window.pageYOffset || 0;
       const actor = curRole.name;
       window.store.updateStudentWeekCriteria(week, studentId, field, delta, actor);
       renderEmulationTable();
       renderDashboard();
+      window.scrollTo({ top: savedScrollY, behavior: 'instant' });
     }
 
     function handleResetStudentWeekCriteria(week, studentId) {
@@ -3763,7 +3779,7 @@
       const store = window.store;
       if (!store) return null;
 
-      const weekNum = parseInt(w) || selectedEmulationWeek || 2;
+      const weekNum = parseInt(w) || getActiveEmulationWeek();
       const students = store.getStudents();
       const weekTheme = store.getWeekTheme(weekNum) || { theme: `Thi đua tuần ${weekNum}`, criteria: [] };
       const emulationNotes = store.getWeekEmulationNotes(weekNum) || {};
@@ -4106,7 +4122,7 @@
     }
 
     function handleExportEmulationWordClick(weekNum) {
-      const w = parseInt(weekNum) || selectedEmulationWeek || 2;
+      const w = parseInt(weekNum) || getActiveEmulationWeek();
       const reportPkg = buildWordReportPackage(w);
       if (!reportPkg) return;
       _activeWordReport = reportPkg;
@@ -4250,7 +4266,7 @@
     }
 
 function handleExportEmulationExcelClick() {
-      const w = selectedEmulationWeek || 2;
+      const w = getActiveEmulationWeek();
       window.syncHub.exportEmulationExcelReport(w);
     }
 
@@ -4268,7 +4284,7 @@ function handleExportEmulationExcelClick() {
         }
       }
 
-      const w = selectedEmulationWeek || 2;
+      const w = getActiveEmulationWeek();
       const crit = window.store.getStudentWeekCriteria(w, s.id);
 
       document.getElementById('sc-target-student-id').value = s.id;
@@ -4365,11 +4381,13 @@ function handleExportEmulationExcelClick() {
       newCrit.note = document.getElementById('sc-note').value.trim();
 
       const actor = window.authManager.getCurrentRole().name;
+      const savedScrollY = window.scrollY || window.pageYOffset || 0;
       window.store.setStudentWeekCriteria(w, studentId, newCrit, actor);
 
       closeStudentCriteriaModal();
       renderEmulationTable();
       renderDashboard();
+      window.scrollTo({ top: savedScrollY, behavior: 'instant' });
     }
 
     function renderEmulationTable() {
@@ -4432,13 +4450,12 @@ function handleExportEmulationExcelClick() {
           `;
         }).join('');
 
-        // Tự động cuộn đến tuần đang chọn
-        setTimeout(() => {
-          const activePill = document.getElementById(`pill-week-${w}`);
-          if (activePill && typeof activePill.scrollIntoView === 'function') {
-            activePill.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-          }
-        }, 80);
+        // Cuộn thanh tuần nằm ngang mà KHÔNG cuộn trang web (giữ nguyên vị trí cuộn trang)
+        const activePill = document.getElementById(`pill-week-${w}`);
+        if (activePill && pillsContainer) {
+          const leftOffset = activePill.offsetLeft - (pillsContainer.clientWidth / 2) + (activePill.clientWidth / 2);
+          pillsContainer.scrollTo({ left: Math.max(0, leftOffset), behavior: 'smooth' });
+        }
       }
 
       // Cập nhật dropdown
@@ -4992,19 +5009,19 @@ function handleExportEmulationExcelClick() {
 
     function toggleCommendationViewMode(mode) {
       commendationViewMode = mode;
-      renderEmulationCommendationBoard(selectedEmulationWeek || 2);
+      renderEmulationCommendationBoard(getActiveEmulationWeek());
     }
 
     function setCommendationMonth(m) {
       commendationMonth = parseInt(m) || 9;
-      renderEmulationCommendationBoard(selectedEmulationWeek || 2);
+      renderEmulationCommendationBoard(getActiveEmulationWeek());
     }
 
     function renderEmulationCommendationBoard(w) {
       const container = document.getElementById('emulation-commendation-board');
       if (!container || !window.store || typeof window.store.getEmulationCommendations !== 'function') return;
 
-      const weekNum = parseInt(w) || selectedEmulationWeek || 2;
+      const weekNum = parseInt(w) || getActiveEmulationWeek();
       
       const calcMonthFromWeek = (wk) => {
         if (wk <= 4) return 9;
@@ -5286,9 +5303,11 @@ function handleExportEmulationExcelClick() {
 
     // ================= DIGITAL WORKSPACE QUẢN LÝ THEO CHỨC DANH =================
     function toggleHw(studentId) {
+      const savedScrollY = window.scrollY || window.pageYOffset || 0;
       window.workspaceManager.toggleHomeworkStatus(studentId);
       renderWorkspaceContent();
       renderDashboard();
+      window.scrollTo({ top: savedScrollY, behavior: 'instant' });
     }
 
     function renderWorkspaceContent() {
@@ -5297,7 +5316,7 @@ function handleExportEmulationExcelClick() {
 
       const curRole = window.authManager.getCurrentRole();
       const students = window.store.getStudents();
-      const w = selectedEmulationWeek || 2;
+      const w = getActiveEmulationWeek();
       const roleId = curRole.id;
       const weekNotes = window.store.getWeekEmulationNotes(w);
       const isApproved = weekNotes.status === 'Đã duyệt';
@@ -7231,7 +7250,13 @@ function handleExportEmulationExcelClick() {
       const callBtn = document.getElementById('btn-call-parent-phone');
       if (callBtn) {
         const clean = (s.parentPhone || '').replace(/[^0-9]/g, '');
-        callBtn.href = clean ? `tel:${clean}` : '#';
+        if (clean) {
+          callBtn.href = `tel:${clean}`;
+          callBtn.onclick = null;
+        } else {
+          callBtn.href = 'javascript:void(0);';
+          callBtn.onclick = (e) => { e.preventDefault(); showToast('Chưa cập nhật SĐT phụ huynh!', 'info'); };
+        }
       }
     }
 
@@ -8162,7 +8187,7 @@ Trân trọng cảm ơn Quý Phụ huynh đã luôn đồng hành, quan tâm và
     // Action Handlers
     function handleSendToBCS(toId, weekNum) {
       if (checkReadOnlyAndBlock('Gửi dữ liệu cho Ban Cán Sự')) return;
-      const w = parseInt(weekNum) || selectedEmulationWeek || 2;
+      const w = parseInt(weekNum) || getActiveEmulationWeek();
       const curRole = (window.authManager && typeof window.authManager.getCurrentRole === 'function')
         ? window.authManager.getCurrentRole()
         : { name: `Tổ trưởng ${toId}` };
@@ -8178,7 +8203,7 @@ Trân trọng cảm ơn Quý Phụ huynh đã luôn đồng hành, quan tâm và
 
     function handleSendToGVCN(weekNum) {
       if (checkReadOnlyAndBlock('Gửi báo cáo cho GVCN')) return;
-      const w = parseInt(weekNum) || selectedEmulationWeek || 2;
+      const w = parseInt(weekNum) || getActiveEmulationWeek();
       const notes = window.store.getWeekEmulationNotes(w);
       const role = (window.authManager && typeof window.authManager.getCurrentRole === 'function') ? window.authManager.getCurrentRole() : { name: 'Ban cán sự lớp' };
       notes.status = 'Chờ GVCN duyệt';
@@ -8206,7 +8231,7 @@ Trân trọng cảm ơn Quý Phụ huynh đã luôn đồng hành, quan tâm và
 
     function handleApproveWeeklyReportDirect(weekNum, reopen = false) {
       if (checkReadOnlyAndBlock(reopen ? 'Mở lại báo cáo tuần' : 'Phê duyệt báo cáo tuần')) return;
-      const w = parseInt(weekNum) || selectedEmulationWeek || 2;
+      const w = parseInt(weekNum) || getActiveEmulationWeek();
       const notes = window.store.getWeekEmulationNotes(w);
       if (reopen) {
         notes.status = 'Chờ GVCN duyệt';
@@ -8230,7 +8255,7 @@ Trân trọng cảm ơn Quý Phụ huynh đã luôn đồng hành, quan tâm và
     }
 
     function handleApproveReportFast() {
-      handleApproveWeeklyReportDirect(selectedEmulationWeek || 2);
+      handleApproveWeeklyReportDirect(getActiveEmulationWeek());
     }
 
     function handleBackupData() {
@@ -9665,7 +9690,7 @@ Trân trọng cảm ơn Quý Phụ huynh đã luôn đồng hành, quan tâm và
       }
 
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js?v=6.5.3', { updateViaCache: 'none' })
+        navigator.serviceWorker.register('./sw.js?v=6.5.4', { updateViaCache: 'none' })
           .then(reg => {
             console.log('PWA Service Worker registered:', reg.scope);
             reg.update().catch(() => {});
@@ -9772,15 +9797,18 @@ Trân trọng cảm ơn Quý Phụ huynh đã luôn đồng hành, quan tâm và
       }
     }
 
-    window.renderApp = () => {
-      if (typeof syncToCurrentWeek === 'function') {
+    window.renderApp = (forceSyncWeek = false) => {
+      // Chỉ đồng bộ tuần khi được yêu cầu rõ ràng (VD: đăng nhập), KHÔNG ép nhảy tuần khi đang làm việc
+      if (forceSyncWeek && typeof syncToCurrentWeek === 'function') {
         syncToCurrentWeek();
       }
+      const savedScrollY = window.scrollY || window.pageYOffset || 0;
       renderPersistentWorkflowGuide();
       renderDashboard();
       renderWorkspaceContent();
       renderEmulationTable();
       syncRoleSelectLabels();
+      window.scrollTo({ top: savedScrollY, behavior: 'instant' });
     };
   </script>
 
