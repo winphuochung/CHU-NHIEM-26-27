@@ -1432,7 +1432,18 @@ class AppStore {
 
     const idx = this.state.students.findIndex(s => s.id === id);
     if (idx !== -1) {
-      this.state.students[idx] = { ...this.state.students[idx], ...partial };
+      const current = this.state.students[idx];
+      const updated = { ...current, ...partial };
+      if (partial.to !== undefined) {
+        updated.to = parseInt(partial.to) || current.to;
+      }
+      if (partial.nv1 !== undefined) {
+        updated.targetHighSchool = {
+          ...(current.targetHighSchool || {}),
+          nv1: partial.nv1
+        };
+      }
+      this.state.students[idx] = updated;
       this.saveState();
       return this.state.students[idx];
     }
@@ -1476,7 +1487,8 @@ class AppStore {
         className: item.className || '9A1',
         cccd: item.cccd || '',
         phone: item.phone || '',
-        parentPhone: item.phone || item.parentPhone || '',
+        parentName: item.parentName || ('Phụ huynh em ' + String(item.name || '').trim().split(' ').pop()),
+        parentPhone: item.parentPhone || item.phone || '',
         address: item.address || 'Xã Phước Hưng, Huyện Long Thành',
         conduct: 'Tốt',
         academic: 'Khá',

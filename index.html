@@ -2061,6 +2061,10 @@
           </select>
         </div>
         <div>
+          <label class="block font-semibold mb-1">Tên Phụ huynh:</label>
+          <input type="text" id="new-hs-parent-name" placeholder="Nguyễn Văn B" class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 outline-none">
+        </div>
+        <div>
           <label class="block font-semibold mb-1">SĐT Phụ huynh:</label>
           <input type="text" id="new-hs-parent-phone" placeholder="0903.xxx.xxx" class="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl px-3 py-2 outline-none">
         </div>
@@ -2865,6 +2869,7 @@
       if (tabId === 'gamification') renderGamification();
       if (tabId === 'kudos') renderKudos();
       if (tabId === 'classroom') renderClassroomGrid();
+      if (tabId === 'dashboard') renderDashboard();
     }
 
     // Theme Toggle
@@ -2895,7 +2900,10 @@
     function onLoginSuccess(role) {
       console.log('[Auth] onLoginSuccess triggered for:', role ? role.id : 'unknown');
 
-      // BẮT BUỘC: Khi đăng nhập vào app, luôn tự động xuất hiện tuần hiện tại
+      // BẮT BUỘC: Khi đăng nhập vào app, luôn tự động xuất hiện tuần hiện tại theo lịch thực tế
+      if (window.store && typeof window.store.resetCurrentWeekToAuto === 'function') {
+        window.store.resetCurrentWeekToAuto();
+      }
       syncToCurrentWeek();
 
       // 1. Gỡ ẩn layout chính ngay lập tức (cả class và style trực tiếp)
@@ -2922,9 +2930,14 @@
       // 4. Xóa các ô nhập mật khẩu
       clearAllLoginInputs();
 
-      // 5. Cập nhật giao diện an toàn
+      // 5. Cập nhật giao diện an toàn và làm mới toàn bộ các bảng theo tuần hiện tại
       try {
         updateRoleUI();
+        if (typeof renderPersistentWorkflowGuide === 'function') renderPersistentWorkflowGuide();
+        if (typeof renderDashboard === 'function') renderDashboard();
+        if (typeof renderEmulationTable === 'function') renderEmulationTable();
+        if (typeof renderWorkspaceContent === 'function') renderWorkspaceContent();
+        if (typeof renderClassroomGrid === 'function') renderClassroomGrid();
       } catch(uiErr) {
         console.warn('[Auth] updateRoleUI notice:', uiErr);
       }
@@ -7137,6 +7150,7 @@ function handleExportEmulationExcelClick() {
         showToast('Chỉ Giáo viên chủ nhiệm mới có quyền chỉnh sửa thông tin học sinh!', 'error');
         return;
       }
+      closeStudentModal();
       if (!window.store) return;
       const students = window.store.getStudents() || [];
       if (students.length === 0) return;
@@ -7343,6 +7357,7 @@ function handleExportEmulationExcelClick() {
       const nextId = `HS${String(window.store.getStudents().length + 1).padStart(2, '0')}`;
       document.getElementById('new-hs-id').value = nextId;
       document.getElementById('new-hs-name').value = '';
+      if (document.getElementById('new-hs-parent-name')) document.getElementById('new-hs-parent-name').value = '';
       document.getElementById('new-hs-parent-phone').value = '';
       document.getElementById('new-hs-address').value = '';
       document.getElementById('modal-add-student').classList.remove('hidden');
@@ -7365,14 +7380,15 @@ function handleExportEmulationExcelClick() {
       const id = document.getElementById('new-hs-id').value.trim();
       const gender = document.getElementById('new-hs-gender').value;
       const dob = document.getElementById('new-hs-dob').value.trim();
-      const to = document.getElementById('new-hs-to').value;
+      const to = parseInt(document.getElementById('new-hs-to').value) || 1;
       const role = document.getElementById('new-hs-role').value;
+      const parentName = document.getElementById('new-hs-parent-name')?.value.trim() || '';
       const parentPhone = document.getElementById('new-hs-parent-phone').value.trim();
       const address = document.getElementById('new-hs-address').value.trim();
       const nv1 = document.getElementById('new-hs-nv1').value.trim();
 
       window.store.addStudent({
-        id, name, gender, dob, to, role, parentPhone, address, nv1
+        id, name, gender, dob, to, role, parentName, parentPhone, address, nv1
       });
 
       alert(`Đã thêm thành công học sinh ${name} vào Tổ ${to}!`);
@@ -7380,6 +7396,7 @@ function handleExportEmulationExcelClick() {
       renderEmulationTable();
       renderDashboard();
       renderClassroomGrid();
+      if (typeof renderManageStudentsTable === 'function') renderManageStudentsTable();
     }
 
     function openManageTeamsModal() {
@@ -7608,6 +7625,7 @@ function handleExportEmulationExcelClick() {
 
     function openParentReportForStudent(studentId) {
       closeStudentModal();
+      closeManageStudentsModal();
       openParentReportModal(studentId);
     }
 
@@ -8017,7 +8035,7 @@ Trân trọng cảm ơn Quý Phụ huynh đã luôn đồng hành, quan tâm và
 
   <div class="info-box">
     <b>Họ và tên học sinh:</b> ${s.name} &nbsp;&nbsp;&nbsp;&nbsp; <b>Mã HS:</b> ${s.id} &nbsp;&nbsp;&nbsp;&nbsp; <b>Tổ:</b> ${s.to} &nbsp;&nbsp;&nbsp;&nbsp; <b>Chức vụ:</b> ${s.role}<br>
-    <b>Ngày sinh:</b> ${s.dob || '15/03/2011'} &nbsp;&nbsp;&nbsp;&nbsp; <b>SĐT Phụ huynh:</b> ${s.parentPhone || 'Chưa cập nhật'}<br>
+    <b>Ngày sinh:</b> ${s.dob || '15/03/2011'} &nbsp;&nbsp;&nbsp;&nbsp; <b>Tên Phụ huynh:</b> ${s.parentName || 'Chưa cập nhật'} &nbsp;&nbsp;&nbsp;&nbsp; <b>SĐT Phụ huynh:</b> ${s.parentPhone || 'Chưa cập nhật'}<br>
     <b>Địa chỉ:</b> ${s.address || 'Ấp Phước Hưng, Huyện Long Thành, Tỉnh Đồng Nai'}
   </div>
 
@@ -9647,7 +9665,7 @@ Trân trọng cảm ơn Quý Phụ huynh đã luôn đồng hành, quan tâm và
       }
 
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js?v=6.5.2', { updateViaCache: 'none' })
+        navigator.serviceWorker.register('./sw.js?v=6.5.3', { updateViaCache: 'none' })
           .then(reg => {
             console.log('PWA Service Worker registered:', reg.scope);
             reg.update().catch(() => {});
