@@ -1,5 +1,5 @@
 // Service Worker cho PWA Lớp 9A1 - TH & THCS Phước Hưng (Version 6.5.4 - Network First)
-const CACHE_NAME = 'phuoc-hung-9a1-v6.5.4';
+const CACHE_NAME = 'phuoc-hung-9a1-v6.5.5';
 
 const PRECACHE_ASSETS = [
   './',

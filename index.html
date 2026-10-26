@@ -695,7 +695,7 @@
           <button onclick="handleExportEmulationWordClick()" class="px-3 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0">
             <i data-lucide="file-text" class="w-4 h-4"></i> Xuất Word (NĐ 30)
           </button>
-          <button onclick="openParentReportModal()" <button onclick="openManageStudentsModal()" id="btn-admin-manage-students" class="px-3 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm shrink-0" title="Quản lý & Cập nhật danh sách học sinh, phụ huynh, SĐT, ngày sinh, nơi ở (Chỉ GVCN)">
+          <button onclick="openManageStudentsModal()" id="btn-admin-manage-students" class="px-3 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm shrink-0" title="Quản lý & Cập nhật danh sách học sinh, phụ huynh, SĐT, ngày sinh, nơi ở (Chỉ GVCN)">
             <i data-lucide="user-cog" class="w-4 h-4"></i> Cập nhật DS Học sinh
           </button>
           <button onclick="openParentReportModal()" id="btn-admin-parent-report" class="px-3 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm shrink-0" title="Tổng hợp tình hình học sinh báo cáo phụ huynh (Chỉ GVCN)">
@@ -7738,31 +7738,39 @@ function handleExportEmulationExcelClick() {
               </div>
               <p class="text-[11px] text-slate-500 mt-0.5 font-medium">
                 Mã: <span class="font-mono font-bold text-slate-700 dark:text-slate-300">${s.id}</span> • 
-                Ngày sinh: ${s.dob || 'N/A'} • 
-                Giới tính: ${s.gender || 'N/A'} • 
-                Địa chỉ: ${s.address || 'Huyện Long Thành'}
+                Ngày sinh: ${s.dob || '15/03/2011'} • 
+                Giới tính: ${s.gender || 'Nam'} • 
+                Phụ huynh: <strong class="text-slate-700 dark:text-slate-200">${s.parentName || 'Chưa cập nhật'}</strong>
+              </p>
+              <p class="text-[11px] text-slate-500 mt-0.5">
+                Nơi ở: ${s.address || 'Ấp Phước Hưng, Huyện Long Thành, Tỉnh Đồng Nai'}
               </p>
             </div>
           </div>
 
-          <!-- Hotline Liên hệ Phụ huynh -->
-          <div class="flex items-center gap-2 bg-purple-50 dark:bg-purple-950/40 p-2.5 rounded-xl border border-purple-200 dark:border-purple-900/50 shrink-0">
-            <div>
-              <span class="text-[10px] text-purple-700 dark:text-purple-300 font-bold block">SĐT Phụ Huynh:</span>
-              <span class="font-mono font-black text-xs text-purple-950 dark:text-purple-200">${s.parentPhone || 'Chưa cập nhật'}</span>
+          <!-- Hotline Liên hệ Phụ huynh & Quick Actions -->
+          <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2.5">
+            <div class="flex items-center gap-2 bg-purple-50 dark:bg-purple-950/40 p-2.5 rounded-xl border border-purple-200 dark:border-purple-900/50 shrink-0">
+              <div>
+                <span class="text-[10px] text-purple-700 dark:text-purple-300 font-bold block">SĐT Phụ Huynh:</span>
+                <span class="font-mono font-black text-xs text-purple-950 dark:text-purple-200">${s.parentPhone || 'Chưa cập nhật'}</span>
+              </div>
+              ${s.parentPhone ? `
+                <a href="tel:${s.parentPhone.replace(/[^0-9]/g, '')}" class="p-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition" title="Bấm gọi ngay cho Phụ huynh">
+                  <i data-lucide="phone-call" class="w-3.5 h-3.5"></i>
+                </a>
+                <button onclick="copyToClipboard('${s.parentPhone}', 'Đã sao chép SĐT Phụ huynh: ${s.parentPhone}')" class="p-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition" title="Sao chép số điện thoại">
+                  <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                </button>
+              ` : ''}
             </div>
-            ${s.parentPhone ? `
-              <a href="tel:${s.parentPhone.replace(/[^0-9]/g, '')}" class="p-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition" title="Bấm gọi ngay cho Phụ huynh">
-                <i data-lucide="phone-call" class="w-3.5 h-3.5"></i>
-              </a>
-              <button onclick="copyToClipboard('${s.parentPhone}', 'Đã sao chép SĐT Phụ huynh: ${s.parentPhone}')" class="p-2 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition" title="Sao chép số điện thoại">
-                <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-              </button>
-            ` : ''}
+            <button onclick="openEditStudentModal('${s.id}')" class="px-2.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold transition flex items-center gap-1 shrink-0" title="Cập nhật hồ sơ học sinh, phụ huynh, SĐT">
+              <i data-lucide="user-edit" class="w-3.5 h-3.5"></i> Sửa Hồ Sơ
+            </button>
           </div>
         </div>
 
-        <!-- 4 Khối Chỉ Số Tổng Kết Lũy Kế Đến Tuần ${summary.upToWeek} -->
+        <!-- 4 Khối Chỉ Số Tổng Kết Lũy Kế Đến Tuần ${summary.upToWeek} (14 Tiêu Chí) -->
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <div class="p-3.5 rounded-xl bg-purple-50/70 dark:bg-slate-900 border border-purple-200 dark:border-slate-800">
             <span class="text-[10px] text-slate-500 font-bold block uppercase tracking-wider">Điểm Thi Đua TB (${summary.upToWeek} tuần)</span>
@@ -7770,7 +7778,9 @@ function handleExportEmulationExcelClick() {
               <span class="text-xl font-black ${conductColor}">${summary.avgConductScore}đ</span>
               <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-200">${summary.overallConductRank}</span>
             </div>
-            <p class="text-[10px] text-slate-400 mt-1">Cộng ${summary.totalPlus}đ • Trừ ${summary.totalMinus}đ</p>
+            <p class="text-[10px] text-slate-400 mt-1">
+              <span class="text-emerald-600 font-bold">+${summary.totalPlus}đ cộng</span> • <span class="text-rose-600 font-bold">-${summary.totalMinus}đ trừ</span>
+            </p>
           </div>
 
           <div class="p-3.5 rounded-xl bg-blue-50/70 dark:bg-slate-900 border border-blue-200 dark:border-slate-800">
@@ -7780,7 +7790,7 @@ function handleExportEmulationExcelClick() {
               <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-200">${s.academic || 'Tốt'}</span>
             </div>
             <p class="text-[10px] text-slate-500 mt-1 flex items-center gap-1">
-              Bài tập về nhà: <strong class="${s.homeworkStatus ? 'text-emerald-600' : 'text-rose-600'}">${s.homeworkStatus ? '✓ Đã hoàn thành' : '⚠️ Chưa hoàn thành'}</strong>
+              Bài tập: <strong class="${s.homeworkStatus ? 'text-emerald-600' : 'text-rose-600'}">${s.homeworkStatus ? '✓ Đã hoàn thành' : '⚠️ Chưa hoàn thành'}</strong>
             </p>
           </div>
 
@@ -7796,7 +7806,7 @@ function handleExportEmulationExcelClick() {
                 <span class="text-base font-black text-amber-700 dark:text-amber-400">${t.diTre} lượt</span>
               </div>
             </div>
-            <p class="text-[10px] text-slate-400 mt-1">15p truy bài: ${t.truyBai} • Đồng phục: ${t.dongPhuc}</p>
+            <p class="text-[10px] text-slate-400 mt-1">15p: ${t.truyBai} • Đ.Phục: ${t.dongPhuc}</p>
           </div>
 
           <div class="p-3.5 rounded-xl bg-emerald-50/70 dark:bg-slate-900 border border-emerald-200 dark:border-slate-800">
@@ -7811,18 +7821,21 @@ function handleExportEmulationExcelClick() {
                 <span class="text-base font-black text-emerald-600">${t.kttx810} lượt</span>
               </div>
             </div>
-            <p class="text-[10px] text-slate-400 mt-1">MTT: ${t.mtt} • Vệ sinh: ${t.veSinh}</p>
+            <p class="text-[10px] text-slate-400 mt-1">MTT: ${t.mtt} • V.Sinh: ${t.veSinh} • Khác: ${t.viPham}</p>
           </div>
         </div>
 
         <!-- Hai Cột: Ưu Điểm Nổi Bật & Điểm Cần Phối Hợp Nhắc Nhở -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
           <!-- Cột Ưu Điểm -->
-          <div class="p-4 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50 space-y-2">
-            <h4 class="font-extrabold text-xs text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5 uppercase">
-              <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i>
-              <span>Ưu Điểm & Điểm Mạnh Của Con</span>
-            </h4>
+          <div class="p-4 rounded-2xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50 space-y-3">
+            <div class="flex items-center justify-between">
+              <h4 class="font-extrabold text-xs text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5 uppercase">
+                <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i>
+                <span>Ưu Điểm & Điểm Mạnh Của Con (${summary.strengths.length} mục)</span>
+              </h4>
+              <span class="text-[10px] font-bold text-emerald-700 bg-emerald-100 dark:bg-emerald-900/60 dark:text-emerald-200 px-2 py-0.5 rounded-full">+${summary.totalPlus}đ cộng</span>
+            </div>
             <ul class="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
               ${summary.strengths.map(st => `
                 <li class="flex items-start gap-2">
@@ -7831,14 +7844,23 @@ function handleExportEmulationExcelClick() {
                 </li>
               `).join('')}
             </ul>
+            <div class="pt-2 border-t border-emerald-200/60 dark:border-emerald-900/40">
+              <label class="block text-[10px] font-bold text-emerald-800 dark:text-emerald-300 mb-1 flex items-center gap-1">
+                <i data-lucide="plus-circle" class="w-3 h-3 text-emerald-600"></i> Ưu điểm bổ sung thêm (GVCN ghi nhận):
+              </label>
+              <textarea id="parent-report-custom-strengths" rows="2" placeholder="Ví dụ: Nhiệt tình hỗ trợ bạn học tập, tích cực tham gia phong trào thi đua..." class="w-full p-2 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-emerald-400">${summary.customStrengthsAddon || ''}</textarea>
+            </div>
           </div>
 
-          <!-- Cột Điểm Cần Lưu Ý -->
-          <div class="p-4 rounded-2xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 space-y-2">
-            <h4 class="font-extrabold text-xs text-amber-900 dark:text-amber-300 flex items-center gap-1.5 uppercase">
-              <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600"></i>
-              <span>Điểm Cần Gia Đình Cùng Phối Hợp Nhắc Nhở</span>
-            </h4>
+          <!-- Cột Điểm Cần Lưu Ý & Vi Phạm -->
+          <div class="p-4 rounded-2xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/50 space-y-3">
+            <div class="flex items-center justify-between">
+              <h4 class="font-extrabold text-xs text-amber-900 dark:text-amber-300 flex items-center gap-1.5 uppercase">
+                <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600"></i>
+                <span>Các Vi Phạm & Điểm Cần Phối Hợp (${summary.improvements.length} mục)</span>
+              </h4>
+              <span class="text-[10px] font-bold text-rose-700 bg-rose-100 dark:bg-rose-900/60 dark:text-rose-200 px-2 py-0.5 rounded-full">-${summary.totalMinus}đ trừ</span>
+            </div>
             <ul class="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
               ${summary.improvements.map(im => `
                 <li class="flex items-start gap-2">
@@ -7847,10 +7869,16 @@ function handleExportEmulationExcelClick() {
                 </li>
               `).join('')}
             </ul>
+            <div class="pt-2 border-t border-amber-200/60 dark:border-amber-900/40">
+              <label class="block text-[10px] font-bold text-amber-800 dark:text-amber-300 mb-1 flex items-center gap-1">
+                <i data-lucide="alert-circle" class="w-3 h-3 text-amber-600"></i> Vi phạm hoặc lưu ý bổ sung (GVCN ghi nhận):
+              </label>
+              <textarea id="parent-report-custom-improvements" rows="2" placeholder="Ví dụ: Hay quên mang sách bài tập Toán, còn nói chuyện riêng giờ Sinh hoạt..." class="w-full p-2 rounded-xl border border-amber-200 dark:border-amber-800 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-200 outline-none focus:ring-2 focus:ring-amber-400">${summary.customImprovementsAddon || ''}</textarea>
+            </div>
           </div>
         </div>
 
-        <!-- Lời Nhận Xét & Dặn Dò Của Giáo Viên Chủ Nhiệm (Cho phép soạn thảo / sửa trực tiếp trước khi gửi) -->
+        <!-- Lời Nhận Xét & Dặn Dò Của Giáo Viên Chủ Nhiệm -->
         <div class="p-4 rounded-2xl bg-purple-50/60 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-900/50 space-y-2">
           <div class="flex items-center justify-between">
             <h4 class="font-extrabold text-xs text-purple-950 dark:text-purple-200 flex items-center gap-1.5 uppercase">
@@ -7862,19 +7890,31 @@ function handleExportEmulationExcelClick() {
             </button>
           </div>
           <textarea id="parent-report-teacher-advice" rows="3" class="w-full p-2.5 rounded-xl border border-purple-200 dark:border-purple-800 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-200 leading-relaxed outline-none focus:ring-2 focus:ring-purple-400">${summary.teacherAdvice}</textarea>
-          <div class="flex flex-wrap items-center justify-between text-[11px] text-slate-500 pt-1">
-            <span>Định hướng lớp 10: <strong>NV1: ${s.targetHighSchool?.nv1 || 'Chưa đăng ký'}</strong> • NV2: ${s.targetHighSchool?.nv2 || 'N/A'}</span>
-            <span class="text-purple-600 dark:text-purple-400 font-medium">💡 Thầy/Cô có thể chỉnh sửa trực tiếp nội dung trên trước khi sao chép gửi Zalo hoặc in phiếu</span>
+          <div class="flex flex-wrap items-center justify-between gap-2 pt-2">
+            <div class="text-[11px] text-slate-500">
+              Định hướng lớp 10: <strong>NV1: ${s.targetHighSchool?.nv1 || 'Chưa đăng ký'}</strong> • NV2: ${s.targetHighSchool?.nv2 || 'N/A'}
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="openStudentCriteriaModal('${s.id}')" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-sm">
+                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> Chấm/Sửa Điểm Tiêu Chí
+              </button>
+              <button onclick="saveParentReportEdits()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-sm">
+                <i data-lucide="save" class="w-3.5 h-3.5"></i> Lưu Báo Cáo Này
+              </button>
+            </div>
           </div>
         </div>
 
         <!-- Bảng Chi Tiết Tiến Trình Qua Từng Tuần (Tuần 1 ➔ Tuần ${summary.upToWeek}) -->
         <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
-          <h4 class="font-extrabold text-xs text-slate-900 dark:text-white uppercase flex items-center gap-1.5">
-            <i data-lucide="history" class="w-4 h-4 text-phuochung-600"></i>
-            <span>Chi Tiết Điểm Rèn Luyện & Nhận Xét Từng Tuần (Tuần 1 ➔ ${summary.upToWeek})</span>
-          </h4>
-          <div class="overflow-x-auto max-h-52 overflow-y-auto">
+          <div class="flex items-center justify-between">
+            <h4 class="font-extrabold text-xs text-slate-900 dark:text-white uppercase flex items-center gap-1.5">
+              <i data-lucide="history" class="w-4 h-4 text-phuochung-600"></i>
+              <span>Chi Tiết Điểm Rèn Luyện & Vi Phạm / Ưu Điểm Từng Tuần (Tuần 1 ➔ ${summary.upToWeek})</span>
+            </h4>
+            <span class="text-[11px] text-slate-400 font-medium">Chuẩn xác 14 tiêu chí thi đua</span>
+          </div>
+          <div class="overflow-x-auto max-h-64 overflow-y-auto">
             <table class="w-full text-left border-collapse text-[11px]">
               <thead>
                 <tr class="bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 font-bold sticky top-0">
@@ -7882,11 +7922,15 @@ function handleExportEmulationExcelClick() {
                   <th class="p-2 border-b border-slate-200 dark:border-slate-700 text-center w-20">Điểm Tuần</th>
                   <th class="p-2 border-b border-slate-200 dark:border-slate-700 text-center w-20">Xếp Loại</th>
                   <th class="p-2 border-b border-slate-200 dark:border-slate-700 text-center w-24">Cộng / Trừ</th>
-                  <th class="p-2 border-b border-slate-200 dark:border-slate-700">Nhận Xét Cán Sự & Ghi Chú</th>
+                  <th class="p-2 border-b border-slate-200 dark:border-slate-700">Chi Tiết Ưu Điểm (+) & Vi Phạm (-) Từng Tuần</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                ${summary.weeklyBreakdown.map(wb => `
+                ${summary.weeklyBreakdown.map(wb => {
+                  const hasMerits = wb.weekMerits && wb.weekMerits.length > 0;
+                  const hasViols = wb.weekViolations && wb.weekViolations.length > 0;
+                  const hasNotes = wb.notes && wb.notes.length > 0;
+                  return `
                   <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                     <td class="p-2 font-bold text-center text-slate-500">T${wb.week}</td>
                     <td class="p-2 font-black text-center text-phuochung-600">${wb.scoreInfo.totalScore}đ</td>
@@ -7896,11 +7940,31 @@ function handleExportEmulationExcelClick() {
                     <td class="p-2 text-center text-[10px]">
                       <span class="text-emerald-600 font-bold">+${wb.scoreInfo.plus}đ</span> / <span class="text-rose-600 font-bold">-${wb.scoreInfo.minus}đ</span>
                     </td>
-                    <td class="p-2 text-slate-600 dark:text-slate-400">
-                      ${wb.notes.length > 0 ? wb.notes.join(' • ') : '<span class="text-slate-400 italic">Chưa có vi phạm hay nhận xét đặc biệt</span>'}
+                    <td class="p-2 space-y-1">
+                      ${hasMerits ? `
+                        <div class="flex flex-wrap items-center gap-1.5">
+                          <span class="px-1.5 py-0.5 bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 rounded font-bold text-[10px]">🟢 Ưu điểm:</span>
+                          <span class="text-emerald-700 dark:text-emerald-400 font-medium">${wb.weekMerits.join(', ')}</span>
+                        </div>
+                      ` : ''}
+                      ${hasViols ? `
+                        <div class="flex flex-wrap items-center gap-1.5">
+                          <span class="px-1.5 py-0.5 bg-rose-100 dark:bg-rose-950/70 text-rose-800 dark:text-rose-300 rounded font-bold text-[10px]">🔴 Vi phạm:</span>
+                          <span class="text-rose-700 dark:text-rose-400 font-medium">${wb.weekViolations.join(', ')}</span>
+                        </div>
+                      ` : ''}
+                      ${hasNotes ? `
+                        <div class="text-[10px] text-slate-500 dark:text-slate-400 italic">
+                          📝 ${wb.notes.join(' • ')}
+                        </div>
+                      ` : ''}
+                      ${(!hasMerits && !hasViols && !hasNotes) ? `
+                        <span class="text-slate-400 italic">100đ • Thực hiện nề nếp thi đua chuẩn</span>
+                      ` : ''}
                     </td>
                   </tr>
-                `).join('')}
+                  `;
+                }).join('')}
               </tbody>
             </table>
           </div>
@@ -7908,6 +7972,28 @@ function handleExportEmulationExcelClick() {
       `;
 
       if (window.lucide) lucide.createIcons();
+    }
+
+    function saveParentReportEdits() {
+      if (!window.store || !activeParentReportStudentId) return;
+      const advice = document.getElementById('parent-report-teacher-advice')?.value || '';
+      const strengthsAddon = document.getElementById('parent-report-custom-strengths')?.value || '';
+      const improvementsAddon = document.getElementById('parent-report-custom-improvements')?.value || '';
+
+      const ok = window.store.saveStudentParentReportCustom(activeParentReportStudentId, {
+        teacherAdvice: advice,
+        customStrengthsAddon: strengthsAddon,
+        customImprovementsAddon: improvementsAddon
+      });
+
+      if (ok) {
+        const student = window.store.getStudentById(activeParentReportStudentId);
+        try {
+          showSeatingToast(`💾 Đã lưu thành công cập nhật ưu điểm, vi phạm và lời dặn dò cho học sinh ${student?.name || ''}!`);
+        } catch(e) {
+          showToast(`Đã lưu thành công cập nhật báo cáo phụ huynh!`, 'success');
+        }
+      }
     }
 
     function regenerateAITeacherAdvice() {
@@ -7934,6 +8020,18 @@ function handleExportEmulationExcelClick() {
       const s = summary.student;
       const t = summary.totals;
       const customAdvice = document.getElementById('parent-report-teacher-advice')?.value || summary.teacherAdvice;
+      const customStrengthsAddon = document.getElementById('parent-report-custom-strengths')?.value || summary.customStrengthsAddon || '';
+      const customImprovementsAddon = document.getElementById('parent-report-custom-improvements')?.value || summary.customImprovementsAddon || '';
+
+      const allStrengths = [...summary.strengths];
+      if (customStrengthsAddon && customStrengthsAddon.trim()) {
+        allStrengths.push(customStrengthsAddon.trim());
+      }
+
+      const allImprovements = [...summary.improvements];
+      if (customImprovementsAddon && customImprovementsAddon.trim()) {
+        allImprovements.push(customImprovementsAddon.trim());
+      }
 
       const msg = `Kính gửi Quý Phụ huynh em ${s.name} (Lớp 9A1 - Trường TH & THCS Phước Hưng),
 
@@ -7943,23 +8041,24 @@ Thầy/Cô Giáo viên Chủ nhiệm xin gửi thông tin tổng hợp tình hì
 - Họ và tên: ${s.name} (Mã HS: ${s.id})
 - Tổ: Tổ ${s.to} • Chức vụ: ${s.role}
 - Điểm thi đua trung bình lũy kế: ${summary.avgConductScore} điểm (Xếp loại rèn luyện: ${summary.overallConductRank})
+- Tổng điểm rèn luyện: +${summary.totalPlus}đ cộng • -${summary.totalMinus}đ trừ
 - Điểm trung bình học tập: ${s.scoreAvg} (Xếp loại học lực: ${s.academic || 'Tốt'})
 - Trạng thái bài tập về nhà: ${s.homeworkStatus ? 'Đã hoàn thành đầy đủ' : 'Cần bổ sung/hoàn thiện thêm'}
 
-2. TÌNH HÌNH NỀ NẾP & CHUYÊN CẦN (LŨY KẾ ĐẾN TUẦN ${summary.upToWeek}):
-- Chuyên cần: ${t.vangK > 0 ? `Vắng không phép: ${t.vangK} buổi; ` : 'Không vắng không phép; '}${t.vangP > 0 ? `Vắng có phép: ${t.vangP} buổi; ` : ''}${t.diTre > 0 ? `Đi học trễ: ${t.diTre} lần` : 'Đi học đúng giờ 100%'}
-- Kỷ luật lớp học: ${t.mtt > 0 ? `Mất trật tự: ${t.mtt} lần; ` : 'Giữ trật tự tốt; '}${t.truyBai > 0 ? `Vi phạm 15p đầu giờ: ${t.truyBai} lần; ` : 'Truy bài nghiêm túc; '}${t.dongPhuc > 0 ? `Vi phạm đồng phục: ${t.dongPhuc} lần` : 'Đồng phục nghiêm trang'}
-- Tích cực thi đua: ${t.gioTay} lượt giơ tay, ${t.phatBieu} lượt phát biểu xây dựng bài, ${t.kttx810} hoa điểm 8-10
+2. TÌNH HÌNH THI ĐUA & NỀ NẾP (LŨY KẾ ĐẾN TUẦN ${summary.upToWeek} - 14 TIÊU CHÍ):
+- Chuyên cần: ${t.vangK > 0 ? `Vắng không phép: ${t.vangK} buổi (-${t.vangK * 5}đ); ` : 'Không vắng KP; '}${t.vangP > 0 ? `Vắng có phép: ${t.vangP} buổi (-${t.vangP * 2}đ); ` : ''}${t.diTre > 0 ? `Đi học trễ: ${t.diTre} lần (-${t.diTre * 5}đ)` : 'Đi học đúng giờ 100%'}
+- Kỷ luật lớp học: ${t.mtt > 0 ? `Mất trật tự: ${t.mtt} lần (-${t.mtt * 5}đ); ` : 'Trật tự tốt; '}${t.truyBai > 0 ? `Vi phạm 15p: ${t.truyBai} lần (-${t.truyBai * 5}đ); ` : 'Truy bài nghiêm túc; '}${t.dongPhuc > 0 ? `Vi phạm đồng phục: ${t.dongPhuc} lần (-${t.dongPhuc * 5}đ); ` : 'Đồng phục nghiêm trang; '}${t.veSinh > 0 ? `Vi phạm vệ sinh: ${t.veSinh} lần (-${t.veSinh * 5}đ); ` : 'Trực nhật tốt; '}${t.viPham > 0 ? `Vi phạm khác: ${t.viPham} lần (-${t.viPham * 5}đ)` : 'Không vi phạm khác'}
+- Tích cực học tập: ${t.gioTay} lượt giơ tay (+${t.gioTay * 1}đ), ${t.phatBieu} lượt phát biểu (+${t.phatBieu * 2}đ), ${t.kttx810} hoa điểm 8-10 (+${t.kttx810 * 5}đ), ${t.kttx57} bài điểm 5-7 (+${t.kttx57 * 1}đ)${t.kttx04 > 0 ? `, ${t.kttx04} bài điểm dưới TB 0-4đ (-${t.kttx04 * 5}đ)` : ''}
 
 3. ƯU ĐIỂM NỔI BẬT CỦA CON:
-${summary.strengths.map(st => '- ' + st).join('\n')}
+${allStrengths.map(st => '- ' + st).join('\n')}
 
-4. ĐIỂM GIA ĐÌNH CÙNG PHỐI HỢP NHẮC NHỞ:
-${summary.improvements.map(im => '- ' + im).join('\n')}
+4. CÁC VI PHẠM & ĐIỂM GIA ĐÌNH CÙNG PHỐI HỢP NHẮC NHỞ:
+${allImprovements.map(im => '- ' + im).join('\n')}
 
 5. LỜI DẶN DÒ CỦA GIÁO VIÊN CHỦ NHIỆM:
 ${customAdvice}
-- Mục tiêu tuyển sinh vào Lớp 10: NV1: ${s.targetHighSchool?.nv1 || 'THPT Phước Hưng'} • NV2: ${s.targetHighSchool?.nv2 || 'N/A'}
+- Mục tiêu tuyển sinh vào Lớp 10: NV1: ${s.targetHighSchool?.nv1 || 'THPT Phước Hưng'} • NV2: ${s.targetHighSchool?.nv2 || 'THPT Long Thành'}
 
 Trân trọng cảm ơn Quý Phụ huynh đã luôn đồng hành, quan tâm và phối hợp cùng nhà trường!
 (GVCN Lớp 9A1 • Trường TH & THCS Phước Hưng)`;
@@ -7967,31 +8066,16 @@ Trân trọng cảm ơn Quý Phụ huynh đã luôn đồng hành, quan tâm và
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(msg).then(() => {
           try {
-            showSeatingToast(`📋 Đã sao chép tin nhắn Zalo gửi Phụ huynh em ${s.name}! Thầy/Cô có thể dán gửi ngay.`);
+            showSeatingToast('📋 Đã sao chép tin nhắn Zalo gửi Phụ huynh đầy đủ 14 tiêu chí!');
           } catch(e) {
-            alert(`Đã sao chép tin nhắn báo cáo Phụ huynh em ${s.name} thành công!`);
+            alert('Đã sao chép tin nhắn Zalo thành công!');
           }
-        }).catch(() => fallbackCopyText(msg));
+        }).catch(() => {
+          fallbackCopyText(msg);
+        });
       } else {
         fallbackCopyText(msg);
       }
-    }
-
-    function fallbackCopyText(text) {
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      ta.style.position = 'fixed';
-      ta.style.left = '-9999px';
-      document.body.appendChild(ta);
-      ta.focus();
-      ta.select();
-      try {
-        document.execCommand('copy');
-        alert('Đã sao chép tin nhắn báo cáo phụ huynh thành công!');
-      } catch(e) {
-        prompt('Vui lòng sao chép tin nhắn thủ công bên dưới:', text);
-      }
-      document.body.removeChild(ta);
     }
 
     function printParentReport() {
@@ -8004,6 +8088,18 @@ Trân trọng cảm ơn Quý Phụ huynh đã luôn đồng hành, quan tâm và
       const s = summary.student;
       const t = summary.totals;
       const customAdvice = document.getElementById('parent-report-teacher-advice')?.value || summary.teacherAdvice;
+      const customStrengthsAddon = document.getElementById('parent-report-custom-strengths')?.value || summary.customStrengthsAddon || '';
+      const customImprovementsAddon = document.getElementById('parent-report-custom-improvements')?.value || summary.customImprovementsAddon || '';
+
+      const allStrengths = [...summary.strengths];
+      if (customStrengthsAddon && customStrengthsAddon.trim()) {
+        allStrengths.push(customStrengthsAddon.trim());
+      }
+
+      const allImprovements = [...summary.improvements];
+      if (customImprovementsAddon && customImprovementsAddon.trim()) {
+        allImprovements.push(customImprovementsAddon.trim());
+      }
 
       const printWin = window.open('', '_blank');
       if (!printWin) {
@@ -8069,6 +8165,8 @@ Trân trọng cảm ơn Quý Phụ huynh đã luôn đồng hành, quan tâm và
     <tr>
       <th>Điểm Rèn Luyện TB</th>
       <th>Xếp Loại Nề Nếp (TT22)</th>
+      <th>Tổng Điểm Cộng</th>
+      <th>Tổng Điểm Trừ</th>
       <th>Điểm TB Học Tập</th>
       <th>Xếp Loại Học Lực</th>
       <th>Bài Tập Về Nhà</th>
@@ -8076,21 +8174,24 @@ Trân trọng cảm ơn Quý Phụ huynh đã luôn đồng hành, quan tâm và
     <tr>
       <td><b>${summary.avgConductScore} / 100đ</b></td>
       <td><b>${summary.overallConductRank}</b></td>
+      <td style="color: #059669;"><b>+${summary.totalPlus}đ</b></td>
+      <td style="color: #dc2626;"><b>-${summary.totalMinus}đ</b></td>
       <td><b>${s.scoreAvg}</b></td>
       <td><b>${s.academic || 'Tốt'}</b></td>
       <td>${s.homeworkStatus ? 'Đã hoàn thành' : 'Chưa nộp đủ'}</td>
     </tr>
   </table>
 
+  <div class="section-title">2. Chi tiết 14 tiêu chí thi đua lũy kế (Tuần 1 ➔ Tuần ${summary.upToWeek}):</div>
   <table class="table-stats">
     <tr>
-      <th>Vắng có phép</th>
-      <th>Vắng không phép</th>
-      <th>Đi học trễ</th>
-      <th>Vi phạm 15p</th>
-      <th>Đồng phục</th>
-      <th>Giơ tay / Phát biểu</th>
-      <th>Hoa điểm 8-10</th>
+      <th>Vắng có phép (-2đ)</th>
+      <th>Vắng không phép (-5đ)</th>
+      <th>Đi học trễ (-5đ)</th>
+      <th>Vi phạm 15p (-5đ)</th>
+      <th>Đồng phục (-5đ)</th>
+      <th>Mất trật tự (-5đ)</th>
+      <th>Vệ sinh (-5đ)</th>
     </tr>
     <tr>
       <td>${t.vangP} buổi</td>
@@ -8098,22 +8199,40 @@ Trân trọng cảm ơn Quý Phụ huynh đã luôn đồng hành, quan tâm và
       <td>${t.diTre} lần</td>
       <td>${t.truyBai} lần</td>
       <td>${t.dongPhuc} lần</td>
-      <td>${t.gioTay} / ${t.phatBieu} lượt</td>
-      <td>${t.kttx810} lượt</td>
+      <td>${t.mtt} lần</td>
+      <td>${t.veSinh} lần</td>
+    </tr>
+    <tr>
+      <th>Vi phạm khác (-5đ)</th>
+      <th>KTTX 0-4đ (-5đ)</th>
+      <th>KTTX 5-7đ (+1đ)</th>
+      <th>Hoa điểm 8-10 (+5đ)</th>
+      <th>Giơ tay (+1đ)</th>
+      <th>Phát biểu (+2đ)</th>
+      <th>Tổng lượt thi đua</th>
+    </tr>
+    <tr>
+      <td>${t.viPham} lần</td>
+      <td>${t.kttx04} bài</td>
+      <td>${t.kttx57} bài</td>
+      <td>${t.kttx810} hoa</td>
+      <td>${t.gioTay} lượt</td>
+      <td>${t.phatBieu} lượt</td>
+      <td><b>${t.gioTay + t.phatBieu + t.kttx810 + t.kttx57} lượt (+)</b></td>
     </tr>
   </table>
 
-  <div class="section-title">2. Ưu điểm nổi bật:</div>
+  <div class="section-title">3. Ưu điểm nổi bật:</div>
   <ul>
-    ${summary.strengths.map(st => '<li>' + st + '</li>').join('')}
+    ${allStrengths.map(st => '<li>' + st + '</li>').join('')}
   </ul>
 
-  <div class="section-title">3. Điểm cần gia đình phối hợp nhắc nhở:</div>
+  <div class="section-title">4. Các vi phạm & Điểm cần gia đình phối hợp nhắc nhở:</div>
   <ul>
-    ${summary.improvements.map(im => '<li>' + im + '</li>').join('')}
+    ${allImprovements.map(im => '<li>' + im + '</li>').join('')}
   </ul>
 
-  <div class="section-title">4. Nhận xét & Đề xuất của Giáo viên Chủ nhiệm:</div>
+  <div class="section-title">5. Nhận xét & Đề xuất của Giáo viên Chủ nhiệm:</div>
   <p style="text-indent: 20pt; margin: 4px 0 8px;">${customAdvice}</p>
   <p style="font-style: italic; font-size: 11pt; margin-top: 4px;">* Mục tiêu thi tuyển sinh Lớp 10 của học sinh: <b>NV1: ${s.targetHighSchool?.nv1 || 'THPT Phước Hưng'}</b>; NV2: ${s.targetHighSchool?.nv2 || 'THPT Long Thành'}; NV3: ${s.targetHighSchool?.nv3 || 'THPT Bình Sơn'}.</p>
 
@@ -8133,12 +8252,11 @@ Trân trọng cảm ơn Quý Phụ huynh đã luôn đồng hành, quan tâm và
     </tr>
   </table>
 
-  <script>window.onload = function() { setTimeout(function() { window.print(); }, 300); };<\/script>
+  
 </body>
 </html>`);
-      printWin.document.close();
+      printWin.document.close(); printWin.focus(); setTimeout(function() { try { printWin.print(); } catch(e){} }, 400);
     }
-
 
     async function toggleDecryptStudentData() {
       if (!activeModalStudent) return;

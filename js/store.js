@@ -440,15 +440,36 @@ class AppStore {
 
       const officerRevs = this.getAllStudentOfficerReviews(w, studentId) || {};
       const notes = [];
-      if (crit.note) notes.push(`[Ghi chú]: ${crit.note}`);
+      if (crit.note) notes.push(`[Ghi chú GV/Cán sự]: ${crit.note}`);
       Object.entries(officerRevs).forEach(([k, r]) => {
         if (r && r.comment) notes.push(`[${r.actor || 'Cán sự'}]: ${r.comment} (${r.rating || ''})`);
       });
+
+      // Tự động phân tích các ưu điểm và vi phạm cụ thể của tuần w
+      const weekMerits = [];
+      const weekViolations = [];
+
+      if (crit.kttx810 > 0) weekMerits.push(`${crit.kttx810} hoa 10 (+${crit.kttx810 * 5}đ)`);
+      if (crit.kttx57 > 0) weekMerits.push(`${crit.kttx57} bài KTTX 5-7đ (+${crit.kttx57 * 1}đ)`);
+      if (crit.phatBieu > 0) weekMerits.push(`${crit.phatBieu} lượt phát biểu (+${crit.phatBieu * 2}đ)`);
+      if (crit.gioTay > 0) weekMerits.push(`${crit.gioTay} lần giơ tay (+${crit.gioTay * 1}đ)`);
+
+      if (crit.vangP > 0) weekViolations.push(`Vắng có phép ${crit.vangP} buổi (-${crit.vangP * 2}đ)`);
+      if (crit.vangK > 0) weekViolations.push(`Vắng không phép ${crit.vangK} buổi (-${crit.vangK * 5}đ)`);
+      if (crit.diTre > 0) weekViolations.push(`Đi trễ ${crit.diTre} lần (-${crit.diTre * 5}đ)`);
+      if (crit.truyBai > 0) weekViolations.push(`Vi phạm 15p ${crit.truyBai} lần (-${crit.truyBai * 5}đ)`);
+      if (crit.dongPhuc > 0) weekViolations.push(`Vi phạm đồng phục ${crit.dongPhuc} lần (-${crit.dongPhuc * 5}đ)`);
+      if (crit.mtt > 0) weekViolations.push(`Mất trật tự ${crit.mtt} lần (-${crit.mtt * 5}đ)`);
+      if (crit.veSinh > 0) weekViolations.push(`Trực nhật/vệ sinh ${crit.veSinh} lần (-${crit.veSinh * 5}đ)`);
+      if (crit.viPham > 0) weekViolations.push(`Vi phạm khác ${crit.viPham} lần (-${crit.viPham * 5}đ)`);
+      if (crit.kttx04 > 0) weekViolations.push(`KTTX 0-4đ ${crit.kttx04} bài (-${crit.kttx04 * 5}đ)`);
 
       weeklyBreakdown.push({
         week: w,
         scoreInfo: sc,
         criteria: crit,
+        weekMerits,
+        weekViolations,
         notes
       });
     }
@@ -463,65 +484,91 @@ class AppStore {
     const strengths = [];
     const improvements = [];
 
-    // Phân tích ưu điểm
-    if (totals.vangK === 0 && totals.diTre === 0) {
-      strengths.push('Chuyên cần tốt, chấp hành nghiêm túc giờ giấc học tập, không đi trễ hay bỏ tiết.');
+    // 1. Phân tích ưu điểm tổng hợp lũy kế
+    if (totals.vangK === 0 && totals.diTre === 0 && totals.vangP === 0) {
+      strengths.push('Chuyên cần mẫu mực 100%: Đi học đúng giờ, không nghỉ học buổi nào, tác phong nghiêm túc.');
+    } else if (totals.vangK === 0 && totals.diTre === 0) {
+      strengths.push('Chấp hành tốt giờ giấc học tập: Đi học đúng giờ 100%, không có buổi vắng không phép nào.');
     }
-    if (totals.phatBieu >= 3 || totals.gioTay >= 6) {
-      strengths.push(`Tích cực tương tác trong giờ học (${totals.gioTay} lần giơ tay, ${totals.phatBieu} lượt phát biểu xây dựng bài).`);
+
+    if (totals.phatBieu > 0 && totals.gioTay > 0) {
+      strengths.push(`Tích cực tương tác xây dựng bài: ${totals.gioTay} lần giơ tay (+${totals.gioTay * 1}đ), ${totals.phatBieu} lượt phát biểu đúng (+${totals.phatBieu * 2}đ).`);
+    } else if (totals.phatBieu > 0) {
+      strengths.push(`Tích cực phát biểu xây dựng bài học: ${totals.phatBieu} lượt phát biểu đóng góp ý kiến (+${totals.phatBieu * 2}đ thi đua).`);
+    } else if (totals.gioTay > 0) {
+      strengths.push(`Chủ động giơ tay xung phong trong các tiết học: ${totals.gioTay} lượt giơ tay (+${totals.gioTay * 1}đ thi đua).`);
     }
-    if (totals.kttx810 >= 1) {
-      strengths.push(`Đạt kết quả kiểm tra thường xuyên xuất sắc (${totals.kttx810} hoa điểm 8-10 môn học).`);
+
+    if (totals.kttx810 > 0) {
+      strengths.push(`Kết quả kiểm tra thường xuyên xuất sắc: Đạt ${totals.kttx810} hoa điểm giỏi 8-10 môn học (+${totals.kttx810 * 5}đ thi đua).`);
     }
+    if (totals.kttx57 > 0) {
+      strengths.push(`Kết quả kiểm tra thường xuyên khá: Đạt ${totals.kttx57} bài điểm 5-7 (+${totals.kttx57 * 1}đ thi đua).`);
+    }
+
+    if (totals.dongPhuc === 0 && totals.truyBai === 0 && totals.mtt === 0 && totals.veSinh === 0 && totals.viPham === 0) {
+      strengths.push('Kỷ luật nề nếp gương mẫu: Tác phong đồng phục trang nghiêm, giữ trật tự tốt trong giờ học, truy bài 15 phút nghiêm túc và giữ vệ sinh lớp sạch sẽ.');
+    } else {
+      if (totals.dongPhuc === 0) strengths.push('Tác phong đồng phục, khăn quàng luôn nghiêm trang, chuẩn mực.');
+      if (totals.mtt === 0) strengths.push('Giữ trật tự tốt trong giờ học, tập trung lắng nghe thầy cô giảng bài.');
+      if (totals.truyBai === 0) strengths.push('Thực hiện nghiêm túc 15 phút truy bài đầu giờ cùng các bạn.');
+      if (totals.veSinh === 0) strengths.push('Có ý thức giữ gìn vệ sinh chung, hoàn thành tốt nhiệm vụ trực nhật.');
+    }
+
     if (s.homeworkStatus) {
-      strengths.push('Ý thức tự giác làm bài tập về nhà đầy đủ trước khi đến lớp.');
+      strengths.push('Ý thức tự giác làm bài tập về nhà đầy đủ và nộp bài đúng hạn trước khi đến lớp.');
     }
     if (s.scoreAvg >= 8.0) {
-      strengths.push(`Học lực vững vàng, điểm trung bình các môn đạt ${s.scoreAvg} (Xếp loại: ${s.academic}).`);
+      strengths.push(`Học lực vững vàng, điểm trung bình các môn đạt ${s.scoreAvg} (Xếp loại: ${s.academic || 'Tốt'}).`);
+    } else if (s.scoreAvg >= 6.5) {
+      strengths.push(`Lực học khá, có tinh thần phấn đấu trong học tập (Điểm TB: ${s.scoreAvg}, Xếp loại: ${s.academic || 'Khá'}).`);
     }
     if (s.role && s.role !== 'Học sinh') {
-      strengths.push(`Đảm nhận trách nhiệm Ban cán sự lớp (${s.role}) nhiệt tình, gương mẫu.`);
+      strengths.push(`Đảm nhận trách nhiệm Ban cán sự lớp (${s.role}) nhiệt tình, gương mẫu, hỗ trợ đắc lực cho lớp.`);
     }
-    if (totals.dongPhuc === 0 && totals.truyBai === 0 && totals.mtt === 0) {
-      strengths.push('Tác phong đồng phục trang nghiêm, giữ trật tự tốt trong giờ học và 15 phút truy bài.');
+    if (totalMinus === 0) {
+      strengths.push('Xuất sắc: Không vi phạm bất kỳ lỗi thi đua nào từ đầu năm học đến nay (0 điểm trừ).');
     }
     if (strengths.length === 0) {
       strengths.push('Ngoan ngoãn, hòa đồng với bạn bè, có tinh thần cầu tiến.');
     }
 
-    // Phân tích điểm cần lưu ý & phối hợp với phụ huynh
+    // 2. Phân tích điểm cần lưu ý & vi phạm cụ thể
     if (totals.vangK > 0) {
-      improvements.push(`Có ${totals.vangK} buổi vắng không phép. Gia đình cần quản lý chặt chẽ giờ giấc đi học của con.`);
+      improvements.push(`Vắng không phép: ${totals.vangK} buổi (-${totals.vangK * 5}đ). Kính mong gia đình quản lý chặt chẽ giờ giấc và thông báo cho GVCN khi có việc đột xuất.`);
     }
-    if (totals.vangP >= 2) {
-      improvements.push(`Đã vắng có phép ${totals.vangP} buổi. Gia đình nhắc con chủ động mượn vở bạn chép bài bù để không hổng kiến thức.`);
+    if (totals.vangP > 0) {
+      improvements.push(`Vắng có phép: ${totals.vangP} buổi (-${totals.vangP * 2}đ). Gia đình nhắc con chủ động mượn vở bạn chép bài và ôn tập bù kiến thức.`);
     }
     if (totals.diTre > 0) {
-      improvements.push(`Đã đi học trễ ${totals.diTre} lần sau 6h45. Gia đình nhắc con thức dậy và chuẩn bị sớm hơn.`);
+      improvements.push(`Đi học trễ: ${totals.diTre} lần sau 6h45 (-${totals.diTre * 5}đ). Gia đình nhắc con thức dậy và chuẩn bị sớm hơn.`);
     }
     if (totals.mtt > 0) {
-      improvements.push(`Còn nói chuyện riêng, mất trật tự trong giờ học (${totals.mtt} lần). Cần tập trung lắng nghe thầy cô giảng bài.`);
+      improvements.push(`Mất trật tự trong giờ học: ${totals.mtt} lần nói chuyện / làm việc riêng (-${totals.mtt * 5}đ). Cần tập trung chú ý nghe giảng.`);
     }
     if (totals.truyBai > 0) {
-      improvements.push(`Vi phạm nề nếp 15 phút đầu giờ (${totals.truyBai} lần). Cần tận dụng giờ truy bài để ôn bài cùng tổ.`);
+      improvements.push(`Vi phạm 15 phút đầu giờ: ${totals.truyBai} lần chưa nghiêm túc truy bài (-${totals.truyBai * 5}đ). Cần tận dụng giờ truy bài để ôn bài cùng tổ.`);
     }
     if (totals.dongPhuc > 0) {
-      improvements.push(`Quên khăn quàng hoặc vi phạm đồng phục (${totals.dongPhuc} lần).`);
-    }
-    if (totals.kttx04 > 0) {
-      improvements.push(`Có ${totals.kttx04} lượt bài kiểm tra điểm dưới trung bình (0-4 điểm). Gia đình cần kèm cặp con ôn tập môn học này.`);
+      improvements.push(`Vi phạm đồng phục / tác phong: ${totals.dongPhuc} lần quên khăn quàng, phù hiệu (-${totals.dongPhuc * 5}đ).`);
     }
     if (totals.veSinh > 0) {
-      improvements.push(`Chưa hoàn thành tốt nhiệm vụ trực nhật/vệ sinh (${totals.veSinh} lần).`);
+      improvements.push(`Vi phạm trực nhật / vệ sinh: ${totals.veSinh} lần chưa hoàn thành nhiệm vụ trực nhật (-${totals.veSinh * 5}đ).`);
+    }
+    if (totals.viPham > 0) {
+      improvements.push(`Vi phạm nội quy khác: ${totals.viPham} lần (-${totals.viPham * 5}đ). Cần chấn chỉnh và chấp hành nghiêm chỉnh quy định của trường lớp.`);
+    }
+    if (totals.kttx04 > 0) {
+      improvements.push(`Kiểm tra thường xuyên điểm dưới trung bình (0-4 điểm): ${totals.kttx04} lượt (-${totals.kttx04 * 5}đ). Gia đình cần tăng cường kèm cặp con ôn tập.`);
     }
     if (!s.homeworkStatus) {
       improvements.push('Còn để quên hoặc chưa hoàn thành bài tập về nhà theo yêu cầu của giáo viên bộ môn.');
     }
     if (improvements.length === 0) {
-      improvements.push('Con duy trì nề nếp rất tốt, gia đình tiếp tục động viên và tạo điều kiện để con giữ vững phong độ.');
+      improvements.push('Con chấp hành nề nếp thi đua rất tốt, không có vi phạm nào. Kính mong gia đình tiếp tục khích lệ và đồng hành cùng con!');
     }
 
-    // Lời nhắn sư phạm mẫu của GVCN
+    // 3. Lời nhắn sư phạm mẫu của GVCN
     let teacherAdvice = '';
     if (overallConductRank === 'Tốt' && s.scoreAvg >= 8.0) {
       teacherAdvice = `Em ${s.name} là học sinh gương mẫu, chăm ngoan và có thành tích học tập, rèn luyện rất đáng khen ngợi. Thầy/Cô rất mong gia đình tiếp tục khích lệ để em bứt phá hơn nữa, hướng tới đỗ Nguyện vọng 1 vào ${s.targetHighSchool?.nv1 || 'trường THPT mong muốn'}.`;
@@ -531,6 +578,12 @@ class AppStore {
       teacherAdvice = `Em ${s.name} nhìn chung ngoan, tuy nhiên vẫn còn một số sơ suất nhỏ về nề nếp. Kính mong Quý Phụ huynh cùng nhà trường đôn đốc, nhắc nhở để em nâng cao tính tự giác và bứt phá trong các tuần tới.`;
     } else {
       teacherAdvice = `Em ${s.name} cần có sự chấn chỉnh kịp thời về nề nếp chuyên cần và ý thức học tập. Thầy/Cô kính đề nghị Quý Phụ huynh phối hợp chặt chẽ, cùng theo dõi thời gian biểu của con mỗi ngày.`;
+    }
+
+    // Nạp các ghi chú bổ sung đã lưu trước đó của GVCN nếu có
+    const savedCustom = (s.parentReportCustom && typeof s.parentReportCustom === 'object') ? s.parentReportCustom : {};
+    if (savedCustom.teacherAdvice) {
+      teacherAdvice = savedCustom.teacherAdvice;
     }
 
     return {
@@ -544,8 +597,40 @@ class AppStore {
       weeklyBreakdown,
       strengths,
       improvements,
-      teacherAdvice
+      teacherAdvice,
+      customNote: savedCustom.customNote || '',
+      customStrengthsAddon: savedCustom.customStrengthsAddon || '',
+      customImprovementsAddon: savedCustom.customImprovementsAddon || ''
     };
+  }
+
+  saveStudentParentReportCustom(studentId, { teacherAdvice, customStrengthsAddon, customImprovementsAddon, customNote } = {}) {
+    if (this.isReadOnly()) {
+      console.warn('[Store] Chế độ xem của Học sinh & Phụ huynh: Từ chối lưu báo cáo.');
+      return false;
+    }
+    const s = this.getStudentById(studentId);
+    if (!s) return false;
+
+    if (!s.parentReportCustom) s.parentReportCustom = {};
+    if (teacherAdvice !== undefined) s.parentReportCustom.teacherAdvice = teacherAdvice;
+    if (customStrengthsAddon !== undefined) s.parentReportCustom.customStrengthsAddon = customStrengthsAddon;
+    if (customImprovementsAddon !== undefined) s.parentReportCustom.customImprovementsAddon = customImprovementsAddon;
+    if (customNote !== undefined) s.parentReportCustom.customNote = customNote;
+
+    if (!this.state.auditLogs) this.state.auditLogs = [];
+    this.state.auditLogs.unshift({
+      id: 'LOG_' + Date.now(),
+      timestamp: new Date().toLocaleString('vi-VN'),
+      actor: 'GVCN Lớp 9A1',
+      targetStudent: `${s.name} (Tổ ${s.to})`,
+      action: 'Cập nhật báo cáo phụ huynh',
+      reason: 'GVCN điều chỉnh ưu điểm, vi phạm và lời dặn dò gửi phụ huynh',
+      verified: true
+    });
+
+    this.saveState();
+    return true;
   }
 
   loadState() {
